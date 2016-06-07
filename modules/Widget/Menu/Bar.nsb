@@ -1,0 +1,13 @@
+Yolo.Ui.Event.OnResize {
+  > Jade content:
+    - var names = node.getChildrenNames();
+    each name in names
+      != children[name]
+
+  > Javascript dom:
+    //node.get('refresh')(node, data);
+
+    return event.reply();
+
+
+}

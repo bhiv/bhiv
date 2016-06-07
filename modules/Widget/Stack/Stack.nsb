@@ -1,0 +1,13 @@
+Yolo.Ui.Dom {
+
+  - orientation: "vertical"
+  - order: []
+
+  > Jade html:
+    div(id=id,class=tags.concat("orientation-" + data.orientation).join(' '))
+      each child in data.order
+        if child in children
+          div.element(class=_.slugify(child))
+            != children[child]
+
+}

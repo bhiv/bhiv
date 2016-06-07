@@ -1,0 +1,7 @@
+{ "Logs": { "output": { "default": { "type": "console" } } }
+, "Cluster": { "count": 1 }
+, "Config":
+   { "Yolo.NSB": { "usecache": false }
+   , "Language.Javascript": { "compress": false }
+   }
+}

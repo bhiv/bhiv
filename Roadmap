@@ -1,0 +1,9 @@
+YoloJS: v2
+
+* typer engine
+* async ORM (adapter less)
+* custom fqn relative config file
+* dom diff apply
+* UI for internal management
+* Android Client
+* 

@@ -1,0 +1,48 @@
+doctype html
+html(lang=boilerplate.lang)
+  head
+    title= title
+    meta(charset="UTF-8")
+    if boilerplate.metas
+      each meta in boilerplate.metas
+        meta(name=meta.name, content=meta.content)
+    if favicon
+      link(rel="icon", type=favicon.mime, href=favicon.location)
+    else if boilerplate.favicon
+      link(rel="icon", type=boilerplate.favicon.mime, href=boilerplate.location)
+    if boilerplate.styles
+      each style in boilerplate.styles
+        if "location" in style
+          link(rel="stylesheet",type="text/css",href=style.location)
+        else if "content" in style
+          style!= script.content
+    if boilerplate.scripts
+      each script in boilerplate.scripts
+        if "location" in script
+          script( src = script.location
+                , async = script.async ? "" : false
+                )
+        else if "content" in script
+          script!= script.content
+    if body.styles
+      each style, styleId in body.styles
+        style.yolo-node-style(id=styleId)!= style.value
+  body
+    if body.html
+      != body.html
+    if body.script
+      script!= body.script
+    if toplevel.Environment == "dev"
+      div.debug(style="position: fixed; bottom: 0")
+        = JSON.stringify(debug)
+    if analytics
+      if /^UA-[0-9]+-[0-9]$/g.test(analytics.google)
+        script
+          | ~function(y,o,l,O,j,s){y.GoogleAnalyticsObject=O;y[O]||(y[O]=function(){
+          | (y[O].q=y[O].q||[]).push(arguments)});y[O].l=+new Date;s=o.createElement(l);
+          | j=o.getElementsByTagName(l)[0];s.async=1;s.src='//www.google-analytics.com/analytics.js';
+          | j.parentNode.insertBefore(s,j)}(window,document,'script','ga');
+          != " ga('create', '" + analytics.google + "', 'auto');"
+          | ga('send', 'pageview');
+      if analytics.leanalytics
+        script(src="https://mts-static.leanalytics.io/inc.min.js")

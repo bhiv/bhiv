@@ -1,0 +1,20 @@
+Yolo.Ui.Dom {
+  - icon: null
+  - image: null
+  - text: null
+
+  + Less style:
+    img.this { max-width: 100%; }
+
+  > Jade content:
+    if children.Flow != null
+      != children.Flow
+    else
+      if data.icon != null
+        span.icon= data.icon
+      if data.image != null
+        img(src=data.image)
+      if data.text != null
+        span.text= data.text
+
+}

@@ -1,0 +1,31 @@
+{ "Services":
+  { "App.Routing":
+    { "engine": "Yolo.Routing"
+    , "events": [ [ "Http:responder-add"
+                  , { "type": "webpage", "handler": "Yolo.Ui.Builder:http-response" }
+                  ]
+                , [ "Http:middleware-add", "Services.Http.Session:attach" ]
+                ]
+    }
+  , "App.Routing.Http": { "engine": "Adapter.Http.Server" }
+  , "Http.Session": { "engine": "Adapter.Http.Session"
+                    , "events": [ [ ":set", { "handler": "redis", "host": "localhost", "port": 6379 } ]
+                                ]
+                    }
+  }
+, "Config":
+  { "Adapter.Http.Server": { "port": 7000, "Formidable": {} }
+  , "Adapter.Http.Session": { "lifetime": 86400 }
+  , "Yolo.Ui.Runtime": { "cache": 60 }
+  , "Language.Jade": { "debug": false, "globals": ["toplevel", "Yolo"] }
+  }
+, "Logs":
+  { "debug": "none"
+  , "info": "none"
+  , "notice": "syslog"
+  , "warning": "syslog"
+  , "error": "syslog"
+  , "critical": "syslog"
+  , "emergency": "syslog"
+  }
+}
