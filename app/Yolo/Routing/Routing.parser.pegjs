@@ -67,21 +67,13 @@ Http_Header_Field = [A-Z0-9a-z\-]+ { return text(); }
 StringComparator = '=' { return 'equal'; }
                  / '~' { return 'regexp'; }
 
-Render = Render_Meta / Render_File / Render_Controller / Render_Fqn
+Render = Render_File / Render_Fqn
 
-Render_Meta = 'meta:' s:Meta_Space? k:Meta_Key {
-  return { _type: 'Render.Meta', key: k, space_id: s || 0 };
-}
-
-Render_File = 'file:' p:File_Path {
+Render_File = (& '/') p:File_Path {
   return { _type: 'Render.File', path: p }
 }
 
-Render_Controller = 'controller:' p:Fqn {
-  return { _type: 'Render.Fqn', path: 'Controller.' + p };
-}
-
-Render_Fqn = 'fqn:' f:Fqn {
+Render_Fqn = (& [A-Z]) f:Fqn {
   return { _type: 'Render.Fqn', path: f };
 }
 

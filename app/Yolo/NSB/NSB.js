@@ -61,12 +61,11 @@ module.exports = function (node) {
     var basename = chain.pop();
     var filename = basename + '.nsb';
     var filepath = chain.join('/');
-    var paths =
-      [ path.join('app', filepath, basename, filename)
-      , path.join('app', filepath, filename)
-      , path.join('modules', filepath, basename, filename)
-      , path.join('modules', filepath, filename)
-      ];
+    var paths = [];
+    toplevel.paths.slice().reverse().map(function (wd) {
+      paths.push(path.join(wd, 'app', filepath, basename, filename));
+      paths.push(path.join(wd, 'app', filepath, filename));
+    });
     return (function loop(list, event) {
       var path = list.shift();
       if (path == null) return event.reply(Yolo.Util.wrapError('Module "' + fqn + '" not found'));

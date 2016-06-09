@@ -4,14 +4,17 @@ yolo_cli () {
     action="$1";
     shift;
     case "$action" in
-        init)    yolo_init $@;;
-        update)  yolo_update $@;;
-        upgrade) yolo_upgrade $@;;
         install) yolo_install $@;;
+        init)    yolo_init $@;;
+        link)    yolo_link $@;;
+
+        run)     yolo_run $@;;
+        test)    yolo_test $@;;
+
         start)   yolo_start $@;;
         stop)    yolo_stop $@;;
         restart) yolo_restart $@;;
-        push)    yolo_push $@;;
+
         help)    yolo_synopsis $@;;
         *)       yolo_synopsis $@;;
     esac
@@ -25,6 +28,10 @@ capitalize () { echo "$(echo -n "$1" | cut -c1 | tr '[a-z]' '[A-Z]')$(echo -n "$
 
 ################################################################
 
+yolo_install () {
+    sudo npm install -g 'https://github.com/np42/yolojs#master'
+}
+
 yolo_init () {
     name="$1"
     port="$2"
@@ -37,36 +44,47 @@ yolo_init () {
 
     index="index.js"
     route="config/route-$name.$port.map"
+    config="config/config-custom.json"
     controller="app/$Name/Controller/Controller.js"
-    home="app/$Name/Views/Home.nsb"
+    home="app/$Name/View/Home.nsb"
 
     mkdir -p node_modules
     mkdir -p app config static
+    mkdir -p "app/$Name/View"
     mkdir -p "app/$Name/Controller"
-    mkdir -p "app/$Name/Views"
     mkdir -p "static/$name"
 
-    npm link -no-bin-links yolojs
+    yolo_link
 
     cat << EOF > "$index"
 require('yolojs');
 EOF
 
     cat << EOF > "$route"
-Http / $Name.Controller:page-home
+Http GET / $Name.Controller:page-home
 EOF
 
     cat << EOF > "$controller"
 module.exports = function (node) {
 
   node.on('page-home', function (payload, event) {
-    var weppage = { type: 'webpage' };
+    var webpage = { type: 'webpage' };
     webpage.title = 'Home Page';
-    webpage.body = { fqn: '$Name.Home', params: { "text": "Hello world" } };
+    webpage.body = { fqn: '$Name.View.Home', params: { "text": "Hello world" } };
     return event.reply(null, webpage);
   });
 
 };
+EOF
+
+    cat << EOF > "$config"
+{ "Services":
+  { "App.Routing": { "events": [ [ ":set", "$route" ] ] }
+  }
+, "Config":
+  {
+  }
+}
 EOF
 
     cat << EOF > "$home"
@@ -81,9 +99,11 @@ Yolo.Ui.Dom {
 EOF
 }
 
-yolo_install () {
-    sudo npm install -g 'https://github.com/np42/yolojs#master'
+yolo_link () {
+    npm link -no-bin-links yolojs
 }
+
+################################################################
 
 yolo_start () {
     echo
@@ -94,12 +114,6 @@ yolo_stop () {
 }
 
 yolo_restart () {
-    echo
-}
-
-################################################################
-
-yolo_push () {
     echo
 }
 

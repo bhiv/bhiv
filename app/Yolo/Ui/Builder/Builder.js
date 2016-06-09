@@ -17,7 +17,7 @@ module.exports = function (node) {
 
   node.on('http-response', new Bee()
           .then(function () { return { debug: { startRespondingAt: new Date().getTime() } }; })
-          .then('Yolo.Meta:get', '${boilerplate}', { boilerplate: '${.}' })
+//          .then('Yolo.Meta:get', '${boilerplate}', { boilerplate: '${.}' })
           .then({ body: { http: '${http}' } })
           .then(':compute', '${body}', { body: '${.}' })
           .then('Yolo.NSB:scope-filter', '${body.instance}', { body: { scope: '${.}' } })
@@ -142,6 +142,7 @@ module.exports = function (node) {
         var startAt = webpage.debug.startRespondingAt;
         var renderDuration = new Date().getTime() - startAt;
         Yolo.Util.merge(webpage.debug, { render: { duration: renderDuration + 'ms' } });
+        if (webpage.boilerplate == null) webpage.boilerplate = {};
         return event.reply('done', template(webpage));
       });
     }
