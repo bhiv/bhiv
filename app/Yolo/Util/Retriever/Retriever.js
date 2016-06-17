@@ -8,12 +8,12 @@ module.exports = function (node) {
   var cache = new Yolo.Cache();
 
   node.on('url', function (url, event) {
-    node.logger.log('Retriving %s', url);
     if (typeof url == 'string') url = Url.parse(url);
     if (url.protocol == null) url.protocol = 'file:';
     var method = 'data' in event.replier ? 'streamable' : 'content';
     if (url.cache) url.cache_key = Yolo.Digest(url);
     if (cache.has(url.cache_key)) return event.reply(null, cache.get(url.cache_key));
+    node.logger.log('Retriving %s', url);
     switch (url.protocol) {
     case 'file:':
       var fp = url.path || url.filepath || url.url;
@@ -49,6 +49,7 @@ module.exports = function (node) {
       var filepath = path.join(wd, request.filepath);
       return fs.readFile(filepath, function (err, buffer) {
         if (err) return callback(null, stack);
+        if (request.first) return event.reply(null, buffer.toString());
         stack.push(buffer.toString());
         return callback(null, stack);
       });
