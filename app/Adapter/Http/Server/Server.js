@@ -34,6 +34,7 @@ module.exports = function (node) {
       var http = { request: request, response: response, config: data };
       var payload = request.payload || {};
       payload.http    = http;
+      payload.url     = request.url;
       payload.headers = request.headers;
       payload.params  = request.params;
       payload.query   = url.parse(request.url, true).query;
