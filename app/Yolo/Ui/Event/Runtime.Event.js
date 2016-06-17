@@ -9,6 +9,7 @@ module.exports = new function () {
       case 'submit':
         bindForm(inlet);
         var wrapper = makeSubmitWrapper(inlet, fn);
+        inlet.node.set('custom_submit', true);
         jQuery(inlet.node.get('dom')).on(inlet.event, inlet.selector, wrapper);
         break ;
       case 'validate': case 'done': case 'fail':
@@ -98,7 +99,7 @@ module.exports = new function () {
         var then = function () {
           if ($(data.dom).is('[x-native]')) return /* do not preventDefault */;
           data.event.preventDefault();
-          if (data.action != null) {
+          if (!inlet.node.get('custom_submit')) {
             return $.ajax({ url: data.action, type: data.method, data: data.value
                           , success: success, error: error
                           });
