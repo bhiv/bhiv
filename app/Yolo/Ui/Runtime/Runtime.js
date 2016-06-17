@@ -81,7 +81,7 @@ module.exports = function (node) {
 
   node.on('include', function (filepath, event) {
     var request = { path: filepath };
-    return node.send('Yolo.Util.Retriever:url', request, event);
+    return node.send('Yolo.Util.Retriever:request', request, event);
   });
 
   node.on('include-customs', function (flow, event) {
@@ -89,7 +89,7 @@ module.exports = function (node) {
       if (files.length == 0) return event.reply(null, { data: accu });
       var file = files.shift();
       var request = { filepath: file, first: true }
-      return node.send('Yolo.Util.Retriever:url', request, function (err, content) {
+      return node.send('Yolo.Util.Retriever:request', request, function (err, content) {
         if (err) node.logger.warn(err);
         return loop(files, accu + ';' + (content || ''));
       });
@@ -114,7 +114,7 @@ module.exports = function (node) {
 
   node.on('import', function (filepath, event) {
     var request = { path: filepath };
-    return node.send('Yolo.Util.Retriever:url', request, function (err, content) {
+    return node.send('Yolo.Util.Retriever:request', request, function (err, content) {
       var name = path.basename(filepath, '.js');
       if (err) return event.reply('fail', err);
       var wrapper =

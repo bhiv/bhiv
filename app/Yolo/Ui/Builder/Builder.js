@@ -17,7 +17,12 @@ module.exports = function (node) {
 
   node.on('http-response', new Bee()
           .then(function () { return { debug: { startRespondingAt: new Date().getTime() } }; })
-//          .then('Yolo.Meta:get', '${boilerplate}', { boilerplate: '${.}' })
+          .then( 'Yolo.Util.Retriever:request'
+               , { filepath: '${boilerplate}', first: true, cache: 60
+                 , parser: 'Language.Json:parse'
+                 }
+               , { boilerplate: '${.}' }
+               )
           .then({ body: { http: '${http}' } })
           .then(':compute', '${body}', { body: '${.}' })
           .then('Yolo.NSB:scope-filter', '${body.instance}', { body: { scope: '${.}' } })
@@ -143,6 +148,7 @@ module.exports = function (node) {
         var renderDuration = new Date().getTime() - startAt;
         Yolo.Util.merge(webpage.debug, { render: { duration: renderDuration + 'ms' } });
         if (webpage.boilerplate == null) webpage.boilerplate = {};
+        debugger;
         return event.reply('done', template(webpage));
       });
     }

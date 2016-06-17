@@ -6,7 +6,7 @@ module.exports = function (node) {
 
   node.on('set', new Bee()
           .extract({ filepath: '${.}' })
-          .then('Yolo.Util.Retriever:url', '${filepath}', { raw: '${.}' })
+          .then('Yolo.Util.Retriever:request', '${filepath}', { raw: '${.}' })
           .then(':parse', '${raw}', { rules: '${.}' })
           .pipe(':config-attach')
           .Map('rules', null, 'rule')

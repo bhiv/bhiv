@@ -2,6 +2,7 @@ var less  = require('less');
 var Bhiv  = require('bhiv');
 
 module.exports = function (node) {
+  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
 
   node.on('parse', function (content, event) {
     if (typeof content == 'string') content = { source: content };
@@ -39,5 +40,10 @@ module.exports = function (node) {
     return event.reply(null, inlet);
   });
 
-  return node;
+  node.on('http-serve', new Bee()
+          .then('Yolo.Util.Retriever:request', 'static/${params.filepath}.less', { content: '${.}' })
+          .pipe(':parse', '${content}', { type: 'css', content: '${template}' })
+          .end()
+         );
+
 };

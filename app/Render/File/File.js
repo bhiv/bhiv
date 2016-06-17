@@ -4,7 +4,7 @@ module.exports = function (node) {
 
   node.on('produce', function (data, event) {
     var filepath = path.join('renders', data.render.path);
-    node.send('Yolo.Util.Retriever', 'url', filepath, function (err, renderString) {
+    node.send('Yolo.Util.Retriever:request', filepath, function (err, renderString) {
       if (err) return event.reply('fail', err);
       try { var render = JSON.parse(renderString); }
       catch (e) { return event.reply('fail', e); }
@@ -12,5 +12,4 @@ module.exports = function (node) {
     });
   });
 
-  return node;
 };

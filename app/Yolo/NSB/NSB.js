@@ -61,20 +61,9 @@ module.exports = function (node) {
     var basename = chain.pop();
     var filename = basename + '.nsb';
     var filepath = chain.join('/');
-    var paths = [];
-    toplevel.paths.slice().reverse().map(function (wd) {
-      paths.push(path.join(wd, 'app', filepath, basename, filename));
-      paths.push(path.join(wd, 'app', filepath, filename));
-    });
-    return (function loop(list, event) {
-      var path = list.shift();
-      if (path == null) return event.reply(Yolo.Util.wrapError('Module "' + fqn + '" not found'));
-      var request = { path: path, cache: 5 };
-      return node.send('Yolo.Util.Retriever:url', request, function (err, content) {
-        if (err) return loop(list, event);
-        return event.reply(null, content)
-      });
-    })(paths, event);
+    var nsbpath = path.join('app', filepath, filename);
+    var request = { filepath: nsbpath, cache: 5, first: true };
+    return node.send('Yolo.Util.Retriever:request', request, event);
   });
 
   // source -> ast
