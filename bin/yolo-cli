@@ -5,6 +5,9 @@ yolo_cli () {
     shift;
     case "$action" in
         install) yolo_install $@;;
+        update) yolo_update $@;;
+
+        create)  yolo_create $@;;
         init)    yolo_init $@;;
         link)    yolo_link $@;;
 
@@ -33,6 +36,19 @@ yolo_install () {
 }
 
 yolo_init () {
+    if [ ! -d package.json ]; then npm init -y; fi
+
+    index="index.js"
+
+    yolo_link
+
+    if [ ! -e "$index" ]
+    then
+        echo "require('yolojs');" > "$index"
+    fi
+}
+
+yolo_create () {
     name="$1"
     port="$2"
     Name=$(capitalize "$name")
@@ -40,9 +56,7 @@ yolo_init () {
     if [ -d app -o -d config -o -d static ]; then errcho "Not empty project"; exit 1; fi
     if [ -z "$port" ]; then port=7000; fi
     if [ -z "$name" ]; then yolo_synopsis $@; fi
-    if [ ! -d package.json ]; then npm init -y; fi
 
-    index="index.js"
     route="config/route-$name.$port.map"
     config="config/config-custom.json"
     controller="app/$Name/Controller/Controller.js"
@@ -54,11 +68,7 @@ yolo_init () {
     mkdir -p "app/$Name/Controller"
     mkdir -p "static/$name"
 
-    yolo_link
-
-    cat << EOF > "$index"
-require('yolojs');
-EOF
+    yolo_init
 
     cat << EOF > "$route"
 Http GET / $Name.Controller:page-home
