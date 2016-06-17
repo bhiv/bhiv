@@ -5,11 +5,7 @@ module.exports = function (node) {
   var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
 
   var libdir       = path.join(toplevel.dirname, 'lib');
-  var moddir       = path.join(toplevel.dirname, 'modules');
   var appdir       = path.join(toplevel.dirname, 'app');
-  var staticdir    = path.join(toplevel.dirname, 'statics');
-  var staticlibdir = path.join(toplevel.dirname, 'statics', 'libraries');
-  var nodemoddir   = path.join(toplevel.dirname, 'node_modules');
 
   var concat = { data: '${data};\n${.}' };
 
@@ -26,18 +22,9 @@ module.exports = function (node) {
           .pipe(':cache-read')
           .pipe({ data: '' })
 
-          .then(':include', path.join(staticdir, 'helpers', 'workaround.js'), concat)
-          .then(':include', path.join(staticdir, 'helpers', 'base64.min.js'), concat)
-          .then(':include', path.join(staticdir, 'helpers', 'crypto.js'), concat)
-
-          .then(':include', path.join(staticlibdir, 'jQuery/jquery-1.12.2.js'), concat)
-          .then(':include', path.join(staticlibdir, 'jQuery/jquery-placeholder-fallback.js'), concat)
-          .then(':include', path.join(staticlibdir, 'JSON/json.js'), concat)
-          .then(':include', path.join(staticlibdir, 'Jade/jade.runtime.js'), concat)
-          .then(':include', path.join(staticlibdir, 'Moment/moment-2.13.0.js'), concat)
+          .then(':include-customs')
 
           .then(':include', path.join(__dirname, 'toplevel.js'), concat)
-          .then(':include', path.join(nodemoddir, 'bhiv/Bhiv.js'), concat)
           .then(':import', path.join(libdir, 'Yolo.Path.js'),  concat)
           .then(':import', path.join(libdir, 'Yolo.js'), concat)
           .then(':globalize', null, concat)
@@ -97,11 +84,23 @@ module.exports = function (node) {
     return node.send('Yolo.Util.Retriever:url', request, event);
   });
 
+  node.on('include-customs', function (flow, event) {
+    return (function loop(files, accu) {
+      if (files.length == 0) return event.reply(null, { data: accu });
+      var file = files.shift();
+      var request = { filepath: file, first: true }
+      return node.send('Yolo.Util.Retriever:url', request, function (err, content) {
+        if (err) node.logger.warn(err);
+        return loop(files, accu + ';' + (content || ''));
+      });
+    })((node.get('includes') || []).slice(), flow.data);
+  });
+
   node.on('embed', function (fqn, event) {
     var parts = fqn.split('.');
     var module = parts[parts.length - 1];
     parts.push('Runtime.' + module + '.js');
-    var filepath = path.join(moddir, parts.join('/'));
+    var filepath = path.join(appdir, parts.join('/'));
     var mod = require(filepath);
     var serialized = mod.constructor.toString();
     var wrapper =
