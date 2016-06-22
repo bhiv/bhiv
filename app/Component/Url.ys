@@ -1,0 +1,63 @@
+Node <_Test, _Toto> {
+
+  extend: String
+
+  identifier: Url(:toString)
+
+  adapter: Adapater.Name
+
+  field protocol: Branch { case http: Leaf { pattern: /^http:/ }
+                           case https: Leaf { value: /^https:/ }
+                           case ftp: Leaf { value: /^ftp:/ }
+                         }
+
+  field auth: Url.Credential
+
+  field hostname: Host.Name
+
+  field port: Host.Port
+
+  field path: String
+
+  field query: Url.Query
+
+  field hash: String
+
+  on convert:
+
+  [Server]
+  on fetch @ Language.Coffescript:
+
+  [App.Android]
+  on fetch:
+
+  [Browser]
+  on fetch:
+
+  on iter:
+
+  on digest:
+
+  on compare:
+
+  from String: str => {
+    if (typeof str != 'string') throw new Error('Not a String');
+    return str;
+  }
+
+  to Json:
+
+  to Leaf:
+
+  to Html @ Language.Jade:
+    div
+
+  to Css @ Language.Less:
+
+  check format:
+
+  fix trim:
+
+  fix encode:
+
+}
