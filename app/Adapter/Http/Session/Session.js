@@ -55,7 +55,7 @@ module.exports = function (node) {
   });
 
   node.on('set-redis', function (config, event) {
-    node.create('Modules', 'Adapter.Redis', 'Redis', function (err, redis) {
+    node.create('Root', 'Adapter.Redis', 'Redis', function (err, redis) {
       if (err) return event.reply('fail', err);
       redis.emit('connect', config, event);
     });

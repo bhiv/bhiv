@@ -148,6 +148,7 @@ Arguments = h:Argument t:(space Argument)* {
 Argument = [^ :]+ { return text(); }
 
 SingleLineComment = '//' (!'\n' .)* '\n'
+
 MultiLineComment = '/*' (!'*/' .)* '*/'
 
 space = [ \t]+

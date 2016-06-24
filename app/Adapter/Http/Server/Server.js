@@ -145,6 +145,7 @@ module.exports = function (node) {
         return node.emit('response-error', data, event);
       } else {
         if (result == null) return event.reply();
+        debugger;
         payload.http.response.writeHead(result.code, result.headers);
         payload.http.response.end(result.body);
         return event.reply();
@@ -154,7 +155,7 @@ module.exports = function (node) {
       if (payload.output.type in responders) {
         return node.send(responders[payload.output.type], payload.output, then);
       } else {
-        var handler = 'response-empty';
+        var handler;
         switch (payload.output.type) {
         case undefined: case null: handler = 'response-empty'; break ;
         case 'json': handler = 'response-json'; break ;

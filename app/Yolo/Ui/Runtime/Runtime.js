@@ -10,12 +10,7 @@ module.exports = function (node) {
   var concat = { data: '${data};\n${.}' };
 
   var waiter = null;
-  var cache  = null;
-
-  node.on('configure', function (config, event) {
-    cache = new Yolo.Cache(node.get('cache'));
-    return event.reply();
-  });
+  var cache  = new Yolo.Cache(node.get('cache'));
 
   node.on('export', new Bee()
           .trap({ code: 'cache' }, { type: 'js', content: '${error.content}' })

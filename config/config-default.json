@@ -4,7 +4,7 @@
     , "events": [ [ "Http:responder-add"
                   , { "type": "webpage", "handler": "Yolo.Ui.Builder:http-response" }
                   ]
-                , [ "Http:middleware-add", "Services.Http.Session:attach" ]
+                , [ "Http:middleware-add", "Http.Session:attach" ]
                 ]
     }
   , "App.Routing.Http": { "engine": "Adapter.Http.Server" }
@@ -15,7 +15,7 @@
   }
 , "Config":
   { "Adapter.Http.Server": { "port": 7000, "Formidable": {} }
-  , "Adapter.Http.Session": { "lifetime": 86400 }
+  , "Http.Session": { "lifetime": 86400 }
   , "Yolo.Ui.Runtime": { "cache": 60 }
   , "Language.Jade": { "debug": false, "globals": ["toplevel", "Yolo"] }
   }
