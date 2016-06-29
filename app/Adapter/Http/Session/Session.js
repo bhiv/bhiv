@@ -37,28 +37,27 @@ module.exports = function (node) {
     var data  = this.data;
     // TODO fetch, merge and replace with this.diff object
     this.diff = {};
-    var args = ['/session/' + this.sid, node.get('lifetime'), JSON.stringify(data)];
-    return node.send('Redis:execute', { cmd: 'setex', args: args }, callback);
+    return node.send('Handler:write', { sid: this.sid, data: data }, callback);
   };
 
-  Session.prototype.destroy = function () {
-    node.send('Redis:execute', { cmd: 'del', args: ['/session/' + this.sid] });
-    this.data = {};
-    this.diff = {};
-  };
-
-  node.on('set', function (config, event) {
-    switch (config.handler) {
-    case 'redis': return node.emit('set-redis', config, event);
-    default: return event.reply('fail', 'Handle ' + config.handler + ' not implemented');
-    }
-  });
-
-  node.on('set-redis', function (config, event) {
-    node.create('Root', 'Adapter.Redis', 'Redis', function (err, redis) {
-      if (err) return event.reply('fail', err);
-      redis.emit('connect', config, event);
+  Session.prototype.destroy = function (payload, event) {
+    var session = this;
+    return node.send('Handler:remove', { sid: this.sid }, function (err) {
+      if (err) node.logger.warn(err);
+      session.data = {};
+      session.diff = {};
+      return event.reply();
     });
+  };
+
+  /***************************************/
+
+  node.on('load', function (_, event) {
+    var handler = ['Handler', node.get('handler') || 'File'].join('.');
+    node.create(handler, 'Handler', function (err, result) {
+      result.leaf.set('lifetime', node.get('lifetime'));
+    });
+    return event.reply();
   });
 
   node.on('attach', function (transaction, event) {
@@ -72,16 +71,8 @@ module.exports = function (node) {
       transaction.request.session = new Session(sid);
       return event.reply();
     } else {
-      var cmd = { cmd: 'get', args: ['/session/' + sid] };
-      return node.send('Redis:execute', cmd, function (err, result) {
-        if (err) node.logger.error(Yolo.Util.wrapError(err));
-        try {
-          var data = JSON.parse(result);
-        } catch (e) {
-          node.logger.warn('Session from ' + sid + ' not parseable');
-          node.logger.error(Yolo.Util.wrapError(e, result));
-          var data = null;
-        }
+      node.send('Handler:read', { sid: sid }, function (err, data) {
+        if (err) return event.reply(err);
         var session = new Session(sid, data);
         transaction.request.session = session;
         return event.reply();

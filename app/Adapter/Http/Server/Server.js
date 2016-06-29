@@ -145,7 +145,6 @@ module.exports = function (node) {
         return node.emit('response-error', data, event);
       } else {
         if (result == null) return event.reply();
-        debugger;
         payload.http.response.writeHead(result.code, result.headers);
         payload.http.response.end(result.body);
         return event.reply();

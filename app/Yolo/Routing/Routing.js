@@ -37,7 +37,7 @@ module.exports = function (node) {
     var render = rule.render;
     rule.outlet = rule.id;
     if (node.getChild(rule.name) == null) {
-      return node.create('Root', rule._type, rule.name, function (err) {
+      return node.create(rule._type, rule.name, function (err) {
         if (err) return event.reply('fail', err);
         return node.emit('adapter-add-rule', rule, event);
       });
