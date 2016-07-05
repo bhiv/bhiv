@@ -1,5 +1,5 @@
 var Bhiv  = require('bhiv');
-var jade  = require('jade');
+var jade  = require('pug');
 var path  = require('path');
 var async = require('async');
 
@@ -148,7 +148,6 @@ module.exports = function (node) {
         var renderDuration = new Date().getTime() - startAt;
         Yolo.Util.merge(webpage.debug, { render: { duration: renderDuration + 'ms' } });
         if (webpage.boilerplate == null) webpage.boilerplate = {};
-        debugger;
         return event.reply('done', template(webpage));
       });
     }

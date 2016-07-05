@@ -1,4 +1,4 @@
-var Jade    = require('jade');
+var Jade    = require('pug');
 var Runtime = require('./Runtime.Jade.js');
 
 module.exports = function (node) {
