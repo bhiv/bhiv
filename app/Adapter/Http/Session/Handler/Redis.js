@@ -1,12 +1,12 @@
 module.exports = function (node) {
 
   node.on('load', function (_, event) {
-    debugger;
     node.create('Adapter.Redis', 'Redis');
     return event.reply();
   });
 
   node.on('read', function (payload, event) {
+    var sid = payload.sid;
     var cmd = { cmd: 'get', args: ['/session/' + sid] };
     return node.send('Redis:execute', cmd, function (err, result) {
       if (err) node.logger.error(Yolo.Util.wrapError(err));

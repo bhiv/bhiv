@@ -4,7 +4,6 @@
     , "events": [ [ "Http:responder-add"
                   , { "type": "webpage", "handler": "Yolo.Ui.Builder:http-response" }
                   ]
-                , [ "Http:middleware-add", "Http.Session:attach" ]
                 ]
     }
   , "App.Routing.Http": { "engine": "Adapter.Http.Server" }
