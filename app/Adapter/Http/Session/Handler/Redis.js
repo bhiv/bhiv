@@ -28,7 +28,7 @@ module.exports = function (node) {
     return node.send('Redis:execute', { cmd: 'setex', args: args }, event.createCallback());
   });
 
-  node.on('remove', function (payload, callback) {
+  node.on('remove', function (payload, event) {
     var args = ['/session/' + payload.sid];
     return node.send('Redis:execute', { cmd: 'del', args: args }, event.createCallback());
   });

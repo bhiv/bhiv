@@ -4,6 +4,8 @@ var Bhiv       = require('bhiv');
 
 module.exports = function (node) {
 
+  var defaultLifetime = 3600;
+
   var Session = function (sid, data) {
     this.sid  = sid;
     this.data = data || {};
@@ -55,7 +57,7 @@ module.exports = function (node) {
   node.on('load', function (_, event) {
     var handler = ['Handler', node.get('handler') || 'File'].join('.');
     node.create(handler, 'Handler', function (err, result) {
-      result.leaf.set('lifetime', node.get('lifetime'));
+      result.leaf.set('lifetime', node.get('lifetime') || defaultLifetime);
     });
     return event.reply();
   });
@@ -63,7 +65,7 @@ module.exports = function (node) {
   node.on('attach', function (transaction, event) {
     var cookies = new Cookie(transaction.request, transaction.response);
     var sid = cookies.get('YSID');
-    var lifetime = node.get('lifetime') || 600;
+    var lifetime = node.get('lifetime') || defaultLifetime;
     if (sid == null) {
       var sid = Yolo.Util.id(64);
       var expires = Date.now() + (1000 * lifetime);
