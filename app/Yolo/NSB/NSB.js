@@ -50,7 +50,7 @@ module.exports = function (node) {
   node.on('produce', new Bee()
           .extract({ fqn: '${.}' })
           .then(':fetch', '${fqn}', { source: '${.}' })
-          .then(':parse', '${source}', { ast: '${.}' })
+          .then(':parse', null, { ast: '${.}' })
           .pipe(':compute')
           .end()
          );
@@ -67,8 +67,8 @@ module.exports = function (node) {
   });
 
   // source -> ast
-  node.on('parse', function (source, event) {
-    var content = { source: source };
+  node.on('parse', function (content, event) {
+    if (typeof content == 'string') content = { source: content };
     try { var ast = parser.parse(content.source); }
     catch (e) { return event.reply(Yolo.Util.wrapError(e, content)); }
     return event.reply(null, ast);
@@ -176,7 +176,8 @@ module.exports = function (node) {
   node.on('inlet-add-custom', function (pair, event) {
     if (pair.structure.inlets == null) pair.structure.inlets = {};
     var fqn = 'Language.' + pair.rule.type + ':inlet-create';
-    return node.send(fqn, pair.rule.value, function (err, inlet) {
+    var payload = { source: pair.rule.value, filename: pair.structure._fqn };
+    return node.send(fqn, payload, function (err, inlet) {
       if (err) return event.reply(err);
       var inlets = pair.structure.inlets[pair.rule.name] || [];
       if (inlets.length == 0) pair.structure.inlets[pair.rule.name] = inlets;
@@ -215,7 +216,7 @@ module.exports = function (node) {
 
   node.on('child-define', function (pair, event) {
     if (pair.structure.children == null) pair.structure.children = {};
-    var data = { ast: pair.rule.structure };
+    var data = { fqn: null, ast: pair.rule.structure };
     return node.emit('compute', data, function (err, structure) {
       if (err) return event.reply(err);
       pair.structure.children[pair.rule.name] = structure._fqn;

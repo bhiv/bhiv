@@ -22,8 +22,10 @@ module.exports = function (node) {
     if (typeof content == 'string') content = { source: content };
     content.source = unindent(content.source);
     var inlet = { source: content.source, template: !!~content.source.indexOf('${') };
-    try { var producer = Jade.compile(content.source, node.get('context')); }
-    catch (e) { return event.reply(Yolo.Util.wrapError(e, content.source)); }
+    var context = node.get('context') || {};
+    if (content.filename != null) context.filename = content.filename;
+    try { var producer = Jade.compile(content.source, context); }
+    catch (e) { console.log(content); return event.reply(Yolo.Util.wrapError(e, content.source)); }
     inlet.producer = producer;
     try { var clientStr = Jade.compileClient(content.source, node.get('context')); }
     catch (e) { var clientStr = 'function () { return "compile failed"; }'; }
