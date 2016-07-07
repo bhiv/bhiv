@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var mime         = require('mime');
 var fs           = require('fs');
 var url          = require('url');
+var async        = require('async');
 
 module.exports = function (node) {
   var middlewares = [];
@@ -72,15 +73,23 @@ module.exports = function (node) {
     })(middlewares.slice());
   };
 
-  node.on('middleware-add', function (fqn, event) {
-    middlewares.push(function (request, response, callback) {
-      node.send(fqn, { request: request, response: response }, callback);
-    });
-    return event.reply();
+  node.on('load', function (_, event) {
+    var responders = node.get('responders');
+    var types = Object.keys(responders) || [];
+    return async.map(types, function (type, callback) {
+      return node.emit('responder-add', { type: type, handler: responders[type] }, callback);
+    }, event.createCallback());
   });
 
   node.on('responder-add', function (description, event) {
     responders[description.type] = description.handler;
+    return event.reply();
+  });
+
+  node.on('middleware-add', function (fqn, event) {
+    middlewares.push(function (request, response, callback) {
+      node.send(fqn, { request: request, response: response }, callback);
+    });
     return event.reply();
   });
 
@@ -112,6 +121,7 @@ module.exports = function (node) {
   });
 
   node.on('handle-middleware', function (data, event) {
+    var exceptions = { request: true, response: true };
     return node.emit('get-server', data, function (err, server) {
       if (err) return event.reply(err);
       server.use(function (request, response, next) {
@@ -122,7 +132,15 @@ module.exports = function (node) {
             /* Nothing to do */
           };
           this.done = function (payload) {
-            Yolo.Util.merge(request.payload, payload);
+            for (var key in payload) {
+              if (!(key in request.payload)) {
+                request.payload[key] = payload[key];
+              } else if (!(key in exceptions)) {
+                Yolo.Util.merge(request.payload[key], payload[key]);
+              } else {
+                continue ;
+              }
+            }
             return next();
           };
           this.fail = function (error) {

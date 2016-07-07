@@ -4,7 +4,16 @@ var Parser = require('./Routing.parser.js');
 module.exports = function (node) {
   var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
 
-  node.on('set', new Bee()
+  node.on('load', function (_, event) {
+    var routes = node.get('routes');
+    return new Bee()
+      .Map('routes', null, 'filepath')
+      .  pipe(':route-map-add', '${filepath}')
+      .close({ max: 1 })
+      .end({ routes: routes }, event.createCallback());
+  });
+
+  node.on('route-map-add', new Bee()
           .extract({ filepath: '${.}' })
           .then('Yolo.Util.Retriever:request', '${filepath}', { raw: '${.}' })
           .then(':parse', '${raw}', { rules: '${.}' })
