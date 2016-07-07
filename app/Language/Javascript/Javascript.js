@@ -22,11 +22,11 @@ module.exports = function (node) {
     return event.reply('done', inlet);
   });
 
-  node.on('parse', function (source, event) {
-    var content = { source: source };
+  node.on('parse', function (content, event) {
+    content = { source: content };
     return node.emit('compress', content, function (err, source) {
       if (err) return event.reply(err);
-      try { var fn = new Function('node,data', source); }
+      try { var fn = new Function('node, data', content.source); }
       catch (e) { return event.reply(Yolo.Util.wrapError(e, content)); }
       return event.reply('done', fn);
     });

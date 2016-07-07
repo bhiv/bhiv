@@ -35,7 +35,7 @@ module.exports = function (node) {
         var inlet = { source: '<no available>' };
         inlet.call = new Function
         ( 'payload, event'
-        , [ 'this.producer = ' + code + ';'
+        , [ 'this.producer = function () { ' + code + '; return template; }();'
           , 'this.call = function (payload, event) {'
           , '  return toplevel.runtimes.Jade.producer(this, payload, event);'
           , '};'
