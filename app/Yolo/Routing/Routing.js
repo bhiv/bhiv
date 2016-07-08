@@ -83,11 +83,12 @@ module.exports = function (node) {
   node.on('production-error', function (payload, callback) {
     var error = payload.error;
     var rulename = payload.http.config.outlet;
-    node.logger.error('Production error [' + rulename + '] %s', error);
-    if (error.source) node.logger.error(error.source);
+    var source = error.source != null ? '\n--\n' + error.source : '';
+    node.logger.error('Production error [' + rulename + '] %s%s', error, source);
     var method = /not found/i.test(error.toString()) ? 'response-notfound' : 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
-    node.send('Adapter.Http.Server', method, data, callback);
+    // FIXME: do not send to "Http" but to the request handler
+    return node.send('Http', method, data, callback);
   });
 
   node.on('response-error', function (payload, callback) {
@@ -96,9 +97,9 @@ module.exports = function (node) {
     node.logger.error('Response error [' + rulename + '] %s', error);
     var method = 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
-    node.send('Adapter.Http.Server', method, data, callback);
+    // FIXME: do not send to "Http" but to the request handler
+    return node.send('Http', method, data, callback);
   });
 
-  return node;
 };
 

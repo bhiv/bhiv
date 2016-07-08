@@ -61,7 +61,7 @@ module.exports = function (node) {
 
   node.on('file-absolute-content', function (request, event) {
     return fs.readFile(request.filepath, function (err, buffer) {
-      if (err) return event.reply('fail', err);
+      if (err) return event.reply(err);
       var response = buffer.toString();
       return node.emit('response', { request: request, response: response }, event);
     });
@@ -117,7 +117,7 @@ module.exports = function (node) {
 
   node.on('http-content', function (request, event) {
     return node.send('Adapter.Http.Client:request', request, function (err, response) {
-      if (err) return event.reply('fail', err);
+      if (err) return event.reply(err);
       return node.emit('response', { request: request, response: response }, event);
     });
   });
