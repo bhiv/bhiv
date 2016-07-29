@@ -46,6 +46,8 @@ yolo_init () {
     then
         echo "require('yolojs');" > "$index"
     fi
+
+    mkdir -p app config test
 }
 
 yolo_create () {
@@ -63,7 +65,6 @@ yolo_create () {
     home="app/$Name/View/Home.nsb"
 
     mkdir -p node_modules
-    mkdir -p app config static
     mkdir -p "app/$Name/View"
     mkdir -p "app/$Name/Controller"
     mkdir -p "static/$name"

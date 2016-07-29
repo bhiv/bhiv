@@ -230,6 +230,16 @@ module.exports = function (node) {
     return event.reply('done', { code: code, headers: headers, body: body });
   });
 
+  node.on('response-html', function (output, event) {
+    var code = output.code || 200;
+    var headers = {};
+    var body = output.content;
+    Yolo.Util.merge(headers, output.headers || {});
+    headers['Content-Type'] = 'text/html; charset=UTF-8';
+    headers['Content-Length'] = body.length;
+    return event.reply('done', { code: code, headers: headers, body: body });
+  });
+
   node.on('response-json', function (output, event) {
     var code = output.code || 200;
     var headers = {};
