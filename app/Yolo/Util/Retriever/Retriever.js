@@ -21,7 +21,7 @@ module.exports = function (node) {
       });
       if (count > 1) return ;
     }
-    node.logger.log('Retrieving %s', request);
+    node.logger.log('Retrieving %s', Url.format(request));
     switch (request.protocol) {
     case 'file:':
       var fp = request.path || request.filepath || request.url;
