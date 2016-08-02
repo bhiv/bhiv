@@ -75,7 +75,7 @@ module.exports = function (node) {
 
   node.on('load', function (_, event) {
     var responders = node.get('responders');
-    var types = Object.keys(responders) || [];
+    var types = Object.keys(responders || {}) || [];
     return async.map(types, function (type, callback) {
       return node.emit('responder-add', { type: type, handler: responders[type] }, callback);
     }, event.createCallback());
