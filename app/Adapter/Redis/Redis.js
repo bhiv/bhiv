@@ -1,6 +1,6 @@
 var redis = require("redis");
 
-module.exports = function (node) {
+module.exports = function (node, logger) {
 
   var client = null;
 
@@ -14,7 +14,7 @@ module.exports = function (node) {
     client = redis.createClient(config);
     if (config.db) client.select(config.db);
 
-    node.logger.info('Connecting to %s:%s', config.host || 'localhost', config.port);
+    logger.info('Connecting to %s:%s', config.host || 'localhost', config.port);
     return event.reply();
   });
 

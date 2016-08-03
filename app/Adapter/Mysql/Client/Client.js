@@ -1,9 +1,7 @@
 var fs     = require("fs");
-var Bhiv   = require('bhiv');
 var mysql  = require('node-wrapper/mysql');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
+module.exports = function (node, logger, Bee) {
 
   node.set('client', mysql.createConnection(node.layout, node.get('.')));
 
@@ -18,7 +16,7 @@ module.exports = function (node) {
     .then(function (query) {
       var scope = { db: node.get('dbs') };
       return query.replace(/\$\{([^\}]+)\}/g, function (_, key) {
-        return Bhiv.getIn(scope, key);
+        return Yolo.Util.getIn(scope, key);
       });
     }, '${query}', { query : '${.}' })
 

@@ -1,8 +1,6 @@
 var less  = require('less');
-var Bhiv  = require('bhiv');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
+module.exports = function (node, logger, Bee) {
 
   node.on('parse', function (content, event) {
     if (typeof content == 'string') content = { source: content };

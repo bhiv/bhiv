@@ -7,7 +7,7 @@ var fs           = require('fs');
 var url          = require('url');
 var async        = require('async');
 
-module.exports = function (node) {
+module.exports = function (node, logger) {
   var middlewares = [];
   var responders = {};
 
@@ -17,10 +17,10 @@ module.exports = function (node) {
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(cookieParser());
     app.use(executeMiddleware);
-    node.logger.info('Listening on %s:%s', ip, port);
+    logger.info('Listening on %s:%s', ip, port);
     app.listen(port, ip);
     app.on('error', function (err) {
-      node.logger.error(err);
+      logger.error(err);
     });
     Object.defineProperty(app.settings, 'ip', { value: ip });
     Object.defineProperty(app.settings, 'port', { value: port });
@@ -29,9 +29,9 @@ module.exports = function (node) {
   };
 
   var createHandler = function (data, source, event) {
-    node.logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
+    logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
-      node.logger.info('[%s] %s %s', data.outlet, request.method, request.url);
+      logger.info('[%s] %s %s', data.outlet, request.method, request.url);
       var http = { request: request, response: response, config: data };
       var payload = request.payload || {};
       payload.http    = http;
@@ -146,7 +146,7 @@ module.exports = function (node) {
           this.fail = function (error) {
             response.end('failed');
             /* TODO: may be responde something */
-            return node.logger.error(error);
+            return logger.error(error);
           };
         });
       });
@@ -158,7 +158,7 @@ module.exports = function (node) {
     var then = function (err, result) {
       if (err) {
         var message = err.toString();
-        node.logger.error(err);
+        logger.error(err);
         var data = { _response: payload.http.response, message: message };
         return node.emit('response-error', data, event);
       } else {

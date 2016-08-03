@@ -1,12 +1,9 @@
-var Bhiv    = require('bhiv');
 var parser  = require('./NSB.parser.js');
 var path    = require('path');
 var async   = require('async');
 var NSBU    = require('./NSB.Util.js');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
-
+module.exports = function (node, logger, Bee) {
   var cache = { fqns: {}, scope: {} };
 
   // fqn -> { fqn, instance }
@@ -22,7 +19,7 @@ module.exports = function (node) {
   node.on('http-serve', function (data, event) {
     var fqn = data.params.fqn;
     var params = data.params.params; // ?!?
-    node.logger.warn('check rights');
+    logger.warn('check rights');
     return node.emit('get', fqn, function (err, result) {
       if (err) return event.reply(err);
       var payload = { fqn: result.fqn, scope: result.scope };
@@ -106,7 +103,7 @@ module.exports = function (node) {
       return node.emit(handler, payload, function (err, result) {
         if (err) return cb(err);
         if (result && result.structure != structure) {
-          node.logger.debug('Side Effect on', structure, '=>', result.structure);
+          logger.debug('Side Effect on', structure, '=>', result.structure);
           structure = result.structure;
         }
         return cb();
@@ -145,11 +142,11 @@ module.exports = function (node) {
     return node.send(fqn, pair.rule.value, function (err, value) {
       if (err) return event.reply(err);
       if (value != null && typeof value == 'object' && !(value instanceof Array)) {
-        var data = Bhiv.getIn(pair.structure.data, pair.rule.path) || {};
+        var data = Yolo.Util.getIn(pair.structure.data, pair.rule.path) || {};
         Yolo.Util.merge(data, value, true);
-        Bhiv.setIn(pair.structure.data, pair.rule.path, data);
+        Yolo.Util.setIn(pair.structure.data, pair.rule.path, data);
       } else {
-        Bhiv.setIn(pair.structure.data, pair.rule.path, value);
+        Yolo.Util.setIn(pair.structure.data, pair.rule.path, value);
       }
       return event.reply();
     });

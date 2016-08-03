@@ -2,7 +2,7 @@ var Cookie     = require('cookies');
 var Bhiv       = require('bhiv');
 // TODO move Session Class into another file
 
-module.exports = function (node) {
+module.exports = function (node, logger) {
 
   var defaultLifetime = 3600;
 
@@ -45,7 +45,7 @@ module.exports = function (node) {
   Session.prototype.destroy = function (payload, event) {
     var session = this;
     return node.send('Handler:remove', { sid: this.sid }, function (err) {
-      if (err) node.logger.warn(err);
+      if (err) logger.warn(err);
       session.data = {};
       session.diff = {};
       return event.reply();

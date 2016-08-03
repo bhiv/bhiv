@@ -1,10 +1,8 @@
-var Bhiv  = require('bhiv');
 var jade  = require('pug');
 var path  = require('path');
 var async = require('async');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
+module.exports = function (node, logger, Bee) {
 
   var template = null;
 

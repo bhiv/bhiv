@@ -1,9 +1,7 @@
-var Bhiv   = require('bhiv');
 var nmh    = require('node-mocks-http');
 var URL    = require('url');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
+module.exports = function (node, logger, Bee) {
 
   node.on('handle-fetch-http', function (data, event) {
     var method = data.method || 'get';

@@ -1,5 +1,3 @@
-var Bhiv  = require('bhiv');
-
 module.exports = function (node) {
 
   var rules = {};
@@ -16,11 +14,11 @@ module.exports = function (node) {
           for (var key in toplevel.Config) {
             if (key == path) result = toplevel.Config[key];
             else if (path.indexOf(key + '.') != 0) continue ;
-            else result = Bhiv.getIn(toplevel.Config[key], path.substr(key.length + 1));
+            else result = Yolo.Util.getIn(toplevel.Config[key], path.substr(key.length + 1));
             if (result != null) break ;
           }
         } else if (path.indexOf('params.') == 0) {
-          result = Bhiv.getIn({ params: params }, path);
+          result = Yolo.Util.getIn({ params: params }, path);
         } else if (path.indexOf('data.') == 0) {
           result = node.get(path.substr('data.'.length));
         }

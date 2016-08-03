@@ -62,7 +62,7 @@ module.exports = new function () {
         };
         if (match[2].indexOf(':') == 0) {
           try { var data = { data: JSON.parse(match[3]) }; }
-          catch (e) { node.logger.warn(Yolo.Util.wrapError(e, match[3])); }
+          catch (e) { logger.warn(Yolo.Util.wrapError(e, match[3])); }
           if (data == null) data = {};
           if (payload.params != null) data.params = payload.params;
           if (payload.children != null) data.children = payload.children;

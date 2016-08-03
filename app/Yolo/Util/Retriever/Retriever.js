@@ -3,7 +3,7 @@ var fs     = require('fs');
 var path   = require('path');
 var async  = require('async');
 
-module.exports = function (node) {
+module.exports = function (node, logger) {
 
   var cache = new Yolo.Cache();
 
@@ -21,7 +21,7 @@ module.exports = function (node) {
       });
       if (count > 1) return ;
     }
-    node.logger.log('Retrieving %s', Url.format(request));
+    logger.log('Retrieving %s', Url.format(request));
     switch (request.protocol) {
     case 'file:':
       var fp = request.path || request.filepath || request.url;
@@ -129,7 +129,7 @@ module.exports = function (node) {
   /***************************************************/
 
   node.on('url', function (request, event) {
-    node.logger.trace('Deprecated :url method, use :request method instead');
+    logger.trace('Deprecated :url method, use :request method instead');
     return node.emit('request', request, event);
   });
 

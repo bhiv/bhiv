@@ -2,7 +2,7 @@ import { default as Http } from 'node-wrapper/http.js';
 import * as Url from 'url';
 import { default as Bhiv } from 'bhiv';
 
-export default function (node) {
+export default function (node, logger, Bee) {
 
   node.on('load', ({}, event) => {
     const templates = node.get('templates');
@@ -22,7 +22,7 @@ export default function (node) {
   node.on('request-template', ({ template, payload }, event) => {
     const request = Object.assign({}, template);
     request.path = (request.path || '/').replace(/\$\{([^\}]+)\}/g, ({}, key) => {
-      let value = Bhiv.getIn(payload, key);
+      let value = Yolo.Util.getIn(payload, key);
       if (typeof value != 'string') value = JSON.stringify(value);
       return encodeURIComponent(value);
     });

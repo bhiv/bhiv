@@ -1,9 +1,6 @@
-var Bhiv   = require('bhiv');
 var path   = require('path');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
-
+module.exports = function (node, logger, Bee) {
   var libdir       = path.join(toplevel.dirname, 'lib');
   var appdir       = path.join(toplevel.dirname, 'app');
 
@@ -85,7 +82,7 @@ module.exports = function (node) {
       var file = files.shift();
       var request = { filepath: file, first: true }
       return node.send('Yolo.Util.Retriever:request', request, function (err, content) {
-        if (err) node.logger.warn(err);
+        if (err) logger.warn(err);
         return loop(files, accu + ';' + (content || ''));
       });
     })((node.get('includes') || []).slice(), flow.data);

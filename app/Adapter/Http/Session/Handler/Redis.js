@@ -1,4 +1,4 @@
-module.exports = function (node) {
+module.exports = function (node, logger) {
 
   node.on('load', function (_, event) {
     node.create('Adapter.Redis', 'Redis');
@@ -9,12 +9,12 @@ module.exports = function (node) {
     var sid = payload.sid;
     var cmd = { cmd: 'get', args: ['/session/' + sid] };
     return node.send('Redis:execute', cmd, function (err, result) {
-      if (err) node.logger.error(Yolo.Util.wrapError(err));
+      if (err) logger.error(Yolo.Util.wrapError(err));
       try {
         var data = JSON.parse(result);
       } catch (e) {
-        node.logger.warn('Session from ' + sid + ' not parseable');
-        node.logger.error(Yolo.Util.wrapError(e, result));
+        logger.warn('Session from ' + sid + ' not parseable');
+        logger.error(Yolo.Util.wrapError(e, result));
         var data = null;
       }
       return event.reply(null, data);

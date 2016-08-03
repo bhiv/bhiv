@@ -1,7 +1,6 @@
-var Bhiv    = require('bhiv');
 var Runtime = require('./Runtime.Event.js');
 
-module.exports = function (node) {
+module.exports = function (node, logger, Bee) {
 
   node.on('parse-rule', function (pair, event) {
     var rule = pair.rule;

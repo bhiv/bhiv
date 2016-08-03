@@ -1,8 +1,6 @@
-var Bhiv   = require('bhiv');
 var Parser = require('./Routing.parser.js');
 
-module.exports = function (node) {
-  var Bee  = new Bhiv(node.createInvoke(), node.data).Bee;
+module.exports = function (node, logger, Bee) {
 
   node.on('load', function (_, event) {
     var routes = node.get('routes');
@@ -84,7 +82,7 @@ module.exports = function (node) {
     var error = payload.error;
     var rulename = payload.http.config.outlet;
     var source = error.source != null ? '\n--\n' + error.source : '';
-    node.logger.error('Production error [' + rulename + '] %s%s', error, source);
+    logger.error('Production error [' + rulename + '] %s%s', error, source);
     var method = /not found/i.test(error.toString()) ? 'response-notfound' : 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
@@ -94,7 +92,7 @@ module.exports = function (node) {
   node.on('response-error', function (payload, callback) {
     var error = payload.error;
     var rulename = payload.http.config.outlet;
-    node.logger.error('Response error [' + rulename + '] %s', error);
+    logger.error('Response error [' + rulename + '] %s', error);
     var method = 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
