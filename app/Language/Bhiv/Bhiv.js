@@ -29,7 +29,7 @@ module.exports = function (node) {
     });
   };
 
-  node.on('parse-rule', function (query, event) {
+  node.on('parse-rule', function (query, callback) {
     var inlet = {};
     var rule = query.rule;
     var structure = query.structure;
@@ -39,15 +39,15 @@ module.exports = function (node) {
     inlet.value = rule.value;
     inlet.args = rule.args;
     inlet.result = null;
-    inlet.call = function (params, event) {
+    inlet.call = function (params, callback) {
       var node = this.node;
       if (this.args.length == 1) this.args.unshift('extract');
       if (this.args.length >= 2) rules[this.args[0]].call(this, params);
       return this.setter(null, event);
     };
-    inlet.setter = function (_, event) {
+    inlet.setter = function (_, callback) {
       if (this.args[0] == 'extract') this.node.set(this.args[1], this.result);
-      return event.reply();
+      return callback();
     };
     inlet.serialize = function () {
       var inlet = {};
@@ -56,7 +56,7 @@ module.exports = function (node) {
       inlet.call = this.setter;
       return Yolo.Util.serialize(inlet);
     };
-    return event.reply();
+    return callback();
   });
 
 };

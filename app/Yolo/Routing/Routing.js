@@ -2,13 +2,13 @@ var Parser = require('./Routing.parser.js');
 
 module.exports = function (node, logger, Bee) {
 
-  node.on('load', function (_, event) {
+  node.on('load', function (_, callback) {
     var routes = node.get('routes');
     return new Bee()
       .Map('routes', null, 'filepath')
       .  pipe(':route-map-add', '${filepath}')
       .close({ max: 1 })
-      .end({ routes: routes }, event.createCallback());
+      .end({ routes: routes }, callback);
   });
 
   node.on('route-map-add', new Bee()

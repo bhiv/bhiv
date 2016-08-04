@@ -2,15 +2,15 @@ var uj    = require('uglify-js');
 
 module.exports = function (node) {
 
-  node.on('inlet-create', function (content, event) {
+  node.on('inlet-create', function (content, flux) {
     if (typeof content == 'string') content = { source: content };
     //content.source += '//# sourceURL=' + content.filepath;
     return node.emit('compress', content, function (err, source) {
-      if (err) return event.reply(err);
-      try { var fn = new Function('node, data, event', source); }
-      catch (e) { return event.reply(Yolo.Util.wrapError(e, content)); }
+      if (err) return flux(err);
+      try { var fn = new Function('node, data, flux', source); }
+      catch (e) { return flux(Yolo.Util.wrapError(e, content)); }
       var inlet = { execute: fn };
-      return node.emit('inlet-consolidate', inlet, event);
+      return node.emit('inlet-consolidate', inlet, flux);
     });
   });
 

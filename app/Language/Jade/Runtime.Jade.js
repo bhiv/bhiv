@@ -44,21 +44,21 @@ module.exports = new function () {
       catch (e) { throw Yolo.Util.wrapError(e, inlet.source); }
     };
 
-    this.producer = function (inlet, payload, event) {
+    this.producer = function (inlet, payload, controller) {
       var result = Runtime.render(inlet, payload);
-      return (function loop(source, payload, event) {
+      return (function loop(source, payload, controller) {
         var match = /%([A-Z][a-z0-9_]*)%([a-z0-9.\-:]+)%(.+?)%\1%/i.exec(source);
-        if (match == null) return event.reply('end', source);
+        if (match == null) return controller.reply('end', source);
         var start = source.substr(0, match.index);
         var end = source.substr(match.index + match[0].length);
         var callback = function (err, data) {
-          if (err) return event.reply(err);
+          if (err) return controller.reply(err);
           var result = [start, data.html, end].join('');
           if (data.instance) inlet.node.attach(data.instance, match[1]);
           for (var layout in data.styles) break ;
           // FIXME: if Yolo.Event.reply become asynchronous
-          if (layout != null) event.reply('styles', data.styles);
-          return loop(result, payload, event);
+          if (layout != null) controller.reply('styles', data.styles);
+          return loop(result, payload, controller);
         };
         if (match[2].indexOf(':') == 0) {
           try { var data = { data: JSON.parse(match[3]) }; }
@@ -80,7 +80,7 @@ module.exports = new function () {
           var flow = { fqn: match[2], params: payload.params, override: override };
           return node.send('Yolo.Ui.Builder:compute', flow, callback);
         }
-      })(result, payload, event);
+      })(result, payload, controller);
     };
 
   };

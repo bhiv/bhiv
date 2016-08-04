@@ -18,36 +18,36 @@ module.exports = function (node) {
     return lines.join('\n');
   };
 
-  node.on('inlet-create', function (content, event) {
+  node.on('inlet-create', function (content, flux) {
     if (typeof content == 'string') content = { source: content };
     content.source = unindent(content.source);
     var inlet = { source: content.source, template: !!~content.source.indexOf('${') };
     var context = node.get('context') || {};
     if (content.filename != null) context.filename = content.filename;
     try { var producer = Jade.compile(content.source, context); }
-    catch (e) { console.log(content); return event.reply(Yolo.Util.wrapError(e, content.source)); }
+    catch (e) { console.log(content); return flux(Yolo.Util.wrapError(e, content.source)); }
     inlet.producer = producer;
     try { var clientStr = Jade.compileClient(content.source, node.get('context')); }
     catch (e) { var clientStr = 'function () { return "compile failed"; }'; }
     return node.send('Language.Javascript:compress', { source: clientStr }, function (err, code) {
-      if (err) return event.reply(err);
+      if (err) return flux(err);
       inlet.serialize = function (iterator) {
         var inlet = { source: '<no available>' };
         inlet.call = new Function
-        ( 'payload, event'
+        ( 'payload, flux'
         , [ 'this.producer = function () { ' + code + '; return template; }();'
-          , 'this.call = function (payload, event) {'
-          , '  return toplevel.runtimes.Jade.producer(this, payload, event);'
+          , 'this.call = function (payload, flux) {'
+          , '  return toplevel.runtimes.Jade.producer(this, payload, flux);'
           , '};'
-          , 'return this.call(payload, event);'
+          , 'return this.call(payload, flux);'
           ].join('\n')
         );
         return Yolo.Util.serialize(inlet, true, iterator);
       };
-      inlet.call = function (payload, event) {
-        return Runtime.Jade.producer(this, payload, event);
+      inlet.call = function (payload, flux) {
+        return Runtime.Jade.producer(this, payload, flux);
       };
-      return event.reply(null, inlet);
+      return flux(null, inlet);
     });
   });
 
