@@ -12,11 +12,11 @@ module.exports = function (node, logger) {
   node.on('request', function (request, flux) {
     if (typeof request == 'string') request = Url.parse(request);
     if (request.protocol == null) request.protocol = 'file:';
-    var method = flux.event.hasHook('data') ? 'streamable' : 'content';
+    var method = flux.has('data') ? 'streamable' : 'content';
     if (request.cache) request.cache_key = Yolo.Digest(request);
     if (method == 'content' && request.cache_key != null) {
       if (cache.has(request.cache_key)) return flux(null, cache.get(request.cache_key));
-      var count = cache.queue(request.cache_key, function (result) {
+      var count = cache.queue(request.cache_key, (result) => {
         return flux(null, result);
       });
       if (count > 1) return ;
@@ -27,53 +27,53 @@ module.exports = function (node, logger) {
       var fp = request.path || request.filepath || request.url;
       request.filepath = fp;
       if (fp[0] == '/') {
-        return node.emit('file-absolute-' + method, request, flux);
+        return this.node.emit('file-absolute-' + method, request, flux);
       } else {
-        return node.emit('file-relative-' + method, request, flux);
+        return this.node.emit('file-relative-' + method, request, flux);
       }
     case 'http:': case 'https:':
-      return node.emit('http-' + method, request, flux);
+      return this.node.emit('http-' + method, request, flux);
     default:
       return flux(new Error('Protocol not yet implemented'));
     }
   });
 
-  node.on('response', function (payload, flux) {
+  node.on('response', function (payload, callback) {
     if (payload.request.parser) {
-      return node.send(payload.request.parser, payload.response, function (err, content) {
-        if (err) return flux(err);
+      return this.node.send(payload.request.parser, payload.response, (err, content) => {
+        if (err) return callback(err);
         payload.response = content;
-        return node.emit('response-cache', payload, flux);
+        return this.node.emit('response-cache', payload, callback);
       });
     } else {
-      return node.emit('response-cache', payload, flux);
+      return this.node.emit('response-cache', payload, callback);
     }
   });
 
-  node.on('response-cache', function (payload, flux) {
+  node.on('response-cache', function (payload, callback) {
     var key = payload.request.cache_key;
-    if (key == null) return flux(null, payload.response);
+    if (key == null) return callback(null, payload.response);
     cache.set(key, payload.response, payload.request.cache > 0 ? payload.request.cache : Infinity);
     return ;
   });
 
   /**************************************************/
 
-  node.on('file-absolute-content', function (request, flux) {
-    return fs.readFile(request.filepath, function (err, buffer) {
-      if (err) return flux(err);
+  node.on('file-absolute-content', function (request, callback) {
+    return fs.readFile(request.filepath, (err, buffer) => {
+      if (err) return callback(err);
       var response = buffer.toString();
-      return node.emit('response', { request: request, response: response }, flux);
+      return this.node.emit('response', { request, response }, callback);
     });
   });
 
-  node.on('file-absolute-streamable', function (request, flux) {
-    return flux(new Error('not yet implemented'));
+  node.on('file-absolute-streamable', function (request, callback) {
+    return callback(new Error('not yet implemented'));
   });
 
-  node.on('file-relative-content', function (request, flux) {
+  node.on('file-relative-content', function (request, callback) {
     var directories = toplevel.paths.slice().reverse();
-    var files = directories.map(function (dir) { return path.join(dir, request.filepath); });
+    var files = directories.map(dir => path.join(dir, request.filepath));
     var basename = path.basename(request.filepath);
     var extname = path.extname(request.filepath);
     if (/^[A-Z]/.test(basename)) {
@@ -88,49 +88,49 @@ module.exports = function (node, logger) {
     } else {
       var tries = files;
     }
-    return async.reduce(tries, [], function (stack, filepath, callback) {
-      return fs.readFile(filepath, function (err, buffer) {
-        if (err) return callback(null, stack);
+    return async.reduce(tries, [], (stack, filepath, cb) => {
+      return fs.readFile(filepath, (err, buffer) => {
+        if (err) return cb(null, stack);
         var response = buffer.toString();
         if (request.first) {
-          return node.emit('response', { request: request, response: response }, flux);
+          return this.node.emit('response', { request, response }, callback);
         } else {
           stack.push(response);
-          return callback(null, stack);
+          return cb(null, stack);
         }
       });
-    }, function (err, stack) {
+    }, (err, stack) => {
       if (err) {
-        return flux(err);
+        return callback(err);
       } else if (stack.length == 0) {
         err = { code: 'NOT_FOUND', message: 'file ' + request.filepath + ' not found' };
-        return flux(Yolo.Util.wrapError(err));
+        return callback(Yolo.Util.wrapError(err));
       } else {
-        return node.emit('response', { request: request, response: stack.join('\n') }, flux);
+        return this.node.emit('response', { request, response: stack.join('\n') }, callback);
       }
     });
   });
 
-  node.on('file-relative-streamable', function (request, flux) {
-    return flux(new Error('not yet implemented'));
+  node.on('file-relative-streamable', function (request, callback) {
+    return callback(new Error('not yet implemented'));
   });
 
-  node.on('http-content', function (request, flux) {
-    return node.send('Adapter.Http.Client:request', request, function (err, response) {
-      if (err) return flux(err);
-      return node.emit('response', { request: request, response: response }, flux);
+  node.on('http-content', function (request, callback) {
+    return this.node.send('Adapter.Http.Client:request', request, (err, response) => {
+      if (err) return callback(err);
+      return this.node.emit('response', { request, response }, callback);
     });
   });
 
-  node.on('http-streamable', function (request, flux) {
-    return flux(new Error('not yet implemented'));
+  node.on('http-streamable', function (request, callback) {
+    return callback(new Error('not yet implemented'));
   });
 
   /***************************************************/
 
-  node.on('url', function (request, flux) {
+  node.on('url', function (request, callback) {
     logger.trace('Deprecated :url method, use :request method instead');
-    return node.emit('request', request, flux);
+    return this.node.emit('request', request, callback);
   });
 
 };

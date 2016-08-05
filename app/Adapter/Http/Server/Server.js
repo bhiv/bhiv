@@ -47,20 +47,21 @@ module.exports = function (node, logger) {
       switch (contentType) {
       default :
         payload.message = 'Unknown / Unhandled content type:' + contentType;
-        return flux.reply('route-fail', payload);
+        debugger;
+        return flux.emit('route-fail', payload);
       case 'none':
-        return flux.reply('request', payload);
+        return flux.emit('request', payload);
       case 'application/x-www-form-urlencoded':
       case 'application/json':
         payload.body = request.body;
-        return flux.reply('request', payload);
+        return flux.emit('request', payload);
       case 'multipart/form-data':
         var opts = node.get('Formidable') || {};
         var form = new formidable.IncomingForm(opts);
         return form.parse(request, function (err, fields, files) {
           payload.body  = fields;
           payload.files = files;
-          return flux.reply('request', payload);
+          return flux.emit('request', payload);
         });
       }
     };
@@ -120,18 +121,21 @@ module.exports = function (node, logger) {
     });
   });
 
-  node.on('handle-middleware', function (data, flux) {
+  node.on('handle-middleware', function (data, callback) {
     var exceptions = { request: true, response: true };
-    return node.emit('get-server', data, function (err, server) {
-      if (err) return flux(err);
+    return this.node.emit('get-server', data, function (err, server) {
+      if (err) return callback(err);
       server.use(function (request, response, next) {
         var payload = { request: request, response: response };
         if (request.payload == null) request.payload = {};
         return node.send(data.fqn, payload, new function () {
-          this.end = function () {
+
+          this.success = function () {
             /* Nothing to do */
           };
+
           this.done = function (payload) {
+            debugger;
             for (var key in payload) {
               if (!(key in request.payload)) {
                 request.payload[key] = payload[key];
@@ -143,14 +147,17 @@ module.exports = function (node, logger) {
             }
             return next();
           };
+
           this.fail = function (error) {
             response.end('failed');
             /* TODO: may be responde something */
             return logger.error(error);
           };
+
         });
       });
-      return flux();
+
+      return callback();
     });
   });
 

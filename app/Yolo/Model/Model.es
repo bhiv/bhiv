@@ -15,46 +15,48 @@ export default function (node, logger, Bee) {
           .end()
          );
 
-  const file = path.join(__dirname, 'filters-parser.pegjs');
-  node.on('http-parse-filters', function ({ filters }, event) {
-    if (filters == null) return event.reply(null, {});
-    return this.node.send('Language.Peg:parse-value-from-peg-file', { file, value: filters }, event);
-  });
+  node.on('http-parse-filters', (function () {
+    const file = path.join(__dirname, 'filters-parser.pegjs');
+    return function ({ filters }, callback) {
+      if (filters == null) return callback(null, {});
+      const payload = { file, value: filters };
+      return this.node.send('Language.Peg:parse-value-from-peg-file', payload, callback);
+    };
+  })());
 
-  node.on('sanitize-model-layout', function (model, event) {
+  node.on('sanitize-model-layout', function (model, callback) {
     const layout = model.layout.split('.').map(section => {
       return S(section).camelize().capitalize().s
     }).join('.');
-    return event.reply(null, { layout });
+    return callback(null, { layout });
   });
 
-  node.on('require-model', function (model, event) {
-    if (model instanceof Yolo.Node) return event.reply(null, model);
-    return this.node.create(model.layout, model.layout, function (err, result) {
-      if (err) return event.reply(err);
-      return event.reply(null, result.leaf);
+  node.on('require-model', function (model, callback) {
+    if (model instanceof Yolo.Node) return callback(null, model);
+    return this.node.create(model.layout, model.layout, (err, result) => {
+      if (err) return callback(err);
+      return callback(null, result.leaf);
     });
   });
 
-  node.on('list', function ({ model, filters, access }, event) {
+  node.on('list', function ({ model, filters, access }, callback) {
     const query = { model, filters, access };
     if (this.node.get('proxy') != null) {
       return this.node.emit('proxy', { method: 'list', model, query }, (err, response) => {
-        debugger;
-        if (err) return event.reply(err);
-        else return event.reply('return', response);
+        if (err) return callback(err);
+        else return callback('return', response);
       });
     } else {
       return this.node.emit('require-model', model, (err, model) => {
-        if (err) return event.reply(err);
-        return model.emit('list', { access, filters }, event);
+        if (err) return callback(err);
+        return model.emit('list', { access, filters }, callback);
       });
     }
   });
 
-  node.on('proxy', function (payload, event) {
+  node.on('proxy', function (payload, callback) {
     const proxy = this.node.get('proxy');
-    return this.node.send(proxy, payload, event);
+    return this.node.send(proxy, payload, callback);
   });
 
 };

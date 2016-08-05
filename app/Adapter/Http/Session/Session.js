@@ -42,45 +42,44 @@ module.exports = function (node, logger) {
     return node.send('Handler:write', { sid: this.sid, data: data }, callback);
   };
 
-  Session.prototype.destroy = function (payload, event) {
+  Session.prototype.destroy = function (payload, callback) {
     var session = this;
-    return node.send('Handler:remove', { sid: this.sid }, function (err) {
+    return this.node.send('Handler:remove', { sid: this.sid }, function (err) {
       if (err) logger.warn(err);
       session.data = {};
       session.diff = {};
-      return event.reply();
+      return callback();
     });
   };
 
   /***************************************/
 
-  node.on('load', function (_, event) {
+  node.on('load', function (_, callback) {
     var handler = ['Handler', node.get('handler') || 'File'].join('.');
-    node.create(handler, 'Handler', function (err, result) {
+    this.node.create(handler, 'Handler', function (err, result) {
       result.leaf.set('lifetime', node.get('lifetime') || defaultLifetime);
     });
-    return event.reply();
+    return callback();
   });
 
-  node.on('attach', function (transaction, event) {
+  node.on('attach', function (transaction, callback) {
     var cookies = new Cookie(transaction.request, transaction.response);
     var sid = cookies.get('YSID');
-    var lifetime = node.get('lifetime') || defaultLifetime;
+    var lifetime = this.node.get('lifetime') || defaultLifetime;
     if (sid == null) {
       var sid = Yolo.Util.id(64);
       var expires = Date.now() + (1000 * lifetime);
       cookies.set('YSID', sid, { expires: new Date(expires) });
       transaction.request.session = new Session(sid);
-      return event.reply();
+      return callback();
     } else {
-      node.send('Handler:read', { sid: sid }, function (err, data) {
-        if (err) return event.reply(err);
+      this.node.send('Handler:read', { sid: sid }, function (err, data) {
+        if (err) return callback(err);
         var session = new Session(sid, data);
         transaction.request.session = session;
-        return event.reply();
+        return callback();
       });
     }
   });
 
-  return node;
 };

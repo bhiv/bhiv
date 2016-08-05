@@ -4,22 +4,22 @@ import { default as Bhiv } from 'bhiv';
 
 export default function (node, logger, Bee) {
 
-  node.on('load', ({}, event) => {
+  node.on('load', function ({}, callback) {
     const templates = node.get('templates');
     if (templates != null) {
       for (const method in templates) {
         const template = templates[method];
         if (template.base_url == null) template.base_url = node.get('base_url');
         if (template.fullresponse == null) template.fullresponse = node.get('fullresponse');
-        node.on(method, ((template) => (payload, event) => {
-          node.emit('request-template', { template, payload }, event);
+        this.node.on(method, ((template) => (payload, callback) => {
+          this.node.emit('request-template', { template, payload }, callback);
         })(template));
       }
     }
-    return event.reply();
+    return callback();
   });
 
-  node.on('request-template', ({ template, payload }, event) => {
+  node.on('request-template', function ({ template, payload }, callback) {
     const request = Object.assign({}, template);
     request.path = (request.path || '/').replace(/\$\{([^\}]+)\}/g, ({}, key) => {
       let value = Yolo.Util.getIn(payload, key);
@@ -27,10 +27,10 @@ export default function (node, logger, Bee) {
       return encodeURIComponent(value);
     });
     request.data = Bhiv.extract(request.data, payload);
-    return node.emit('request', request, event);
+    return node.emit('request', request, callback);
   });
 
-  node.on('request', (request, event) => {
+  node.on('request', function (request, callback) {
     if (request.url == null && request.base_url != null  && request.path != null)
       request.url = request.base_url + request.path;
     if (request.url) {
@@ -53,7 +53,7 @@ export default function (node, logger, Bee) {
     if (request.data != null)
       http.setDataObject(request.data);
     http.setOutputType(request.fullresponse ? 'fullresponse' : 'bodyonly');
-    return http.execute(event.createCallback());
+    return http.execute(callback);
   });
 
 };

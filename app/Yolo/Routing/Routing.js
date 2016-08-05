@@ -22,41 +22,40 @@ module.exports = function (node, logger, Bee) {
           .end()
          );
 
-  node.on('parse', function (content, event) {
+  node.on('parse', function (content, callback) {
     try { var rules = Parser.parse(content); }
-    catch (e) { return event.reply('fail', Yolo.Util.wrapError(e, content)); }
-    return event.reply('done', rules);
+    catch (e) { return callback(Yolo.Util.wrapError(e, content)); }
+    return callback(null, rules);
   });
 
-  node.on('config-attach', function (flow, event) {
+  node.on('config-attach', function (flow, callback) {
     var match = /(\d+)\.map$/.exec(flow.filepath);
-    if (!match) return event.reply(null, flow);
+    if (!match) return callback(null, flow);
     for (var i = 0; i < flow.rules.length; i++) {
       var rule = flow.rules[i];
       rule.config = {};
       rule.config.port = parseInt(match[1], 10);
     }
-    return event.reply(null, flow);
+    return callback(null, flow);
   });
 
-  node.on('rule-add', function (rule, event) {
+  node.on('rule-add', function (rule, callback) {
     if (rule.id == null) rule.id = Yolo.Digest(rule).substr(0, 8);
     var render = rule.render;
     rule.outlet = rule.id;
     if (node.getChild(rule.name) == null) {
-      return node.create(rule._type, rule.name, function (err) {
-        if (err) return event.reply('fail', err);
-        return node.emit('adapter-add-rule', rule, event);
+      return this.node.create(rule._type, rule.name, function (err) {
+        if (err) return callback(err);
+        return node.emit('adapter-add-rule', rule, callback);
       });
     } else {
-      return node.emit('adapter-add-rule', rule, event);
+      return node.emit('adapter-add-rule', rule, callback);
     }
   });
 
-  node.on('adapter-add-rule', function (rule, event) {
-    return node.send(rule.name, 'handle-' + rule.handle, rule, new function () {
-      this.done = function (payload) { return event.reply('done', payload); };
-      this.fail = function (error) { return event.reply('fail', error); };
+  node.on('adapter-add-rule', function (rule, callback) {
+    var handler = Yolo.Flux.extend(callback, new function () {
+
       this.request = function (payload) {
         payload.render = rule.render;
         node.send(rule.render._type, 'produce', payload, function (err, output) {
@@ -75,7 +74,10 @@ module.exports = function (node, logger, Bee) {
           });
         });
       };
+
     });
+
+    return this.node.send(rule.name, 'handle-' + rule.handle, rule, handler);
   });
 
   node.on('production-error', function (payload, callback) {
