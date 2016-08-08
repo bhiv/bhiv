@@ -1,9 +1,9 @@
-var Parser = require('./Routing.parser.js');
+import Parser from './Routing.parser.js';
 
-module.exports = function (node, logger, Bee) {
+export default function (node, logger, Bee) {
 
   node.on('load', function (_, callback) {
-    var routes = node.get('routes');
+    var routes = this.node.get('routes');
     return new Bee()
       .Map('routes', null, 'filepath')
       .  pipe(':route-map-add', '${filepath}')
@@ -43,28 +43,30 @@ module.exports = function (node, logger, Bee) {
     if (rule.id == null) rule.id = Yolo.Digest(rule).substr(0, 8);
     var render = rule.render;
     rule.outlet = rule.id;
-    if (node.getChild(rule.name) == null) {
-      return this.node.create(rule._type, rule.name, function (err) {
+    if (this.node.getChild(rule.name) == null) {
+      return this.node.create(rule._type, (err, result) => {
         if (err) return callback(err);
-        return node.emit('adapter-add-rule', rule, callback);
+        this.node.attach(result.leaf, rule.name);
+        return this.node.emit('adapter-add-rule', rule, callback);
       });
     } else {
-      return node.emit('adapter-add-rule', rule, callback);
+      return this.node.emit('adapter-add-rule', rule, callback);
     }
   });
 
   node.on('adapter-add-rule', function (rule, callback) {
+    var node = this.node;
     var handler = Yolo.Flux.extend(callback, new function () {
 
-      this.request = function (payload) {
+      this.request = (payload) => {
         payload.render = rule.render;
-        node.send(rule.render._type, 'produce', payload, function (err, output) {
+        node.send(rule.render._type, 'produce', payload, (err, output) => {
           if (err) {
             payload.error = err;
             return node.emit('production-error', payload);
           }
           payload.output = output;
-          node.send(rule.name, 'response', payload, function (err) {
+          node.send(rule.name, 'response', payload, (err) => {
             if (err) {
               payload.error = err;
               return node.emit('reponse-error', payload);
@@ -88,7 +90,7 @@ module.exports = function (node, logger, Bee) {
     var method = /not found/i.test(error.toString()) ? 'response-notfound' : 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
-    return node.send('Http', method, data, callback);
+    return this.node.send('Http', method, data, callback);
   });
 
   node.on('response-error', function (payload, callback) {
@@ -98,7 +100,7 @@ module.exports = function (node, logger, Bee) {
     var method = 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
-    return node.send('Http', method, data, callback);
+    return this.node.send('Http', method, data, callback);
   });
 
 };
