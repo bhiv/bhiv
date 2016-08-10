@@ -32,7 +32,7 @@ module.exports = function (node, logger) {
     logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
       logger.info('[%s] %s %s', data.outlet, request.method, request.url);
-      var http = { request: request, response: response, config: data };
+      var http = { request, response, config: data };
       var payload = request.payload || {};
       payload.http    = http;
       payload.url     = request.url;
@@ -70,63 +70,63 @@ module.exports = function (node, logger) {
   var executeMiddleware = function (request, response, next) {
     return (function loop(fns) {
       if (fns.length == 0) return next();
-      else return fns.shift()(request, response, function () { loop(fns); });
+      else return fns.shift()(request, response, () => loop(fns));
     })(middlewares.slice());
   };
 
-  node.on('load', function (_, flux) {
+  node.on('load', function (_, callback) {
     var responders = node.get('responders');
     var types = Object.keys(responders || {}) || [];
-    return async.map(types, function (type, callback) {
-      return node.emit('responder-add', { type: type, handler: responders[type] }, callback);
-    }, flux);
+    return async.map(types, (type, callback) => {
+      return this.node.emit('responder-add', { type, handler: responders[type] }, callback);
+    }, callback);
   });
 
-  node.on('responder-add', function (description, flux) {
+  node.on('responder-add', function (description, callback) {
     responders[description.type] = description.handler;
-    return flux();
+    return callback();
   });
 
-  node.on('middleware-add', function (fqn, flux) {
-    middlewares.push(function (request, response, callback) {
-      node.send(fqn, { request: request, response: response }, callback);
+  node.on('middleware-add', function (fqn, callback) {
+    middlewares.push((request, response, callback) => {
+      this.node.send(fqn, { request, response }, callback);
     });
-    return flux();
+    return callback();
   });
 
-  node.on('get-server', function (data, flux) {
-    var ip = Yolo.Util.getIn(data, 'config.ip') || node.get('ip') || '0.0.0.0';
-    var port = Yolo.Util.getIn(data, 'config.port') || node.get('port') || 80;
+  node.on('get-server', function (data, callback) {
+    var ip = Yolo.Util.getIn(data, 'config.ip') || this.node.get('ip') || '0.0.0.0';
+    var port = Yolo.Util.getIn(data, 'config.port') || this.node.get('port') || 80;
     var name = [ip, port].join(':');
     var key = Yolo.Digest(name);
-    var server = node.get('servers.' + key);
+    var server = this.node.get('servers.' + key);
     if (server == null) {
       try { server = createServer(ip, port); }
-      catch (e) { return flux(e); }
-      node.set('servers.' + key, server);
+      catch (e) { return callback(e); }
+      this.node.set('servers.' + key, server);
     }
-    return flux(null, server);
+    return callback(null, server);
   });
 
-  node.on('handle-query', function (data, flux) {
-    return node.emit('get-server', data, function (err, server) {
-      if (err) return flux(err);
+  node.on('handle-query', function (data, callback) {
+    return this.node.emit('get-server', data, (err, server) => {
+      if (err) return callback(err);
       for (var i = 0; i < data.methods.length; i++) {
         var method = data.methods[i].toLowerCase();
         data.method = method;
         var name = server.settings.ip + ':' + server.settings.port;
-        server[method](data.location, createHandler(data, name, flux));
+        server[method](data.location, createHandler(data, name, callback));
       }
-      return flux();
+      return callback();
     });
   });
 
   node.on('handle-middleware', function (data, callback) {
     var exceptions = { request: true, response: true };
-    return this.node.emit('get-server', data, function (err, server) {
+    return this.node.emit('get-server', data, (err, server) => {
       if (err) return callback(err);
-      server.use(function (request, response, next) {
-        var payload = { request: request, response: response };
+      server.use((request, response, next) => {
+        var payload = { request, response };
         if (request.payload == null) request.payload = {};
         return node.send(data.fqn, payload, new function () {
 
@@ -166,7 +166,7 @@ module.exports = function (node, logger) {
       if (err) {
         var message = err.toString();
         logger.error(err);
-        var data = { _response: payload.http.response, message: message };
+        var data = { _response: payload.http.response, message };
         return node.emit('response-error', data, flux);
       } else {
         if (result == null) return flux();
@@ -200,33 +200,33 @@ module.exports = function (node, logger) {
     }
   });
 
-  node.on('response-empty', function (_, flux) {
-    return flux.reply('done', { code: 204, headers: {}, body: new Buffer('') });
+  node.on('response-empty', function (_, callback) {
+    return callback('done', { code: 204, headers: {}, body: new Buffer('') });
   });
 
-  node.on('response-redirect', function (output, flux) {
-    return flux.reply('done', { code: output.code || 303
-                               , headers: { 'Location': output.location }
-                               , body: new Buffer('')
-                               });
+  node.on('response-redirect', function (output, callback) {
+    return callback('done', { code: output.code || 303
+                            , headers: { 'Location': output.location }
+                            , body: new Buffer('')
+                            });
   });
 
-  node.on('response-plain', function (output, flux) {
+  node.on('response-plain', function (output, callback) {
     var code = output.code || 200;
     var headers = {};
     headers['Content-Type'] = 'text/plain; charset=UTF-8';
     var body = new Buffer(output.content);
     headers['Content-Length'] = body.length;
-    return flux.reply('done', { code: code, headers: headers, body: body });
+    return callback('done', { code, headers, body });
   });
 
-  node.on('response-json-response', function (output, flux) {
+  node.on('response-json-response', function (output, callback) {
     var headers = {};
     Yolo.Util.merge(headers, output.headers || {});
     headers['Content-Type'] = 'application/json; charset=UTF-8';
     if (output.error != null) {
       var message = Yolo.Util.wrapError(output.error).message;
-      var result = { status: 'error', code: output.code || 400, message: message };
+      var result = { status: 'error', code: output.code || 400, message };
     } else {
       var result = { status: 'ok', code: output.code || 200, data: output.content || output.success };
     }
@@ -234,79 +234,79 @@ module.exports = function (node, logger) {
     headers['Content-Length'] = body.length;
     var code = parseInt(result.code)
     if (!(code > 0)) code = result.status == 'ok' ? 200 : 400;
-    return flux(null, { code: code, headers: headers, body: body });
+    return callback(null, { code, headers, body });
   });
 
-  node.on('response-html', function (output, flux) {
+  node.on('response-html', function (output, callback) {
     var code = output.code || 200;
     var headers = {};
     var body = output.content;
     Yolo.Util.merge(headers, output.headers || {});
     headers['Content-Type'] = 'text/html; charset=UTF-8';
     headers['Content-Length'] = body.length;
-    return flux.reply(null, { code: code, headers: headers, body: body });
+    return callback(null, { code, headers, body });
   });
 
-  node.on('response-json', function (output, flux) {
+  node.on('response-json', function (output, callback) {
     var code = output.code || 200;
     var headers = {};
     Yolo.Util.merge(headers, output.headers || {});
     headers['Content-Type'] = 'application/json; charset=UTF-8';
     var body = new Buffer(JSON.stringify(output.content));
     headers['Content-Length'] = body.length;
-    return flux.reply(null, { code: code, headers: headers, body: body });
+    return callback(null, { code, headers, body });
   });
 
-  node.on('response-css', function (output, flux) {
+  node.on('response-css', function (output, callback) {
     var code = output.code || 200;
     var headers = {};
     Yolo.Util.merge(headers, output.headers || {});
     headers['Content-Type'] = 'text/css';
     var body = new Buffer(output.content);
     headers['Content-Length'] = body.length;
-    return flux(null, { code: code, headers: headers, body: body });
+    return callback(null, { code, headers, body });
   });
 
-  node.on('response-javascript', function (output, flux) {
+  node.on('response-javascript', function (output, callback) {
     var code = output.code || 200;
     var headers = {};
     Yolo.Util.merge(headers, output.headers || {});
     headers['Content-Type'] = 'application/javascript; charset=utf-8';
     var body = new Buffer(output.content);
     headers['Content-Length'] = body.length;
-    return flux.reply('done', { code: code, headers: headers, body: body });
+    return callback('done', { code, headers, body });
   });
 
   node.on('response-file', function (output, flux) {
     var code = output.code || 200;
     var body = fs.createReadStream(output.filepath);
-    body.on('error', function (err) {
-      return node.emit('response-notfound', output, flux);
+    body.on('error', (err) => {
+      return this.node.emit('response-notfound', output, flux);
     });
-    body.on('start', function () {
+    body.on('start', () => {
       var contentType = mime.lookup(output.filepath);
       var headers = { 'Content-Type': contentType }
       output._response.writeHead(code, headers);
     });
-    body.on('data', function (chunk) {
+    body.on('data', (chunk) => {
       output._response.write(chunk);
     });
-    body.on('end', function () {
+    body.on('end', () => {
       output._response.end();
-      return flux.reply('end', null);
+      return flux.emit('success', null);
     });
   });
 
   node.on('response-notfound', function (output, flux) {
     output._response.writeHead(404);
     output._response.end(output.message || 'Content Not Found');
-    return flux.reply('end', null);
+    return flux.emit('success', null);
   });
 
   node.on('response-error', function (output, flux) {
     output._response.writeHead(500);
     output._response.end(output.message || 'Internal Error');
-    return flux.reply('end', null);
+    return flux.emit('success', null);
   });
 
 };

@@ -5,13 +5,13 @@ import { default as Bhiv } from 'bhiv';
 export default function (node, logger, Bee) {
 
   node.on('load', function ({}, callback) {
-    const templates = node.get('templates');
+    const templates = this.node.get('templates');
     if (templates != null) {
       for (const method in templates) {
         const template = templates[method];
-        if (template.base_url == null) template.base_url = node.get('base_url');
-        if (template.fullresponse == null) template.fullresponse = node.get('fullresponse');
-        this.node.on(method, ((template) => (payload, callback) => {
+        if (template.base_url == null) template.base_url = this.node.get('base_url');
+        if (template.fullresponse == null) template.fullresponse = this.node.get('fullresponse');
+        node.on(method, ((template) => (payload, callback) => {
           this.node.emit('request-template', { template, payload }, callback);
         })(template));
       }
@@ -27,7 +27,7 @@ export default function (node, logger, Bee) {
       return encodeURIComponent(value);
     });
     request.data = Bhiv.extract(request.data, payload);
-    return node.emit('request', request, callback);
+    return this.node.emit('request', request, callback);
   });
 
   node.on('request', function (request, callback) {

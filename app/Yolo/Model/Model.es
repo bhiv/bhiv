@@ -39,17 +39,17 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('list', function ({ model, filters, access }, callback) {
+  node.on('list', function ({ model, filters, access }, flux) {
     const query = { model, filters, access };
     if (this.node.get('proxy') != null) {
       return this.node.emit('proxy', { method: 'list', model, query }, (err, response) => {
-        if (err) return callback(err);
-        else return callback('return', response);
+        if (err) return flux(err);
+        else return flux.emit('success', response);
       });
     } else {
       return this.node.emit('require-model', model, (err, model) => {
-        if (err) return callback(err);
-        return model.emit('list', { access, filters }, callback);
+        if (err) return flux(err);
+        return model.emit('list', { access, filters }, flux);
       });
     }
   });
