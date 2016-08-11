@@ -43,12 +43,11 @@ module.exports = function (node, logger) {
       payload.session = request.session;
       payload.body    = null;
       payload.files   = null;
+      payload.output  = {};
       var contentType = (request.headers['content-type'] || '').split(';')[0] || 'none';
       switch (contentType) {
       default :
-        payload.message = 'Unknown / Unhandled content type:' + contentType;
-        debugger;
-        return flux.emit('route-fail', payload);
+        return node.emit('response', payload);
       case 'none':
         return flux.emit('request', payload);
       case 'application/x-www-form-urlencoded':
@@ -201,11 +200,11 @@ module.exports = function (node, logger) {
   });
 
   node.on('response-empty', function (_, callback) {
-    return callback('done', { code: 204, headers: {}, body: new Buffer('') });
+    return callback(null, { code: 204, headers: {}, body: new Buffer('') });
   });
 
   node.on('response-redirect', function (output, callback) {
-    return callback('done', { code: output.code || 303
+    return callback(null, { code: output.code || 303
                             , headers: { 'Location': output.location }
                             , body: new Buffer('')
                             });
@@ -217,7 +216,7 @@ module.exports = function (node, logger) {
     headers['Content-Type'] = 'text/plain; charset=UTF-8';
     var body = new Buffer(output.content);
     headers['Content-Length'] = body.length;
-    return callback('done', { code, headers, body });
+    return callback(null, { code, headers, body });
   });
 
   node.on('response-json-response', function (output, callback) {
@@ -274,7 +273,7 @@ module.exports = function (node, logger) {
     headers['Content-Type'] = 'application/javascript; charset=utf-8';
     var body = new Buffer(output.content);
     headers['Content-Length'] = body.length;
-    return callback('done', { code, headers, body });
+    return callback(null, { code, headers, body });
   });
 
   node.on('response-file', function (output, flux) {
