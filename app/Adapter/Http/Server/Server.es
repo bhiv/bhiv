@@ -43,11 +43,10 @@ module.exports = function (node, logger) {
       payload.session = request.session;
       payload.body    = null;
       payload.files   = null;
-      payload.output  = {};
       var contentType = (request.headers['content-type'] || '').split(';')[0] || 'none';
       switch (contentType) {
       default :
-        return node.emit('response', payload);
+        return flux.emit('request', payload);
       case 'none':
         return flux.emit('request', payload);
       case 'application/x-www-form-urlencoded':
