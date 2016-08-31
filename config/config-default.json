@@ -1,6 +1,4 @@
-{ "Instances":
-  { "App.Routing": { "engine": "Yolo.Routing" }
-  }
+{ "Instances": {}
 
 , "Config":
   { "Service.Http.Session": { "lifetime": 86400 }

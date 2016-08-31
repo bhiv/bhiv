@@ -2,7 +2,7 @@ import Parser from './Routing.parser.js';
 
 export default function (node, logger, Bee) {
 
-  node.on('load', function (_, callback) {
+  node.on('init', function (_, callback) {
     var routes = this.node.get('routes');
     return new Bee()
       .Map('routes', null, 'filepath')
@@ -24,7 +24,7 @@ export default function (node, logger, Bee) {
 
   node.on('parse', function (content, callback) {
     try { var rules = Parser.parse(content); }
-    catch (e) { return callback(Yolo.Util.wrapError(e, content)); }
+    catch (e) { debugger; return callback(Yolo.Util.wrapError(e, content)); }
     return callback(null, rules);
   });
 
@@ -60,7 +60,7 @@ export default function (node, logger, Bee) {
 
       this.request = (payload) => {
         payload.render = rule.render;
-        node.send(rule.render._type, 'produce', payload, (err, output) => {
+        return node.getChild(rule.name).send(rule.render.path, payload, (err, output) => {
           if (err) {
             payload.error = err;
             return node.emit('production-error', payload);

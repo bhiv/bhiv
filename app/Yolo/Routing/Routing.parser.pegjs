@@ -67,13 +67,9 @@ Http_Header_Field = [A-Z0-9a-z\-]+ { return text(); }
 StringComparator = '=' { return 'equal'; }
                  / '~' { return 'regexp'; }
 
-Render = Render_File / Render_Fqn
+Render = Render_Fqn
 
-Render_File = (& '/') p:File_Path {
-  return { _type: 'Render.File', path: p }
-}
-
-Render_Fqn = (& [A-Z]) f:Fqn {
+Render_Fqn = (& [A-Z.]) f:Fqn {
   return { _type: 'Render.Fqn', path: f };
 }
 
@@ -83,9 +79,10 @@ Modules = h:Module t:(ws ',' ws Module)* {
   return mods;
 }
 
-Module = h:AssetName t:(ws '.' ws AssetName)* {
+Module = d:'.'? h:AssetName t:('.' AssetName)* {
   var fqn = [h];
-  for (var i = 0; i < t.length; i++) fqn.push(t[i][3]);
+  for (var i = 0; i < t.length; i++) fqn.push(t[i][1]);
+  if (d != null) fqn.unshift('');
   return fqn.join('.');
 }
 
@@ -105,10 +102,13 @@ Http_Path = '/' Http_Path_Format? { return text(); }
 
 Http_Path_Format = Http_Path_Defined Http_Path_Format*
                  / Http_Path_Variable Http_Path_Format*
+                 / Http_Path_Wildcard
 
 Http_Path_Defined = [a-zA-Z0-9.\-/_]+
 
 Http_Path_Variable = ':' [a-zA-Z] [a-zA-Z0-9]* [*+?]?
+
+Http_Path_Wildcard = '*'
 
 Http_Methods = h:Http_Method t:(ws ',' ws Http_Method)* {
   var unicity = {};
@@ -118,7 +118,7 @@ Http_Methods = h:Http_Method t:(ws ',' ws Http_Method)* {
    return Object.keys(unicity);
 }
 
-Http_Method = 'GET' / 'POST' / 'PUT' / 'HEAD' / 'PATCH' / 'DELETE'
+Http_Method = 'GET' / 'POST' / 'PUT' / 'HEAD' / 'PATCH' / 'DELETE' / 'OPTIONS'
 
 Pattern = ('\\ ' / (!' ' .))+ { return text() }
 

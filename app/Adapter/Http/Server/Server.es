@@ -66,6 +66,7 @@ module.exports = function (node, logger) {
   };
 
   var executeMiddleware = function (request, response, next) {
+    response.setHeader('X-Powered-By', 'YoloJS');
     return (function loop(fns) {
       if (fns.length == 0) return next();
       else return fns.shift()(request, response, () => loop(fns));
@@ -93,7 +94,11 @@ module.exports = function (node, logger) {
   });
 
   node.on('get-server', function (data, callback) {
-    var ip = Yolo.Util.getIn(data, 'config.ip') || this.node.get('ip') || '0.0.0.0';
+    var ip = Yolo.Util.getIn(data, 'config.ip')
+      || Yolo.Util.getIn(data, 'config.listen')
+      || this.node.get('ip')
+      || this.node.get('listen')
+      || '0.0.0.0';
     var port = Yolo.Util.getIn(data, 'config.port') || this.node.get('port') || 80;
     var name = [ip, port].join(':');
     var key = Yolo.Digest(name);
@@ -106,6 +111,45 @@ module.exports = function (node, logger) {
     return callback(null, server);
   });
 
+  node.on('handle-middleware', function (data, callback) {
+    var exceptions = { request: true, response: true };
+    return this.node.emit('get-server', data, (err, server) => {
+      if (err) return callback(err);
+      server.use((request, response, next) => {
+        var payload = { request, response };
+        if (request.payload == null) request.payload = {};
+        return this.node.send(data.fqn, payload, new function () {
+
+          this.success = function () {
+            /* Nothing to do */
+          };
+
+          this.done = function (result) {
+            for (var key in result) {
+              if (key in exceptions)
+                continue ;
+              else if (request.payload[key] == null)
+                request.payload[key] = result[key];
+              else
+                Yolo.Util.merge(request.payload[key], result[key]);
+            }
+            return next();
+          };
+
+          this.fail = function (error) {
+            debugger;
+            response.end('failed');
+            /* TODO: may be responde something */
+            return logger.error(error);
+          };
+
+        });
+      });
+
+      return callback();
+    });
+  });
+
   node.on('handle-query', function (data, callback) {
     return this.node.emit('get-server', data, (err, server) => {
       if (err) return callback(err);
@@ -115,46 +159,6 @@ module.exports = function (node, logger) {
         var name = server.settings.ip + ':' + server.settings.port;
         server[method](data.location, createHandler(data, name, callback));
       }
-      return callback();
-    });
-  });
-
-  node.on('handle-middleware', function (data, callback) {
-    var exceptions = { request: true, response: true };
-    return this.node.emit('get-server', data, (err, server) => {
-      if (err) return callback(err);
-      server.use((request, response, next) => {
-        var payload = { request, response };
-        if (request.payload == null) request.payload = {};
-        return node.send(data.fqn, payload, new function () {
-
-          this.success = function () {
-            /* Nothing to do */
-          };
-
-          this.done = function (payload) {
-            debugger;
-            for (var key in payload) {
-              if (!(key in request.payload)) {
-                request.payload[key] = payload[key];
-              } else if (!(key in exceptions)) {
-                Yolo.Util.merge(request.payload[key], payload[key]);
-              } else {
-                continue ;
-              }
-            }
-            return next();
-          };
-
-          this.fail = function (error) {
-            response.end('failed');
-            /* TODO: may be responde something */
-            return logger.error(error);
-          };
-
-        });
-      });
-
       return callback();
     });
   });
@@ -179,7 +183,7 @@ module.exports = function (node, logger) {
       } else {
         var handler;
         switch (payload.output.type) {
-        case undefined: case null: handler = 'response-empty'; break ;
+        case 'empty': case undefined: case null: handler = 'response-empty'; break ;
         case 'json': handler = 'response-json'; break ;
         case 'json-response': handler = 'response-json-response'; break ;
         case 'html': handler = 'response-html'; break ;
@@ -198,15 +202,19 @@ module.exports = function (node, logger) {
     }
   });
 
-  node.on('response-empty', function (_, callback) {
-    return callback(null, { code: 204, headers: {}, body: new Buffer('') });
+  node.on('response-empty', function (output, callback) {
+    return callback(null, { code: 204
+                          , headers: output.headers || {}
+                          , body: new Buffer('')
+                          }
+                   );
   });
 
   node.on('response-redirect', function (output, callback) {
     return callback(null, { code: output.code || 303
-                            , headers: { 'Location': output.location }
-                            , body: new Buffer('')
-                            });
+                          , headers: { 'Location': output.location }
+                          , body: new Buffer('')
+                          });
   });
 
   node.on('response-plain', function (output, callback) {
