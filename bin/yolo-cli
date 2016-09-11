@@ -39,12 +39,22 @@ yolo_init () {
     if [ ! -d package.json ]; then npm init -y; fi
 
     index="index.js"
+    ignore=".gitignore"
 
     yolo_link
 
     if [ ! -e "$index" ]
     then
         echo "require('yolojs');" > "$index"
+    fi
+
+    if [ ! -e "$ignore" ]
+    then
+        echo -n > "$ignore"
+        echo '*~' >> "$ignore"
+        echo '.#*#' >> "$ignore"
+        echo '#*#' >> "$ignore"
+        echo 'node_modules' >> "$ignore"
     fi
 
     mkdir -p app config test
@@ -55,7 +65,7 @@ yolo_create () {
     port="$2"
     Name=$(capitalize "$name")
 
-    if [ -d app -o -d config -o -d static ]; then errcho "Not empty project"; exit 1; fi
+    if [ -d app -o -d config ]; then errcho "Not empty project"; exit 1; fi
     if [ -z "$port" ]; then port=7000; fi
     if [ -z "$name" ]; then yolo_synopsis $@; fi
 
@@ -116,6 +126,16 @@ yolo_link () {
 
 ################################################################
 
+yolo_run () {
+    node index.js
+}
+
+yolo_test () {
+    node index.js --test $@
+}
+
+################################################################
+
 yolo_start () {
     echo
 }
@@ -131,7 +151,7 @@ yolo_restart () {
 ################################################################
 
 yolo_synopsis () {
-    
+
     if [ "$0" = "help" ]; then exit 0;
     else exit 1; fi
 }

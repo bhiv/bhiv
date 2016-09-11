@@ -1,23 +1,29 @@
 { "Instances": {}
 
-, "Config":
+, "Data":
   { "Service.Http.Session": { "lifetime": 86400 }
+
   , "App.Routing.Http":
     { "port": 7000, "Formidable": {}
     , "responders": { "webpage": "Yolo.Ui.Builder:http-response" }
     }
-  , "Language.Jade": { "debug": false, "globals": ["toplevel", "Yolo"] }
-  , "Yolo.Ui.Runtime": { "cache": 60 }
-  }
 
-, "Logs":
-  { "debug": "none"
-  , "info": "none"
-  , "notice": "syslog"
-  , "warning": "syslog"
-  , "error": "syslog"
-  , "critical": "syslog"
-  , "emergency": "syslog"
+  , "Language.Jade": { "debug": false, "globals": ["toplevel", "Yolo"] }
+
+  , "Yolo.Ui.Runtime": { "cache": 60 }
+
+  , "Cluster": {}
+
+  , "Logs":
+    { "debug": "none"
+    , "info": "none"
+    , "notice": "syslog"
+    , "warning": "syslog"
+    , "error": "syslog"
+    , "critical": "syslog"
+    , "emergency": "syslog"
+    }
+
   }
 
 }
