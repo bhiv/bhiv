@@ -51,6 +51,7 @@
     "node-mocks-http": "^1.5.2",
     "node-wrapper": "^0.0.31",
     "pegjs": "^0.9.0",
+    "pegjs-require": "^1.0.0",
     "pug": "^2.0.0-beta3",
     "qs": "^2.4.1",
     "redis": "^0.12.1",
