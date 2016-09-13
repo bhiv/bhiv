@@ -1,4 +1,4 @@
-import Parser from './Routing.parser.js';
+import Parser from './Routing.parser.pegjs';
 
 export default function (node, logger, Bee) {
 
