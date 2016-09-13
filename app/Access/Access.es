@@ -1,4 +1,3 @@
-import Url from 'url';
 import detectSeries from 'async/detectSeries';
 import KeyRing from './parser.keyring.pegjs';
 import KeyHole from './parser.keyhole.pegjs'
