@@ -31,7 +31,7 @@ module.exports = function (node, logger) {
   var createHandler = function (data, source, flux) {
     logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
-      logger.info('[%s] %s %s', data.outlet, request.method, request.url);
+      logger.log('[%s] %s %s', data.outlet, request.method, request.url);
       var http = { request, response, config: data };
       var payload = request.payload || {};
       payload.http    = http;
