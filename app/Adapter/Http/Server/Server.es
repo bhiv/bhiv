@@ -31,7 +31,7 @@ module.exports = function (node, logger) {
   var createHandler = function (data, source, flux) {
     logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
-      logger.log('[%s] %s %s', data.outlet, request.method, request.url);
+      //logger.log('[%s] %s %s', data.outlet, request.method, request.url);
       var http = { request, response, config: data };
       var payload = request.payload || {};
       payload.http    = http;
@@ -66,6 +66,7 @@ module.exports = function (node, logger) {
   };
 
   var executeMiddleware = function (request, response, next) {
+    logger.log('%s %s', request.method, request.url);
     response.setHeader('X-Powered-By', 'YoloJS');
     return (function loop(fns) {
       if (fns.length == 0) return next();
