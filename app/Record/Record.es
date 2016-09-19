@@ -1,7 +1,8 @@
 export default function (node, logger, Bee) {
 
-  node.on('list', 'out', function (data, callback) {
-    console.log(data);
+  node.kind('Record');
+
+  node.on('fetch', function (data, callback) {
     return callback(null, data);
   });
 
