@@ -1,7 +1,7 @@
-var fs     = require("fs");
-var mysql  = require('node-wrapper/mysql');
+import fs from 'fs';
+import mysql from 'node-wrapper/mysql';
 
-module.exports = function (node, logger, Bee) {
+export default function (node, logger, Bee) {
 
   node.on('init', function (_, callback) {
     const name = this.node.layout;
@@ -19,7 +19,7 @@ module.exports = function (node, logger, Bee) {
 
   node.on('retrieveQuery', function (flow, callback) {
     if (flow.filename) return this.node.send(':getFile', flow.filename, callback);
-    else if (flow.query != undefined) return callback(null, flow.query);
+    else if (flow.query != null) return callback(null, flow.query);
     else return callback("No query");
   });
 
@@ -31,7 +31,7 @@ module.exports = function (node, logger, Bee) {
 
   node.on('prepareQuery', function (query, callback) {
     var scope = { db: this.node.get('dbs') };
-    var prepared = query.replace(/\$\{([^\}]+)\}/g, function (_, key) {
+    var prepared = query.replace(/\$\{([^\}]+)\}/g, (_, key) => {
       return Yolo.Util.getIn(scope, key);
     });
     return callback(null, prepared);
