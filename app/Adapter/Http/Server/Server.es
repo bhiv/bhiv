@@ -2,13 +2,13 @@ var express      = require('express');
 var bodyParser   = require('body-parser');
 var formidable   = require('formidable');
 var cookieParser = require('cookie-parser');
-var mime         = require('mime');
-var fs           = require('fs');
-var url          = require('url');
-var async        = require('async');
+import mime from 'mime';
+import fs from 'fs';
+import url from 'url';
+import async from 'async';
+import S from 'underscore.string';
 
 module.exports = function (node, logger) {
-  var middlewares = [];
   var responders = {};
 
   var createServer = function (ip, port) {
@@ -31,10 +31,12 @@ module.exports = function (node, logger) {
   var createHandler = function (data, source, flux) {
     logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
-      //logger.log('[%s] %s %s', data.outlet, request.method, request.url);
-      var http = { request, response, config: data };
-      var payload = request.payload || {};
+      logger.log('[%s] %s %s', data.outlet, request.method, request.url);
+      const onode = node.self();
+      const http = { request, response, config: data };
+      const payload = request.payload || {};
       payload.http    = http;
+      payload.scope   = generateScope(onode.cwd(), data.location, data.method);
       payload.url     = request.url;
       payload.headers = request.headers;
       payload.params  = request.params;
@@ -46,32 +48,74 @@ module.exports = function (node, logger) {
       var contentType = (request.headers['content-type'] || '').split(';')[0] || 'none';
       switch (contentType) {
       default :
-        return flux.emit('request', payload);
+        return triggerRequest(onode, payload, flux);
       case 'none':
-        return flux.emit('request', payload);
+        return triggerRequest(onode, payload, flux);
       case 'application/x-www-form-urlencoded':
       case 'application/json':
         payload.body = request.body;
-        return flux.emit('request', payload);
+        return triggerRequest(onode, payload, flux);
       case 'multipart/form-data':
         var opts = node.get('Formidable') || {};
         var form = new formidable.IncomingForm(opts);
         return form.parse(request, function (err, fields, files) {
           payload.body  = fields;
           payload.files = files;
-          return flux.emit('request', payload);
+          return triggerRequest(onode, payload, flux);
         });
       }
     };
   };
 
+  var triggerRequest = function (node, payload, flux) {
+    return (function loop(middlewares, payload, flux) {
+      if (middlewares.length == 0) return flux.emit('request', payload);
+      const fqn = middlewares.shift();
+      return node.send(fqn, payload, new function () {
+        this.done = function (payload) {
+          return loop(middlewares, payload, flux);
+        };
+        this.fail = function (error) {
+          payload.response.end('failed');
+          return logger.error(error);
+        };
+      });
+    })(payload.http.request.middlewares.slice(), payload, flux);
+  };
+
+  var generateScope = function (fqn, location, method) {
+    const scopes = [];
+    const parts = location.substr(1).split('/').map(function (s) {
+      switch (s.charAt(0)) {
+      case ':': return '{' + s.substr(1) + '}';
+      default: return S.classify(s);
+      }
+    });
+    const frags = []
+    for (let i = 0; i < parts.length; i++) {
+      const left = parts[i - 1];
+      const right = parts[i];
+      if (left == null) {
+        frags.push(right);
+      } else if (right.charAt(0) == '{') {
+        frags.push('(', right);
+      } else if (left.charAt(0) == '{') {
+        if (right.charAt(0) == '{') {
+          frags.push(',', right);
+        } else {
+          frags.push(').', right);
+        }
+      } else {
+        frags.push('.', right);
+      }
+    }
+    const path = frags.join('');
+    return fqn + '.Path(' + path + '):' + method.toLowerCase();
+  }
+
   var executeMiddleware = function (request, response, next) {
-    logger.log('%s %s', request.method, request.url);
     response.setHeader('X-Powered-By', 'YoloJS');
-    return (function loop(fns) {
-      if (fns.length == 0) return next();
-      else return fns.shift()(request, response, () => loop(fns));
-    })(middlewares.slice());
+    return next();
   };
 
   node.on('load', function (_, callback) {
@@ -84,13 +128,6 @@ module.exports = function (node, logger) {
 
   node.on('responder-add', function (description, callback) {
     responders[description.type] = description.handler;
-    return callback();
-  });
-
-  node.on('middleware-add', function (fqn, callback) {
-    middlewares.push((request, response, callback) => {
-      this.node.send(fqn, { request, response }, callback);
-    });
     return callback();
   });
 
@@ -117,36 +154,10 @@ module.exports = function (node, logger) {
     return this.node.emit('get-server', data, (err, server) => {
       if (err) return callback(err);
       server.use((request, response, next) => {
-        var payload = { request, response };
-        if (request.payload == null) request.payload = {};
-        return this.node.send(data.fqn, payload, new function () {
-
-          this.success = function () {
-            /* Nothing to do */
-          };
-
-          this.done = function (result) {
-            for (var key in result) {
-              if (key in exceptions)
-                continue ;
-              else if (request.payload[key] == null)
-                request.payload[key] = result[key];
-              else
-                Yolo.Util.merge(request.payload[key], result[key]);
-            }
-            return next();
-          };
-
-          this.fail = function (error) {
-            debugger;
-            response.end('failed');
-            /* TODO: may be responde something */
-            return logger.error(error);
-          };
-
-        });
+        if (request.middlewares == null) request.middlewares = [];
+        request.middlewares.push(data.fqn);
+        return next();
       });
-
       return callback();
     });
   });
