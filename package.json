@@ -4,7 +4,8 @@
   "description": "A framework for RIA website",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha --reporter spec",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -42,5 +43,8 @@
     "node-wrapper": "^0.0.31",
     "pegjs": "^0.9.0",
     "pegjs-require": "^1.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^3.0.2"
   }
 }
