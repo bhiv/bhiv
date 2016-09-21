@@ -13,11 +13,12 @@ export default function (node, logger) {
         field.node = cache.get(field.fqn);
         return cb();
       } else {
-        debugger;
+        if (cache.queue(field.fqn, node => { field.node = node }) > 1)
+          return cb();
         return this.node.create(field.fqn, (err, node) => {
           if (err) return cb(err);
           cache.set(field.fqn, node);
-          debugger;
+          return cb();
         });
       }
     }, (err) => {
