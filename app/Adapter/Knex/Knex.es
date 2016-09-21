@@ -14,7 +14,11 @@ export default function (node, logger, Bee) {
 
   node.on('create-link', function (name, callback) {
     const config = this.node.get(name);
-    const link = knex(config);
+    const link = knex(config).on('query-error', (err, obj) => {
+      const slot = '[' + name + ']';
+      logger.error(slot, obj.sql);
+      logger.error(slot, JSON.stringify(obj.bindings));
+    });
     node.set('links.' + name, link);
     return callback(null, link);
   });

@@ -1,4 +1,4 @@
-export default function (node, logger, Bee) {
+export default function (node, logger) {
 
   node.on('load', function (_, callback) {
     const config = { fqn: this.node.get('mysql.fqn')
