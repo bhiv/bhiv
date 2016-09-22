@@ -1,9 +1,0 @@
-Widget.Element {
-
-  > Jade html:
-    if data.image != null
-      img(id=id,class=tags.join(' '),src=data.image)
-    else
-      span(id=id,class=tags.join(' ')) No picture
-
-}

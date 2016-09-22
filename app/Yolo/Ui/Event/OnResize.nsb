@@ -1,7 +1,0 @@
-Yolo.Ui.Dom {
-
-  - Jade html:
-    div(id=id,class=tags)
-      != produce("content")
-
-}
