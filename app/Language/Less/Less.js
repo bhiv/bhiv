@@ -39,7 +39,7 @@ module.exports = function (node, logger, Bee) {
   });
 
   node.on('http-serve', new Bee()
-          .then('Yolo.Util.Retriever:request', 'static/${params.filepath}.less', { content: '${.}' })
+          .then('Util.Retriever:request', 'static/${params.filepath}.less', { content: '${.}' })
           .pipe(':parse', '${content}', { type: 'css', content: '${template}' })
           .end()
          );

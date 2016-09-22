@@ -1,4 +1,4 @@
-import Parser from './Routing.parser.pegjs';
+import Parser from './Router.parser.pegjs';
 
 export default function (node, logger, Bee) {
 
@@ -13,7 +13,7 @@ export default function (node, logger, Bee) {
 
   node.on('route-map-add', new Bee()
           .extract({ filepath: '${.}' })
-          .then('Yolo.Util.Retriever:request', '${filepath}', { raw: '${.}' })
+          .then('Util.Retriever:request', '${filepath}', { raw: '${.}' })
           .then(':parse', '${raw}', { rules: '${.}' })
           .pipe(':config-attach')
           .Map('rules', null, 'rule')

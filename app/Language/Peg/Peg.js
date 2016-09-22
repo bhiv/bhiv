@@ -18,7 +18,7 @@ module.exports = function (node) {
       return callback(null, parser.parse(request.value));
     });
     if (count > 1) return ;
-    return node.send('Yolo.Util.Retriever:request', request.file, function (err, content) {
+    return node.send('Util.Retriever:request', request.file, function (err, content) {
       if (err) {
         cache.remove(request.file);
         return callback(err);

@@ -70,6 +70,8 @@ module.exports = new function () {
             if (err) return callback(err);
             if (result instanceof Yolo.Node) {
               var flow = { instance: result, params: payload.params };
+              // FIXME
+              logger.warn('Need a fix here');
               return node.send('Yolo.Ui.Builder:execute', flow, callback);
             } else {
               return callback(null, { html: result });
@@ -78,6 +80,8 @@ module.exports = new function () {
         } else {
           var override = JSON.parse(match[3]);
           var flow = { fqn: match[2], params: payload.params, override: override };
+          // FIXME
+          logger.warn('Need a fix here');
           return node.send('Yolo.Ui.Builder:compute', flow, callback);
         }
       })(result, payload, controller);

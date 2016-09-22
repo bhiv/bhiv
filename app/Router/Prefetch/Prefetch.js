@@ -20,17 +20,24 @@ module.exports = function (node, logger, Bee) {
     if (response._headerNames == null) response._headerNames = {};
     if (response._removedHeader == null) response._removedHeader = {};
     //
+    logger.warn('Need a fix here');
     return node.send('Routing.Http:get-server', data, function (err, server) {
       server.handle(request, response);
       return event.reply();
     });
   });
 
+  node.on('handle-fetch-view', function (_, callback) {
+    logger.warn('Need a fix here');
+    return callback();
+  });
+  /*
   node.on('handle-fetch-view', new Bee()
           .Map('views', null, 'view')
           .  pipe('Yolo.NSB:get', '${view}')
           .close()
           .end()
          );
+  */
 
 };

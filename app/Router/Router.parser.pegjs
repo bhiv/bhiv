@@ -46,7 +46,7 @@ Engine_Http = 'Http' ws m:Http_Methods ws l:Http_Path ws r:Render {
 
 Engine_PrefetchHttp = 'Prefetch.Http' ws p:Http_Path {
   var result        = {};
-  result._type      = 'Yolo.Routing.Prefetch';
+  result._type      = 'Router.Prefetch';
   result.name       = 'Prefetch';
   result.handle     = 'fetch-http';
   result.path       = p;
@@ -55,7 +55,7 @@ Engine_PrefetchHttp = 'Prefetch.Http' ws p:Http_Path {
 
 Engine_PrefetchView = 'Prefetch.View' ws m:Modules {
   var result        = {};
-  result._type      = 'Yolo.Routing.Prefetch';
+  result._type      = 'Router.Prefetch';
   result.name       = 'Prefetch';
   result.handle     = 'fetch-view';
   result.views      = m;

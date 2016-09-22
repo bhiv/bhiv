@@ -24,7 +24,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('getFile', new Bee()
-    .then('Yolo.Util.Retriever:url', '${.}', { raw: '${.}' })
+    .then('Util.Retriever:url', '${.}', { raw: '${.}' })
     .then(function (raw) { return raw.replace(/\n/g, ' '); }, '${raw}')
     .end()
   );
