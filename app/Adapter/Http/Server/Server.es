@@ -122,7 +122,7 @@ module.exports = function (node, logger) {
     var responders = node.get('responders');
     var types = Object.keys(responders || {}) || [];
     return async.map(types, (type, callback) => {
-      return this.node.emit('responder-add', { type, handler: responders[type] }, callback);
+      return this.node.send(':responder-add', { type, handler: responders[type] }, callback);
     }, callback);
   });
 
@@ -151,7 +151,7 @@ module.exports = function (node, logger) {
 
   node.on('handle-middleware', function (data, callback) {
     var exceptions = { request: true, response: true };
-    return this.node.emit('get-server', data, (err, server) => {
+    return this.node.send(':get-server', data, (err, server) => {
       if (err) return callback(err);
       server.use((request, response, next) => {
         if (request.middlewares == null) request.middlewares = [];
@@ -163,7 +163,7 @@ module.exports = function (node, logger) {
   });
 
   node.on('handle-query', function (data, callback) {
-    return this.node.emit('get-server', data, (err, server) => {
+    return this.node.send(':get-server', data, (err, server) => {
       if (err) return callback(err);
       for (var i = 0; i < data.methods.length; i++) {
         var method = data.methods[i].toLowerCase();
@@ -181,7 +181,7 @@ module.exports = function (node, logger) {
         var message = err.toString();
         logger.error(err);
         var data = { _response: payload.http.response, message };
-        return node.emit('response-error', data, flux);
+        return node.send(':response-error', data, flux);
       } else {
         if (result == null) return flux();
         payload.http.response.writeHead(result.code, result.headers);
@@ -195,22 +195,22 @@ module.exports = function (node, logger) {
       } else {
         var handler;
         switch (payload.output.type) {
-        case 'empty': case undefined: case null: handler = 'response-empty'; break ;
-        case 'json': handler = 'response-json'; break ;
-        case 'json-response': handler = 'response-json-response'; break ;
-        case 'html': handler = 'response-html'; break ;
-        case 'css': handler = 'response-css'; break ;
-        case 'js': case 'javascript': handler = 'response-javascript'; break ;
-        case 'plain': case 'txt': case 'text': handler = 'response-plain'; break ;
-        case 'file': handler = 'response-file'; break ;
-        case 'redirect': case 'location': handler = 'response-redirect'; break ;
-        default: handler = 'response-unknown'; break ;
+        case 'empty': case undefined: case null: handler = ':response-empty'; break ;
+        case 'json': handler = ':response-json'; break ;
+        case 'json-response': handler = ':response-json-response'; break ;
+        case 'html': handler = ':response-html'; break ;
+        case 'css': handler = ':response-css'; break ;
+        case 'js': case 'javascript': handler = ':response-javascript'; break ;
+        case 'plain': case 'txt': case 'text': handler = ':response-plain'; break ;
+        case 'file': handler = ':response-file'; break ;
+        case 'redirect': case 'location': handler = ':response-redirect'; break ;
+        default: handler = ':response-unknown'; break ;
         }
         payload.output._response = payload.http.response;
-        return node.emit(handler, payload.output, then);
+        return node.send(handler, payload.output, then);
       }
     } else {
-      return node.emit('response-unknown', payload.output, then);
+      return node.send(':response-unknown', payload.output, then);
     }
   });
 
@@ -299,7 +299,7 @@ module.exports = function (node, logger) {
     var code = output.code || 200;
     var body = fs.createReadStream(output.filepath);
     body.on('error', (err) => {
-      return this.node.emit('response-notfound', output, flux);
+      return this.node.send(':response-notfound', output, flux);
     });
     body.on('start', () => {
       var contentType = mime.lookup(output.filepath);

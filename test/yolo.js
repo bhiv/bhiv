@@ -1,6 +1,12 @@
 var Yolo = require('../lib/Yolo.js');
 var assert = require('assert');
 
+Array.prototype.sum = function () {
+  var res = 0;
+  this.map(function (e) { res += e; });
+  return res;
+};
+
 describe('Yolo', function () {
 
   describe('Fqn', function () {
@@ -42,5 +48,26 @@ describe('Yolo', function () {
     });
 
   })
+
+  describe('Inlet', function () {
+
+    it('should return 42', function (done) {
+      var A = new Yolo.Node('A');
+      var B = new Yolo.Node('B');
+      var C = new Yolo.Node('C');
+      A.setOlder(B);
+      B.setOlder(C);
+      A.on('test1', 'in', function (e, c) { c(null, [2]) });
+      C.on('test1', 'in', function (e, c) { c(null, [4]) });
+      B.on('test1', 'out', function (e, c) { c(null, e.sum()); });
+      A.on('test1', 'out', function (e, c) { });
+      A.send(':test1', [1], function (err, result) {
+        if (err) return done(err);
+        try { asser.equal(result, 42); }
+        catch (e) { return done(e); }
+      });
+    });
+
+  });
 
 });

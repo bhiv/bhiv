@@ -47,29 +47,31 @@ export default function (node, logger, Bee) {
       return this.node.create(rule._type, (err, result) => {
         if (err) return callback(err);
         this.node.attach(result.leaf, rule.name);
-        return this.node.emit('adapter-add-rule', rule, callback);
+        return this.node.send(':adapter-add-rule', rule, callback);
       });
     } else {
-      return this.node.emit('adapter-add-rule', rule, callback);
+      return this.node.send(':adapter-add-rule', rule, callback);
     }
   });
 
   node.on('adapter-add-rule', function (rule, callback) {
-    var node = this.node;
-    var handler = Yolo.Flux.extend(callback, new function () {
+    const node = this.node;
+    const childName = '.' + rule.name;
+    const fqn = [childName, 'handle-' + rule.handle].join(':');
+    return this.node.send(fqn, rule, Yolo.Flux.extend(callback, new function () {
 
       this.request = (payload) => {
         payload.render = rule.render;
         return node.getChild(rule.name).send(rule.render.path, payload, (err, output) => {
           if (err) {
             payload.error = err;
-            return node.emit('production-error', payload);
+            return node.send(':production-error', payload);
           }
           payload.output = output;
-          node.send(rule.name, 'response', payload, (err) => {
+          return node.send(childName + ':response', payload, (err) => {
             if (err) {
               payload.error = err;
-              return node.emit('reponse-error', payload);
+              return node.send(':reponse-error', payload);
             } else {
               return /* page successfully rendered */ ;
             }
@@ -77,9 +79,7 @@ export default function (node, logger, Bee) {
         });
       };
 
-    });
-
-    return this.node.send(rule.name, 'handle-' + rule.handle, rule, handler);
+    }));
   });
 
   node.on('production-error', function (payload, callback) {
