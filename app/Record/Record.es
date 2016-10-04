@@ -12,8 +12,23 @@ export default function (node, logger) {
         field.node = node;
         return cb(null, node);
       });
-    }, (err) => {
+    }, err => {
       return callback(err);
+    });
+  });
+
+  node.on('parse', function (record, callback) {
+    const result = {};
+    return async.map(this.node.field(), (name, callback) => {
+      const field = this.node.field(name);
+      const value = record[name];
+      return field.node.send(':parse', value, (err, value) => {
+        if (err) return callback(err);
+        result[name] = value;
+        return callback();
+      });
+    }, err => {
+      return callback(err, result);
     });
   });
 

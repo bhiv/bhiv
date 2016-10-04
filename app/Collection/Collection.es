@@ -11,9 +11,4 @@ export default function (node, logger) {
     });
   });
 
-  node.on('fetch', function (query, callback) {
-    var type = this.node.type();
-    debugger;
-  });
-
 };

@@ -1,19 +1,18 @@
 export default function (node, logger) {
 
-  const cache = new Yolo.Cache(-1);
+  const loaded = new Yolo.Cache(-1);
 
   node.on('get', function (fqn, callback) {
-    if (cache.has(fqn)) {
-      return callback(null, cache.get(fqn));
+    if (loaded.has(fqn)) {
+      return callback(null, loaded.get(fqn));
     } else {
-      var waiter = cache.waitFor(fqn, callback);
+      var waiter = loaded.waitFor(fqn, callback);
       if (waiter == null) return ;
       return this.node.create(fqn, (err, result) => {
         if (err) return waiter(err);
-        return result.leaf.setParent(this.node).load(result, err => {
-          if (err) return waiter(err);
-          return waiter(null, result.leaf);
-        });
+        result.leaf.setParent(this.node);
+        waiter(null, result.leaf);
+        return result.leaf.emit('-load', result);
       });
     }
   });
