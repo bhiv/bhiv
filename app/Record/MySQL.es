@@ -16,7 +16,7 @@ export default function (node, logger) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
       if (err) return callbnack(err);
       node.set(config.name, link);
-      node.set('table', link.clone().table(config.table));
+      node.set('table', link.table(config.table));
       return callback(null, link);
     });
   });
