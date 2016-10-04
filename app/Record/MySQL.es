@@ -1,11 +1,11 @@
 export default function (node, logger) {
 
-  node.on('load', function (_, callback) {
+  node.on('-load', function (_, callback) {
     const config = { fqn: this.node.get('mysql.fqn')
                    , name: this.node.get('mysql.name')
                    , table: this.node.get('mysql.table')
                    };
-    if (config == null) return callback();
+    if (config.fqn == null) return callback();
     return this.node.send(':prepare-workspace', config, (err) => {
       if (err) return callback();
       return callback();
@@ -16,26 +16,21 @@ export default function (node, logger) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
       if (err) return callbnack(err);
       node.set(config.name, link);
-      node.set('table', link.table(config.table).clone());
-      const fields = this.node.field();
-      for (let i = 0; i < fields.length; i++) {
-        const name = fields[i];
-        const field = this.node.field(name);
-        if (field.fqn.indexOf('Collection.') !== 0) continue ;
-        const table = link.table(config.table + '-' + name).clone();
-        node.set('table-' + name, table);
-        ['fetch', 'save', 'remove'].map(action => {
-          node.on(action + '-' + name, (query, callback) => {
-            return node.send(action + '-x', { table, field, query }, callback);
-          });
-        });
-      }
+      node.set('table', link.clone().table(config.table));
       return callback(null, link);
     });
   });
 
+  node.on('parse', 'in', function (data, callback) {
+    if (typeof data != 'number') return callback(null, data);
+    return this.node.send(':fetch', { filters: { id: data } }, callback);
+  });
+
   node.on('fetch', function (query, callback) {
-    debugger;
+    return this.node.get('table').clone()
+      .select('*')
+      .where(query.filters)
+      .asCallback(callback);
   });
 
   node.on('save', function (query, callback) {
@@ -43,18 +38,6 @@ export default function (node, logger) {
   });
 
   node.on('remove', function (query, callback) {
-    debugger;
-  });
-
-  node.on('fetch-x', function ({ table, field, query }, callback) {
-    debugger;
-  });
-
-  node.on('save-x', function ({ table, field, query }, callback) {
-    debugger;
-  });
-
-  node.on('remove-x', function ({ table, field, query }, callback) {
     debugger;
   });
 
