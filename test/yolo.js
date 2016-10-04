@@ -49,6 +49,22 @@ describe('Yolo', function () {
 
   })
 
+  describe('Node', function () {
+
+    describe('Handlers / Hooks', function () {
+
+    });
+
+    describe('Data', function () {
+
+    });
+
+    describe('Model', function () {
+
+    });
+
+  });
+
   describe('Inlet', function () {
 
     it('should return 42', function (done) {
@@ -60,11 +76,12 @@ describe('Yolo', function () {
       A.on('test1', 'in', function (e, c) { c(null, [2]) });
       C.on('test1', 'in', function (e, c) { c(null, [4]) });
       B.on('test1', 'out', function (e, c) { c(null, e.sum()); });
-      A.on('test1', 'out', function (e, c) { });
+      A.on('test1', 'out', function (e, c) { c(null, e * 6); });
       A.send(':test1', [1], function (err, result) {
         if (err) return done(err);
-        try { asser.equal(result, 42); }
+        try { assert.equal(result, 42); }
         catch (e) { return done(e); }
+        return done();
       });
     });
 
