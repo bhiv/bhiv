@@ -54,7 +54,7 @@ module.exports = function (node, logger) {
 
   /***************************************/
 
-  node.on('load', function (_, callback) {
+  node.on('-start', function (_, callback) {
     var handler = ['Handler', node.get('handler') || 'File'].join('.');
     this.node.create(handler, 'Handler', function (err, result) {
       result.leaf.set('lifetime', node.get('lifetime') || defaultLifetime);

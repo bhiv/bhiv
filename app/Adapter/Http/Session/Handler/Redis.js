@@ -1,6 +1,6 @@
 module.exports = function (node, logger) {
 
-  node.on('load', function (_, event) {
+  node.on('-load', function (_, event) {
     node.create('Adapter.Redis', 'Redis');
     return event.reply();
   });

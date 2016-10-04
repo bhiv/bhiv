@@ -2,7 +2,7 @@ import Parser from './Router.parser.pegjs';
 
 export default function (node, logger, Bee) {
 
-  node.on('init', function (_, callback) {
+  node.on('-start', function (_, callback) {
     var routes = this.node.get('routes');
     return new Bee()
       .Map('routes', null, 'filepath')

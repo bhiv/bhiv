@@ -4,7 +4,7 @@ export default function (node, logger) {
 
   node.kind('Record');
 
-  node.on('load', function (_, callback) {
+  node.on('-load', function (_, callback) {
     return async.map(this.node.field(), (name, cb) => {
       const field = this.node.field(name);
       return this.node.send('Type:get', field.fqn, (err, node) => {

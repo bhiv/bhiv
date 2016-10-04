@@ -118,7 +118,7 @@ module.exports = function (node, logger) {
     return next();
   };
 
-  node.on('load', function (_, callback) {
+  node.on('-load', function (_, callback) {
     var responders = node.get('responders');
     var types = Object.keys(responders || {}) || [];
     return async.map(types, (type, callback) => {
