@@ -21,14 +21,35 @@ export default function (node, logger) {
     });
   });
 
-  node.on('parse', 'in', function (data, callback) {
-    if (typeof data != 'number') return callback(null, data);
-    return this.node.send(':fetch', { filters: { id: data } }, callback);
+  node.on('parse', function (data, flux) {
+    if (typeof data == 'number') {
+      return this.node.send(':fetch', { filters: { id: data } }, (err, data) => {
+        if (err) return flux(err);
+        return this.node.send(':parse', data, flux);
+      });
+    } else if (data && typeof data == 'object') {
+      const result = {};
+      return async.map(this.node.field(), (name, callback) => {
+        const field = this.node.field(name);
+        let value = record[name];
+        if (value == null && field.node.kind() == 'Collection') { value = data.id; debugger; }
+        return field.node.send(':parse', value, (err, value) => {
+          if (err) return callback(err);
+          result[name] = value;
+          return callback();
+        });
+      }, err => {
+        if (err) return flux(err);
+        else return flux.emit('success', result);
+      });
+    } else {
+      return flux(null, data);
+    }
   });
 
   node.on('fetch', function (query, callback) {
     return this.node.get('table').clone()
-      .select('*')
+      .first('*')
       .where(query.filters)
       .asCallback(callback);
   });
