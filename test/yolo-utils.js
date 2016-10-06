@@ -4,11 +4,14 @@ var assert = require('assert');
 describe('Utils', function () {
 
   describe('Merge', function () {
+    var array = [1];
     [ ['a', 42, 42]
     , [{ a: 2 }, { b: 1 }, { a: 2, b: 1 }]
     , [[1,2,3], [4,5,6], [1,2,3,4,5,6]]
     , [1, { a: 42 }, { a: 42 }]
     , [1, [24], [24]]
+    , [[1], [1], [1, 1]]
+    , [array, array, [1]]
     ].map(function (e) {
       const s = JSON.stringify.bind(JSON);
       it('should merge: ' + s(e[0]) + ' with ' + s(e[1]) + ' => ' + s(e[2]), function () {
