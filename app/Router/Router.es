@@ -58,7 +58,10 @@ export default function (node, logger, Bee) {
     const node = this.node;
     const childName = '.' + rule.name;
     const fqn = [childName, 'handle-' + rule.handle].join(':');
-    return this.node.send(fqn, rule, Yolo.Flux.extend(callback, new function () {
+    debugger;
+    return this.node.send(fqn, rule, new function () {
+
+      this.callback = callback;
 
       this.request = (payload) => {
         payload.render = rule.render;
@@ -79,7 +82,7 @@ export default function (node, logger, Bee) {
         });
       };
 
-    }));
+    });
   });
 
   node.on('production-error', function (payload, callback) {

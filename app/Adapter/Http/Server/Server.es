@@ -32,7 +32,7 @@ module.exports = function (node, logger) {
     logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
       logger.log('[%s] %s %s', data.outlet, request.method, request.url);
-      const onode = node.self();
+      const onode = node.newest();
       const http = { request, response, config: data };
       const payload = request.payload || {};
       payload.http    = http;
