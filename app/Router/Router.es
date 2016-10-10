@@ -58,7 +58,6 @@ export default function (node, logger, Bee) {
     const node = this.node;
     const childName = '.' + rule.name;
     const fqn = [childName, 'handle-' + rule.handle].join(':');
-    debugger;
     return this.node.send(fqn, rule, new function () {
 
       this.callback = callback;
