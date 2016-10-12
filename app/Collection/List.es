@@ -13,4 +13,19 @@ export default function (node, logger) {
     }, callback);
   });
 
+  [ 'concat', 'detect', 'each', 'eachOf'
+  , 'every', 'map', 'reject'
+  , 'some', 'sortBy'
+  ].map((method) => {
+    node.on(method, function (payload, callback) {
+      const args = [];
+      const data = payload.data;
+      const fqn = payload.iterator || payload.fqn;
+      const node = this.node.type().node;
+      const iterator = (item, callback) => node.send(fqn, item, callback);
+      args.push(data, iterator, callback);
+      return async[method].apply(async, args);
+    });
+  });
+
 };

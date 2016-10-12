@@ -7,7 +7,7 @@ export default function (node, logger) {
     return this.node.send('Type:get', type.fqn, (err, node) => {
       if (err) return callback(err);
       type.node = node;
-      return callback(null, node);
+      return callback();
     });
   });
 

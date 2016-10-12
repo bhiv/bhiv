@@ -14,6 +14,7 @@ export default function (node, logger, Bee) {
   node.on('when-granted', function ({ scopes, rights }, callback) {
     if (scopes == null) return callback('Scopes is missing');
     if (rights == null) return callback('No right given');
+    logger.debug(scopes, rights);
     return this.node.send(':create-keyring', rights, (err, keyring) => {
       if (err) return callback(err);
       return this.node.send(':open-one-keyhole', { keyholes: scopes, keyring }, (err) => {

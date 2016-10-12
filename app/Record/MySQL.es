@@ -1,3 +1,5 @@
+import async from 'async';
+
 export default function (node, logger) {
 
   node.on('-load', function (_, callback) {
@@ -6,44 +8,44 @@ export default function (node, logger) {
                    , table: this.node.get('mysql.table')
                    };
     if (config.fqn == null) return callback();
-    return this.node.send(':prepare-workspace', config, (err) => {
-      if (err) return callback();
+    return this.node.send(':prepare-workspace', config, err => {
+      if (err) return callback(err);
       return callback();
     });
   });
 
   node.on('prepare-workspace', function (config, callback) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
-      if (err) return callbnack(err);
+      if (err) return callback(err);
       node.set(config.name, link);
       node.set('table', link.table(config.table));
       return callback(null, link);
     });
   });
 
-  node.on('parse', function (data, flux) {
+  node.on('parse', function (data, callback) {
     if (typeof data == 'number') {
       return this.node.send(':fetch', { filters: { id: data } }, (err, data) => {
-        if (err) return flux(err);
-        return this.node.send(':parse', data, flux);
+        if (err) return callback(err);
+        return this.node.send(':parse', data, callback);
       });
     } else if (data && typeof data == 'object') {
       const result = {};
       return async.map(this.node.field(), (name, callback) => {
         const field = this.node.field(name);
-        let value = record[name];
-        if (value == null && field.node.kind() == 'Collection') { value = data.id; debugger; }
+        let value = data[name];
+        if (value == null && field.node.kind() == 'Collection') value = data.id;
         return field.node.send(':parse', value, (err, value) => {
           if (err) return callback(err);
           result[name] = value;
           return callback();
         });
-      }, err => {
-        if (err) return flux(err);
-        else return flux.emit('success', result);
+      }, (err) => {
+        if (err) return callback(err);
+        return callback(null, result);
       });
     } else {
-      return flux(null, data);
+      return callback(null, data);
     }
   });
 
