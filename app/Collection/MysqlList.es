@@ -11,8 +11,9 @@ export default function (node, logger) {
     const fields = [];
     const filters = {};
     const children = {};
+    const childType = this.node.type().node
     for (var field in view) {
-      const child = this.node.field(field);
+      const child = childType.field(field);
       if (child == null) {
         logger.warn(this.node.cwd(), 'has undefined field', field);
         continue ;
@@ -50,26 +51,27 @@ export default function (node, logger) {
         .asCallback((err, result) => {
           if (err) return callback(err);
           if (result.length == 0) return callback(null, []);
-          
           const children = Object.keys(factor.children);
           if (children.length == 0) return callback(null, result);
-          return async.map(children, (field, callback) => {
-            const view = factor.children[field];
-            const child = this.node.field(field);
-            if (child.node.kind() == 'Collection') {
-              view.this = result.id;
-            } else {
-              view.id = result[field];
-            }
-            return child.node.send(':fetch', view, (err, value) => {
+          return async.map(result, (row, callback) => {
+            return async.map(children, (field, callback) => {
+              const view = factor.children[field];
+              const child = this.node.type().node.field(field);
+              if (child.node.kind() == 'Collection') {
+                view.this = row.id;
+              } else {
+                view.id = row[field];
+              }
+              return child.node.send(':fetch', view, (err, value) => {
+                if (err) return callback(err);
+                row[field] = value;
+                return callback();
+              });
+            }, (err) => {
               if (err) return callback(err);
-              result[field] = value;
-              return callback();
+              return callback(null, row);
             });
-          }, (err) => {
-            if (err) return callback(err);
-            return callback(null, result);
-          });
+          }, callback);
         });
     });
 
