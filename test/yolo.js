@@ -15,7 +15,7 @@ describe('Yolo', function () {
     });
 
     describe('Model', function () {
-
+      // test type, field deep resolution
     });
 
   });
