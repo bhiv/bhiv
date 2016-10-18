@@ -26,6 +26,7 @@ TODO:
   * Add hot code swapping 
   * Add submodule based parser for Routing module
   * Flow control (c.f: Bhiv)
+  * handle cross dependencies better
 
 # Yolo.Node Pattern:
 
