@@ -11,11 +11,23 @@ export default function (node, logger) {
     const fields = [];
     const filters = {};
     const children = {};
-    const childType = this.node.type().node
+    const type = this.node.type()
+    if (type.node == null) {
+      logger.warn(type.fqn, 'is not loaded, use Type:preload');
+      throw new Error('missing type');
+    }
+    if (view == null || '*' in view) {
+      if (view == null) view = {};
+      delete view['*'];
+      type.node.field().map(field => {
+        if (!(field in view))
+          view[field] = null;
+      });
+    }
     for (var field in view) {
-      const child = childType.field(field);
+      const child = type.node.field(field);
       if (child == null) {
-        logger.warn(this.node.cwd(), 'has undefined field', field);
+        logger.warn(type.fqn, 'has undefined field', field);
         continue ;
       }
       const v = view[field];
@@ -55,14 +67,19 @@ export default function (node, logger) {
           if (children.length == 0) return callback(null, result);
           return async.map(result, (row, callback) => {
             return async.map(children, (field, callback) => {
-              const view = factor.children[field];
+              const view = factor.children[field] || { '*': true };
               const child = this.node.type().node.field(field);
               if (child.node.kind() == 'Collection') {
                 view.this = row.id;
               } else {
-                view.id = row[field];
+                if (row[field] == null) {
+                  return callback();
+                } else {
+                  view.id = row[field];
+                }
               }
-              return child.node.send(':fetch', view, (err, value) => {
+              const method = view.$ || 'fetch';
+              return child.node.emit(method, view, (err, value) => {
                 if (err) return callback(err);
                 row[field] = value;
                 return callback();

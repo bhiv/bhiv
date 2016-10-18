@@ -9,7 +9,7 @@ export default function (node, logger, Bee) {
                    , name: this.node.get('mysql.name')
                    , table: this.node.get('mysql.table')
                    };
-    if (config.fqn == null) return callback();
+    if (config.fqn == null) return callback(this.node.cwd() + ' needs a configuration');
     return this.node.send(':prepare-workspace', config, err => {
       if (err) return callback(err);
       return callback();
@@ -20,7 +20,10 @@ export default function (node, logger, Bee) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
       if (err) return callback(err);
       node.set(config.name, link);
-      node.set('table', link.table(config.table));
+      if (config.table == null)
+        logger.error('Model:', this.node.cwd(), 'needs a table definition');
+      else if (typeof config.table == 'string')
+        node.set('table', link.table(config.table));
       return callback(null, link);
     });
   });
@@ -30,6 +33,14 @@ export default function (node, logger, Bee) {
     const fields = [];
     const filters = {};
     const children = {};
+    if (view == null || '*' in view) {
+      if (view == null) view = {};
+      delete view['*'];
+      this.node.field().map(field => {
+        if (!(field in view))
+          view[field] = null;
+      });
+    }
     for (var field in view) {
       const child = this.node.field(field);
       if (child == null) {
@@ -95,14 +106,15 @@ export default function (node, logger, Bee) {
           const children = Object.keys(factor.children);
           if (children.length == 0) return callback(null, result);
           return async.map(children, (field, callback) => {
-            const view = factor.children[field];
+            const view = factor.children[field] || { '*': null };
             const child = this.node.field(field);
             if (child.node.kind() == 'Collection') {
               view.this = result.id;
             } else {
               view.id = result[field];
             }
-            return child.node.send(':fetch', view, (err, value) => {
+            const method = view.$ || 'fetch';
+            return child.node.emit(method, view, (err, value) => {
               if (err) return callback(err);
               result[field] = value;
               return callback();

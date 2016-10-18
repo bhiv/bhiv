@@ -5,14 +5,7 @@ export default function (node, logger) {
   node.kind('Record');
 
   node.on('-load', function (_, callback) {
-    return async.map(this.node.field(), (name, cb) => {
-      const field = this.node.field(name);
-      return this.node.send('Type:get', field.fqn, (err, node) => {
-        if (err) return cb(err);
-        field.node = node;
-        return cb(null, node);
-      });
-    }, err => {
+    return this.node.send('Type:inflate', this.node, err => {
       return callback(err);
     });
   });
@@ -32,8 +25,27 @@ export default function (node, logger) {
     });
   });
 
-  node.on('fetch', function (data, callback) {
-    return callback(null, data);
+  node.on('fetch', function (view, callback) {
+    const result = {};
+    const fields = this.node.field();
+    return async.map(fields, (field, callback) => {
+      if (view && !(field in view)) return callback();
+      const childType = this.node.field(field).node;
+      if (childType == null) {
+        logger.warn(this.node.cwd(), 'field', field, 'is not loaded, use Type:preload');
+        return callback('Missing type');
+      }
+      const subview = view && view[field] || null;
+      const method = subview && subview.$ || 'fetch';
+      return childType.emit(method, subview, (err, value) => {
+        if (err) return callback(err);
+        result[field] = value;
+        return callback();
+      });
+    }, err => {
+      if (err) return callback(err);
+      return callback(null, result);
+    });
   });
 
 };

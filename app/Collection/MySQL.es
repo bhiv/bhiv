@@ -7,7 +7,7 @@ export default function (node, logger) {
                    , name: type.node.get('mysql.name')
                    , table: type.node.get('mysql.table')
                    };
-    if (config.fqn == null) return callback();
+    if (config.fqn == null) return callback(type.node.cwd() + ' needs a configuration');
     return this.node.send(':prepare-workspace', config, err => {
       if (err) return callback(err);
       return callback();
@@ -18,7 +18,10 @@ export default function (node, logger) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
       if (err) return callback(err);
       node.set(config.name, link);
-      node.set('table', link.table(config.table).clone());
+      if (config.table == null)
+        logger.error('Model:', this.node.cwd(), 'needs a table definition');
+      else if (typeof config.table == 'string')
+        node.set('table', link.table(config.table));
       return callback(null, link);
     });
   });
