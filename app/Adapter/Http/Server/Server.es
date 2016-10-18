@@ -68,6 +68,8 @@ module.exports = function (node, logger) {
   };
 
   var triggerRequest = function (node, payload, flux) {
+    if (payload.http.request.middlewares == null)
+      return flux.emit('request', payload);
     return (function loop(middlewares, payload, flux) {
       if (middlewares.length == 0) return flux.emit('request', payload);
       const fqn = middlewares.shift();
@@ -266,11 +268,12 @@ module.exports = function (node, logger) {
   });
 
   node.on('response-json', function (output, callback) {
-    var code = output.code || 200;
-    var headers = {};
+    const code = output.code || 200;
+    const headers = {};
+    const data = output.content || output.data;
     Yolo.Util.merge(headers, output.headers || {});
     headers['Content-Type'] = 'application/json; charset=UTF-8';
-    var body = new Buffer(JSON.stringify(output.content));
+    const body = new Buffer(JSON.stringify(data) || '');
     headers['Content-Length'] = body.length;
     return callback(null, { code, headers, body });
   });
