@@ -48,4 +48,8 @@ export default function (node, logger) {
     });
   });
 
+  node.on('produce', function (data, callback) {
+
+  });
+
 };

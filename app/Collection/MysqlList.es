@@ -29,6 +29,9 @@ export default function (node, logger) {
       if (child == null) {
         logger.warn(type.fqn, 'has undefined field', field);
         continue ;
+      } else if (child.node == null) {
+        logger.warn(type.fqn, 'has field', field, child.fqn, 'not loaded');
+        continue ;
       }
       const v = view[field];
       switch (child.node.kind()) {
@@ -55,9 +58,11 @@ export default function (node, logger) {
   });
 
   node.on('fetch', function (view, callback) {
+    const table = this.node.get('table');
+    if (table == null) return callback(new Error('Collection have not been configured'));
     return this.node.send(':extract-view-factors', view, (err, factor) => {
       if (err) return callback(err);
-      return this.node.get('table').clone()
+      return table.clone()
         .select(factor.fields)
         .where(factor.filters)
         .asCallback((err, result) => {

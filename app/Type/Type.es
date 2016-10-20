@@ -1,6 +1,6 @@
 import async from 'async';
 
-export default function (node, logger) {
+export default function (node, logger, Bee) {
 
   const loading = new Yolo.Cache(-1);
 
@@ -32,7 +32,13 @@ export default function (node, logger) {
     }
   });
 
-  node.on('inflate', function (node, callback) {
+  node.on('inflate', new Bee()
+          .Go().pipe(':inflate-compound')
+          .Go().pipe(':inflate-projections')
+          .end()
+         );
+
+  node.on('inflate-compound', function (node, callback) {
     switch (node.kind()) {
     case 'Collection':
       return this.node.send(':instanciate', node.type(), err => {
@@ -50,6 +56,15 @@ export default function (node, logger) {
     default :
       return callback('Unhandled model kind');
     }
+  });
+
+  node.on('inflate-projections', function (node, callback) {
+    const projections = node.produce();
+    return async.map(projections, (name, callback) => {
+      return this.node.send(':instanciate', node.produce(name), callback);
+    }, err => {
+      return callback(err, node);
+    });
   });
 
 };

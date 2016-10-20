@@ -11,11 +11,12 @@ A framework for scalabe and splittable backend, it bring a single design pattern
   * flow based exectution
   * event sourcing like
   * DDD / CQRS ability
-  * async ORM with abstract connector  
+  * async ORM with abstract connector
 
 Fully undocumented (sorry about that) but it should comming soon
 
 TODO:
+  * Refactor Collection using "field" instead of "type"
   * Allow Yaml format config files
   * Add syntax for merging behavior
   * Handle react / redux (replacement of NSB https://github.com/np42/yolojs/tree/b1009616e66a7aa5c82d4582e7f84a49fdd10e10/app/Widget)
@@ -23,7 +24,7 @@ TODO:
   * Add pattern matching, reduce,  basic async pattern to Bhiv (flow based execution)
   * Add outlets api (e.g. node.when('subscribe', 'before', (payload, callback) => { ... }))
   * Fix inlets settings
-  * Add hot code swapping 
+  * Add hot code swapping
   * Add submodule based parser for Routing module
   * Flow control (c.f: Bhiv)
   * handle cross dependencies better
@@ -33,7 +34,7 @@ TODO:
 The Yolo.Node pattern is an omnipotent object which can:
   * have properties, methods and events
   * have children (like dom)
-  * have extended model capability 
+  * have extended model capability
   * have sibling (like inheritence)
   * have event rerouting capability
   * have children autoloading
