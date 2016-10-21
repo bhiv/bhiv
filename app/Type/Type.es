@@ -24,8 +24,7 @@ export default function (node, logger, Bee) {
         node.setParent(this.node);
         this.node.set(key, node);
         loading.pick(type.fqn).map(fn => fn(node));
-        return node.emit('-load', result, (err) => {
-          if (err) return callback(err);
+        return node.emit('-load', result, err => {
           return callback(err, type);
         });
       });
@@ -54,10 +53,11 @@ export default function (node, logger, Bee) {
 
   node.set('checks.Record', function (data) {
     const node = this;
-    node.field().map(field => {
+    node.field().map(name => {
+      const field = node.field(name);
       if (field.options.required === true) {
         if (data == null) throw new Error('Data can not be null');
-        if (data[field] == null) throw new Error('Field: ' + field + ' is required');
+        if (data[name] == null) throw new Error('Field: ' + name + ' is required');
       }
     });
   });

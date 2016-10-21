@@ -5,7 +5,7 @@ export default function (node, logger) {
   node.set('regexp', /(https?|ftp):\/\/(-\.)?([^\s/?\.#-]+\.?)+(\/[^\s]*)?$/i);
 
   node.check('valid-url', function (url) {
-    if (this.get('regexp').test(url))
+    if (!this.get('regexp').test(url))
       throw new Error('Is not a valid url');
   });
 

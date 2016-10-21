@@ -1,5 +1,3 @@
-import async from 'async';
-
 export default function (node, logger) {
 
   node.kind('Record');

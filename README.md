@@ -16,6 +16,7 @@ A framework for scalabe and splittable backend, it bring a single design pattern
 Fully undocumented (sorry about that) but it should comming soon
 
 TODO:
+  * Force patch procedure ordered !
   * Refactor Collection using "field" instead of "type"
   * Allow Yaml format config files
   * Add syntax for merging behavior

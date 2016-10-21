@@ -1,3 +1,5 @@
+import async from 'async';
+
 export default function (node, logger) {
 
   node.kind('Collection');
@@ -8,8 +10,8 @@ export default function (node, logger) {
     });
   });
 
-  node.on('parse', 'format', function (collection, callback) {
-    logger.emergency('TODO: parse.format');
+  node.on('parse', 'execute', function (data, callback) {
+    return this.node.send('Type:parse', { node: this.node.type().node, data }, callback);
   });
 
 };

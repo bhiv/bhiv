@@ -8,4 +8,8 @@ export default function (node) {
     });
   });
 
+  node.on('parse', 'execute', function (data, callback) {
+    return this.node.send('Type:parse', { node: this.node, data }, callback);
+  });
+
 };
