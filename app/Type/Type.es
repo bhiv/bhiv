@@ -32,13 +32,7 @@ export default function (node, logger, Bee) {
     }
   });
 
-  node.on('inflate', new Bee()
-          .Go().pipe(':inflate-compound')
-          .Go().pipe(':inflate-projections')
-          .end()
-         );
-
-  node.on('inflate-compound', function (node, callback) {
+  node.on('inflate', function (node, callback) {
     switch (node.kind()) {
     case 'Collection':
       return this.node.send(':instanciate', node.type(), err => {
@@ -58,13 +52,44 @@ export default function (node, logger, Bee) {
     }
   });
 
-  node.on('inflate-projections', function (node, callback) {
-    const projections = node.produce();
-    return async.map(projections, (name, callback) => {
-      return this.node.send(':instanciate', node.produce(name), callback);
-    }, err => {
-      return callback(err, node);
+  node.set('checks.Record', function (data) {
+    const node = this;
+    node.field().map(field => {
+      if (field.options.required === true) {
+        if (data == null) throw new Error('Data can not be null');
+        if (data[field] == null) throw new Error('Field: ' + field + ' is required');
+      }
     });
   });
+
+  node.on('parse', function ({ node, data }, callback) {
+    const defaultCheck = this.node.get('checks.' + node.kind());
+    const checks = node.check().map(name => node.check(name));
+    if (defaultCheck != null) checks.unshift(defaultCheck);
+    return (function walk(data, checks, patches, error) {
+      const check = checks.shift();
+      if (check == null) return callback(error, data);
+      try {
+        check.call(node, data);
+      } catch (e) {
+        if (patches.length > 0) {
+          error = e;
+          checks.unshift(check);
+          return node.patch(patches.shift()).call(node, data, (err, value) => {
+            if (err) {
+              logger.warn(err);
+              return walk.call(this, data, checks, patches, error);
+            } else {
+              return walk.call(this, value, checks, patches, error);
+            }
+          });
+        } else {
+          return callback(e);
+        }
+      }
+      return walk.call(this, data, checks, patches, null);
+    }).call(this, data, checks, node.patch(), null, callback);
+  });
+
 
 };

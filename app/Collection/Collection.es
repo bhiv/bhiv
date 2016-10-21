@@ -8,4 +8,8 @@ export default function (node, logger) {
     });
   });
 
+  node.on('parse', 'format', function (collection, callback) {
+    logger.emergency('TODO: parse.format');
+  });
+
 };

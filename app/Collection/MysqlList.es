@@ -83,8 +83,8 @@ export default function (node, logger) {
                   view.id = row[field];
                 }
               }
-              const method = view.$ || 'fetch';
-              return child.node.emit(method, view, (err, value) => {
+              const fqn = view.$ || ':fetch';
+              return child.node.send(fqn, view, (err, value) => {
                 if (err) return callback(err);
                 row[field] = value;
                 return callback();
@@ -97,22 +97,6 @@ export default function (node, logger) {
         });
     });
 
-  });
-
-  node.on('parse', function (data, callback) {
-    if (typeof data == 'number') {
-      return this.node.send(':fetch', { filters: { this: data } }, (err, list) => {
-        if (err) return callback(err);
-        return this.node.send(':parse', list, callback);
-      });
-    } else if (data instanceof Array) {
-      const type = this.node.type();
-      return async.map(data, (item, cb) => {
-        return type.node.send(':parse', item, cb);
-      }, callback);
-    } else {
-      return callback(new Error('Bad data type'));
-    }
   });
 
 };

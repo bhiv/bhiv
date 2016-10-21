@@ -10,9 +10,13 @@ export default function (node, logger) {
     });
   });
 
-  node.on('parse', function (record, callback) {
+  node.on('parse', 'execute', function (data, callback) {
+    return this.node.send('Type:parse', { node: this.node, data }, callback);
+  });
+
+  node.on('parse', 'format', function (record, callback) {
     const result = {};
-    return async.map(this.node.field(), (name, callback) => {
+    return Yolo.Async.each(this.node.field(), (name, callback) => {
       const field = this.node.field(name);
       const value = record[name];
       return field.node.send(':parse', value, (err, value) => {
@@ -28,7 +32,7 @@ export default function (node, logger) {
   node.on('fetch', function (view, callback) {
     const result = {};
     const fields = this.node.field();
-    return async.map(fields, (field, callback) => {
+    return Yolo.Async.each(fields, (field, callback) => {
       if (view && !(field in view)) return callback();
       const childType = this.node.field(field).node;
       if (childType == null) {
@@ -36,8 +40,8 @@ export default function (node, logger) {
         return callback('Missing type');
       }
       const subview = view && view[field] || null;
-      const method = subview && subview.$ || 'fetch';
-      return childType.emit(method, subview, (err, value) => {
+      const fqn = subview && subview.$ || ':fetch';
+      return childType.send(fqn, subview, (err, value) => {
         if (err) return callback(err);
         result[field] = value;
         return callback();
@@ -48,8 +52,9 @@ export default function (node, logger) {
     });
   });
 
-  node.on('produce', function (data, callback) {
-
+  node.on('produce', function ({ model, data }, callback) {
+    const schema = this.node.produce(model);
+    return this.node.resolve(schema, data, callback);
   });
 
 };

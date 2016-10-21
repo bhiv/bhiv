@@ -77,23 +77,6 @@ export default function (node, logger, Bee) {
           .end()
          );
 
-  node.on('parse', function (data, callback) {
-    const result = {};
-    return async.map(this.node.field(), (name, callback) => {
-      const field = this.node.field(name);
-      let value = data[name];
-      if (value == null && field.node.kind() == 'Collection') value = data.id;
-      return field.node.send(':parse', value, (err, value) => {
-        if (err) return callback(err);
-        result[name] = value;
-        return callback();
-      });
-    }, (err) => {
-      if (err) return callback(err);
-      return callback(null, result);
-    });
-  });
-
   node.on('fetch', function (view, callback) {
     return this.node.send(':extract-view-factors', view, (err, factor) => {
       if (err) return callback(err);
@@ -113,8 +96,8 @@ export default function (node, logger, Bee) {
             } else {
               view.id = result[field];
             }
-            const method = view.$ || 'fetch';
-            return child.node.emit(method, view, (err, value) => {
+            const fqn = view.$ || ':fetch';
+            return child.node.send(fqn, view, (err, value) => {
               if (err) return callback(err);
               result[field] = value;
               return callback();
@@ -125,14 +108,6 @@ export default function (node, logger, Bee) {
           });
         });
     });
-  });
-
-  node.on('save', function (query, callback) {
-    debugger;
-  });
-
-  node.on('remove', function (query, callback) {
-    debugger;
   });
 
 };
