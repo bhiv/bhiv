@@ -71,7 +71,7 @@ The Yolo.Node pattern is an omnipotent object which can:
   * .getChildrenNames()
   * .match(\<pattern>)
   * .setParent(\<node>)
- 
+
 ## Inheritance
   * .hasLayout('Name')
   * .getFirstLayout('Name') // (WIP)
@@ -88,14 +88,13 @@ The Yolo.Node pattern is an omnipotent object which can:
   * .check('rule-name', \<function>)
   * .fix()
 
+## Producer
+`Selector: @producer_name`
+
+ * .produce(\<producer_name>, \<view>)
+
 ## Traveral
 
   * send(\<selector>, \<payload>, \<callback>)
   * 
 
-
-
-
-
-
-  
