@@ -77,9 +77,9 @@ The Yolo.Node pattern is an omnipotent object which can:
   * .getFirstLayout('Name') // (WIP)
   * .getLastLayout('Name') // (WIP)
   * .setOlder(\<node>)
-  * .top()
+  * .oldest()
+  * .newest()
   * .fold(\<iterator>, \<accumulator>) // synchronous
-
 
 ## Model
 `Selector: /field_name`
