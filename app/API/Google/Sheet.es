@@ -8,7 +8,6 @@ export default function (node, logger, Bee) {
   /*************************/
 
   node.on('-load', function ({}) {
-    debugger;
     if (this.node.get('credentials') == null) throw new Error('missing credentials');
   });
 
@@ -92,4 +91,11 @@ export default function (node, logger, Bee) {
     return googleAPI.sheets('v4').spreadsheets.get(payload, callback);
   });
 
+  node.on('get-values', new Bee()
+          .then(':authorize', { scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'] })
+          .then(':get-values-unsafe')
+          .end());
+  node.on('get-values-unsafe', function (payload, callback) {
+    return googleAPI.sheets('v4').spreadsheets.values.get(payload, callback);
+  });
 };
