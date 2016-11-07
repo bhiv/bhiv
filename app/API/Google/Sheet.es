@@ -18,7 +18,8 @@ export default function (node, logger, Bee) {
     const redirectUrl = credentials.installed.redirect_uris[0];
     const auth = new googleAuth();
     const client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
-    if (this.node.get('auth') != null) return callback(null, { auth: client });
+    const savedAuth = this.node.get('auth');
+    if (savedAuth != null) return callback(null, { auth: savedAuth });
     return this.node.emit('read-token', {}, (err, token) => {
       if (err == null) return this.node.emit('set-token', { client, token }, callback);
       const code = this.node.get('authorization_code');
