@@ -6,18 +6,18 @@ export default function (node, logger, Bee) {
     var routes = this.node.get('routes');
     return new Bee()
       .Map('routes', null, 'filepath')
-      .  pipe(':route-map-add', '${filepath}')
+      .  pipe(':route-map-add', 'jp:filepath')
       .close({ max: 1 })
       .end({ routes: routes }, callback);
   });
 
   node.on('route-map-add', new Bee()
-          .extract({ filepath: '${.}' })
-          .then('Util.Retriever:request', '${filepath}', { raw: '${.}' })
-          .then(':parse', '${raw}', { rules: '${.}' })
+          .extract({ filepath: 'jp:@' })
+          .then('Util.Retriever:request', 'jp:filepath', { raw: 'jp:@' })
+          .then(':parse', 'jp:raw', { rules: 'jp:@' })
           .pipe(':config-attach')
           .Map('rules', null, 'rule')
-          .  then(':rule-add', '${rule}', {})
+          .  then(':rule-add', 'jp:rule', {})
           .close({ max: 1 })
           .end()
          );

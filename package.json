@@ -38,6 +38,7 @@
     "bhiv": "^3.1.39",
     "chokidar": "1.6.0",
     "glob": "^7.0.3",
+    "jmespath": "^0.15.0",
     "kexec": "^2.0.2",
     "minimist": "^1.2.0",
     "node-wrapper": "^0.0.31",

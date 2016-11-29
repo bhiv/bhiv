@@ -34,7 +34,7 @@ module.exports = function (node, logger, Bee) {
   /*
   node.on('handle-fetch-view', new Bee()
           .Map('views', null, 'view')
-          .  pipe('Yolo.NSB:get', '${view}')
+          .  pipe('Yolo.NSB:get', 'jp:view')
           .close()
           .end()
          );

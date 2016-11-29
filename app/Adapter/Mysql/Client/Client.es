@@ -11,8 +11,8 @@ export default function (node, logger, Bee) {
   });
 
   node.on('query', new Bee()
-          .then(':retrieveQuery', null, { query: '${.}' })
-          .then(':prepareQuery', '${query}', { query : '${.}' })
+          .then(':retrieveQuery', null, { query: 'jp:@' })
+          .then(':prepareQuery', 'jp:query', { query : 'jp:@' })
           .pipe(':executeQuery')
           .end()
          );
@@ -24,9 +24,9 @@ export default function (node, logger, Bee) {
   });
 
   node.on('getFile', new Bee()
-    .then('Util.Retriever:url', '${.}', { raw: '${.}' })
-    .then(function (raw) { return raw.replace(/\n/g, ' '); }, '${raw}')
-    .end()
+          .then('Util.Retriever:url', 'jp:@', { raw: 'jp:@' })
+          .then(function (raw) { return raw.replace(/\n/g, ' '); }, 'jp:raw')
+          .end()
   );
 
   node.on('prepareQuery', function (query, callback) {

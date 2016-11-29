@@ -31,13 +31,13 @@ export default function (node, logger, Bee) {
   });
 
   node.on('request', function (request, callback) {
-    if (request.url == null && request.base_url != null  && request.path != null)
+    if (request.url == null && request.base_url != null && request.path != null)
       request.url = request.base_url + request.path;
     if (request.url) {
       const urlp = Url.parse(request.url, true);
       const parts = { protocol: urlp.protocol, host: urlp.host
-                  , pathname: urlp.pathname, query: urlp.query
-                  };
+                    , pathname: urlp.pathname, query: urlp.query
+                    };
       Yolo.Util.merge(request, parts);
     }
     const http = new Http(Url.format(request));

@@ -39,8 +39,11 @@ module.exports = function (node, logger, Bee) {
   });
 
   node.on('http-serve', new Bee()
-          .then('Util.Retriever:request', 'static/${params.filepath}.less', { content: '${.}' })
-          .pipe(':parse', '${content}', { type: 'css', content: '${template}' })
+          .then('Util.Retriever:request'
+               , 'jp:[`static/`,params.filepath,`.less`]|join(``,@)'
+               , { content: 'jp:@' }
+               )
+          .pipe(':parse', 'jp:content', { type: 'css', content: 'jp:template' })
           .end()
          );
 
