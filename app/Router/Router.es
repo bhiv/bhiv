@@ -92,7 +92,7 @@ export default function (node, logger, Bee) {
     var method = /not found/i.test(error.toString()) ? 'response-notfound' : 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
-    return this.node.send('Http', method, data, callback);
+    return this.node.send('Http:' + method, data, callback);
   });
 
   node.on('response-error', function (payload, callback) {
@@ -102,7 +102,7 @@ export default function (node, logger, Bee) {
     var method = 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
-    return this.node.send('Http', method, data, callback);
+    return this.node.send('Http:' + method, data, callback);
   });
 
 };
