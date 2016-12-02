@@ -9,6 +9,7 @@ export default function (node) {
   });
 
   node.on('parse', 'execute', function (data, callback) {
+    if (data == null) return callback(null, null);
     return this.node.send('Type:parse', { node: this.node, data }, callback);
   });
 

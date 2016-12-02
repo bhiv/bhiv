@@ -57,6 +57,7 @@ export default function (node, logger, Bee) {
       const field = node.field(name);
       if (field.options.required === true) {
         if (data == null) throw new Error('Data can not be null');
+        if (data instanceof Array) throw new Error('Data can not be an array');
         if (data[name] == null) throw new Error('Field: ' + name + ' is required');
       }
     });

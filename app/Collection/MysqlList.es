@@ -75,6 +75,16 @@ export default function (node, logger, Bee) {
           .end()
          );
 
+  node.on('fetch-prepare', function (data, callback) {
+    const type = this.node.type().node;
+    return type.send(':fetch~prepare', data, callback);
+  });
+
+  node.on('fetch-format', function (data, callback) {
+    const type = this.node.type().node;
+    return type.send(':fetch~format', data, callback);
+  });
+
   node.on('fetch-execute', function (view, callback) {
     const table = this.node.get('table');
     if (table == null) return callback(new Error('Collection have not been configured'));
@@ -114,13 +124,6 @@ export default function (node, logger, Bee) {
           }, callback);
         });
     });
-  });
-
-  node.on('fetch-format', function (data, callback) {
-    const event = [{ type: 'inlet', name: 'fetch', mode: 'format' }];
-    const type = this.node.type().node;
-    debugger;
-    return type.send(event, data, callback);
   });
 
 };
