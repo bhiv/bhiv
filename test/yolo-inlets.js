@@ -70,6 +70,72 @@ describe('Yolo', function () {
 
     })();
 
+    it('should process only prepare', function (done) {
+      var A = new Yolo.Node('A');
+      var B = new Yolo.Node('B');
+      var C = new Yolo.Node('C');
+      A.setOlder(B);
+      B.setOlder(C);
+      A.on('e', 'prepare', function (e, c) { c(null, e + 1) });
+      B.on('e', 'prepare', function (e, c) { c(null, e * 5); });
+      C.on('e', 'prepare', function (e, c) { c(null, e - 2); });
+      A.on('e', 'execute', function (e, c) { c('should never execute'); });
+      B.on('e', 'execute', function (e, c) { c('should never execute'); });
+      C.on('e', 'execute', function (e, c) { c('should never execute'); });
+      A.on('e', 'format', function (e, c) { c('should never execute'); });
+      B.on('e', 'format', function (e, c) { c('should never execute'); });
+      C.on('e', 'format', function (e, c) { c('should never execute'); });
+      A.send(':e~prepare', 1, function (err, result) {
+        if (err) return done(err);
+        try { assert.equal(result, 8); return done(); }
+        catch (e) { return done(e); }
+      });
+    });
+
+
+    it('should process only execute', function (done) {
+      var A = new Yolo.Node('A');
+      var B = new Yolo.Node('B');
+      var C = new Yolo.Node('C');
+      A.setOlder(B);
+      B.setOlder(C);
+      A.on('e', 'prepare', function (e, c) { c('should never execute'); });
+      B.on('e', 'prepare', function (e, c) { c('should never execute'); });
+      C.on('e', 'prepare', function (e, c) { c('should never execute'); });
+      C.on('e', 'execute', function (e, c) { c(null, e * 7); });
+      A.on('e', 'format', function (e, c) { c('should never execute'); });
+      B.on('e', 'format', function (e, c) { c('should never execute'); });
+      C.on('e', 'format', function (e, c) { c('should never execute'); });
+      A.send(':e~execute', 6, function (err, result) {
+        if (err) return done(err);
+        try { assert.equal(result, 42); return done(); }
+        catch (e) { return done(e); }
+      });
+    });
+
+
+    it('should process only format', function (done) {
+      var A = new Yolo.Node('A');
+      var B = new Yolo.Node('B');
+      var C = new Yolo.Node('C');
+      A.setOlder(B);
+      B.setOlder(C);
+      A.on('e', 'prepare', function (e, c) { c('should never execute'); });
+      B.on('e', 'prepare', function (e, c) { c('should never execute'); });
+      C.on('e', 'prepare', function (e, c) { c('should never execute'); });
+      A.on('e', 'execute', function (e, c) { c('should never execute'); });
+      B.on('e', 'execute', function (e, c) { c('should never execute'); });
+      C.on('e', 'execute', function (e, c) { c('should never execute'); });
+      A.on('e', 'format', function (e, c) { c(null, e - 2); });
+      B.on('e', 'format', function (e, c) { c(null, e * 5); });
+      C.on('e', 'format', function (e, c) { c(null, e + 1) });
+      A.send(':e~format', 1, function (err, result) {
+        if (err) return done(err);
+        try { assert.equal(result, 8); return done(); }
+        catch (e) { return done(e); }
+      });
+    });
+
   });
 
 });
