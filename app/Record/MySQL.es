@@ -85,9 +85,11 @@ export default function (node, logger, Bee) {
          );
 
   node.on('fetch', function (view, callback) {
+    const table = this.node.get('table');
+    if (table == null) return callback(new Error('Collection have not been configured'));
     return this.node.send(':extract-view-factors', view, (err, factor) => {
       if (err) return callback(err);
-      return this.node.get('table').clone()
+      return table.clone()
         .first(factor.fields)
         .where(factor.filters)
         .asCallback((err, result) => {
