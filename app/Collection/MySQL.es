@@ -21,7 +21,7 @@ export default function (node, logger) {
       if (config.table == null)
         logger.error('Model:', this.node.cwd(), 'needs a table definition');
       else if (typeof config.table == 'string')
-        node.set('table', link.table(config.table));
+        node.set('table', link.table(link.raw('`' + config.table + '`')));
       return callback(null, link);
     });
   });
