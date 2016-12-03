@@ -13,6 +13,7 @@ export default function (node, logger, Bee) {
     const config = this.node.get(name);
     if (Yolo.Util.getIn(config, 'connection.user') == null)
       return callback(new Error(slot + ' Missing Knex config connection user'));
+    logger.debug(slot, 'config =>', config);
     const link = knex(config).on('query-error', (err, obj) => {
       logger.error(slot, obj.sql, JSON.stringify(obj.bindings));
     }).on('query', obj => {
