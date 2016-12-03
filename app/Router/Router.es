@@ -85,14 +85,14 @@ export default function (node, logger, Bee) {
   });
 
   node.on('production-error', function (payload, callback) {
-    var error = payload.error;
+    var error = Yolo.Util.wrapError(payload.error);
     var rulename = payload.http.config.outlet;
     var source = error.source != null ? '\n--\n' + error.source : '';
     logger.error('Production error [' + rulename + '] %s%s', error, source);
     var method = /not found/i.test(error.toString()) ? 'response-notfound' : 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
-    return this.node.send('Http:' + method, data, callback);
+    return this.node.send('.Http:' + method, data, callback);
   });
 
   node.on('response-error', function (payload, callback) {
@@ -102,7 +102,7 @@ export default function (node, logger, Bee) {
     var method = 'response-error';
     var data = { _response: payload.http.response, message: error.toString() };
     // FIXME: do not send to "Http" but to the request handler
-    return this.node.send('Http:' + method, data, callback);
+    return this.node.send('.Http:' + method, data, callback);
   });
 
 };
