@@ -14,6 +14,7 @@ export default function (node, logger) {
   });
 
   node.on('parse', 'format', function (record, callback) {
+    if (record == null) return callback(null, null);
     const result = {};
     return Yolo.Async.each(this.node.field(), (name, callback) => {
       const field = this.node.field(name);
