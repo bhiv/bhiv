@@ -100,8 +100,10 @@ export default function (node, logger, Bee) {
             const child = this.node.field(field);
             if (child.node.kind() == 'Collection') {
               view.this = result.id;
-            } else {
+            } else if (result[field] != null) {
               view.id = result[field];
+            } else {
+              return callback();
             }
             const fqn = view.$ || ':fetch';
             return child.node.send(fqn, view, (err, value) => {
