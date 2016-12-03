@@ -28,6 +28,13 @@ export default function (node, logger, Bee) {
     });
   });
 
+  node.on('identity-of', 'format', function (value) {
+    if (value == null) return null;
+    if (parseInt(value, 10) === value) return value;
+    if (value.id > 0) return value.id;
+    return value;
+  });
+
   node.on('extract-view-factors', function (view) {
     let hasCollection = false;
     const fields = [];
