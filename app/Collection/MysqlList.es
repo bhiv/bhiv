@@ -42,8 +42,12 @@ export default function (node, logger, Bee) {
           return callback();
         case 'Record':
           fields.push(field);
-          if (typeof value == 'number') {
-            children[field] = null;
+          if (typeof value != 'object') {
+            if (view[field] == value) {
+              children[field] = null;
+            } else if (typeof view[field] == 'object' && Object.keys(view[field]).length > 1) {
+              children[field] = view[field];
+            }
             filters[field] = value;
           } else {
             children[field] = value;
