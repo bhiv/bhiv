@@ -21,7 +21,7 @@ export default function (node, logger, Bee) {
       const value = Yolo.Util.getIn(record, name);
       return field.node.send(':parse', value, (err, value) => {
         if (err) return callback(err);
-        Yolo.Util.setIn(result, name, value);
+        if (value != null) Yolo.Util.setIn(result, name, value);
         return callback();
       });
     }, err => {
