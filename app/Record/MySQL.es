@@ -90,35 +90,36 @@ export default function (node, logger, Bee) {
     return this.node.send(':extract-view-factors', view, (err, factor) => {
       if (err) return callback(err);
       const link = this.node.get('link');
-      return table.clone()
-        .first(factor.fields.map(n => link.raw('`' + n + '`')))
-        .where(factor.filters)
-        .asCallback((err, result) => {
-          if (err) return callback(err);
-          if (result == null) return callback(null, null);
-          const children = Object.keys(factor.children);
-          if (children.length == 0) return callback(null, result);
-          return async.map(children, (field, callback) => {
-            const view = factor.children[field] || { '*': null };
-            const child = this.node.field(field);
-            if (child.node.kind() == 'Collection') {
-              view.this = result.id;
-            } else if (result[field] != null) {
-              view.id = result[field];
-            } else {
-              return callback();
-            }
-            const fqn = view.$ || ':fetch';
-            return child.node.send(fqn, view, (err, value) => {
-              if (err) return callback(err);
-              result[field] = value;
-              return callback();
-            });
-          }, (err) => {
+      const query = table.clone();
+      query.first(factor.fields.map(n => link.raw('`' + n + '`')));
+      for (const key in factor.filters)
+        query.whereRaw('`' + key + '` = ?', [factor.filters[key]])
+      return query.asCallback((err, result) => {
+        if (err) return callback(err);
+        if (result == null) return callback(null, null);
+        const children = Object.keys(factor.children);
+        if (children.length == 0) return callback(null, result);
+        return async.map(children, (field, callback) => {
+          const view = factor.children[field] || { '*': null };
+          const child = this.node.field(field);
+          if (child.node.kind() == 'Collection') {
+            view.this = result.id;
+          } else if (result[field] != null) {
+            view.id = result[field];
+          } else {
+            return callback();
+          }
+          const fqn = view.$ || ':fetch';
+          return child.node.send(fqn, view, (err, value) => {
             if (err) return callback(err);
-            return callback(null, result);
+            result[field] = value;
+            return callback();
           });
+        }, (err) => {
+          if (err) return callback(err);
+          return callback(null, result);
         });
+      });
     });
   });
 

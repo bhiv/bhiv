@@ -1,4 +1,4 @@
-export default function (node, logger) {
+export default function (node, logger, Bee) {
 
   node.kind('Record');
 
@@ -18,10 +18,10 @@ export default function (node, logger) {
     const result = {};
     return Yolo.Async.each(this.node.field(), (name, callback) => {
       const field = this.node.field(name);
-      const value = record[name];
+      const value = Yolo.Util.getIn(record, name);
       return field.node.send(':parse', value, (err, value) => {
         if (err) return callback(err);
-        result[name] = value;
+        Yolo.Util.setIn(result, name, value);
         return callback();
       });
     }, err => {
@@ -66,5 +66,12 @@ export default function (node, logger) {
     const schema = this.node.produce(model);
     return this.node.resolve(schema, data, callback);
   });
+
+  node.on('save', new Bee()
+          .then(':parse', 'jp:data', { data: 'jp:@' })
+          .then(':fetch', 'jp:merge(identity,`{"*":true}`)', { source: 'jp:@' })
+          .pipe(data => { console.log(data); return data; })
+          .end()
+         );
 
 };
