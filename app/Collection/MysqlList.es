@@ -94,8 +94,9 @@ export default function (node, logger, Bee) {
     if (table == null) return callback(new Error('Collection have not been configured'));
     return this.node.send(':extract-view-factors', view, (err, factor) => {
       if (err) return callback(err);
+      const link = this.node.get('link');
       return table.clone()
-        .select(factor.fields)
+        .select(factor.fields.map(n => link.raw('`' + n + '`')))
         .where(factor.filters)
         .asCallback((err, result) => {
           if (err) return callback(err);

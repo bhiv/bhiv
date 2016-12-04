@@ -19,7 +19,7 @@ export default function (node, logger, Bee) {
   node.on('prepare-workspace', function (config, callback) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
       if (err) return callback(err);
-      node.set(config.name, link);
+      node.set('link', link);
       if (config.table == null)
         logger.error('Model:', this.node.cwd(), 'needs a table definition');
       else if (typeof config.table == 'string')
@@ -89,8 +89,9 @@ export default function (node, logger, Bee) {
     if (table == null) return callback(new Error('Collection have not been configured'));
     return this.node.send(':extract-view-factors', view, (err, factor) => {
       if (err) return callback(err);
+      const link = this.node.get('link');
       return table.clone()
-        .first(factor.fields)
+        .first(factor.fields.map(n => link.raw('`' + n + '`')))
         .where(factor.filters)
         .asCallback((err, result) => {
           if (err) return callback(err);

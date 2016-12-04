@@ -17,7 +17,7 @@ export default function (node, logger) {
   node.on('prepare-workspace', function (config, callback) {
     return this.node.send(config.fqn + ':get-link', config.name, (err, link) => {
       if (err) return callback(err);
-      node.set(config.name, link);
+      node.set('link', link);
       if (config.table == null)
         logger.error('Model:', this.node.cwd(), 'needs a table definition');
       else if (typeof config.table == 'string')

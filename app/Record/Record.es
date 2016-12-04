@@ -52,6 +52,16 @@ export default function (node, logger) {
     });
   });
 
+  node.on('fetch', 'format', function (record) {
+    if (record == null) return null;
+    var result = {};
+    for (var key in record) {
+      if (~key.indexOf('.')) Yolo.Util.setIn(result, key, record[key]);
+      else result[key] = record[key];
+    }
+    return result;
+  });
+
   node.on('produce', function ({ model, data }, callback) {
     const schema = this.node.produce(model);
     return this.node.resolve(schema, data, callback);
