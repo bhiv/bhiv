@@ -3,7 +3,7 @@ export default function (node, logger) {
   node.kind('Record');
 
   node.on('parse', function (view) {
-    if (view != null && typeof view == 'object') return view;
+    if (typeof view == 'object') return view;
     const main = this.node.get('main_field') || 'name';
     const field = this.node.field(main);
     if (field == null) return view;
