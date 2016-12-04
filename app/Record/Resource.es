@@ -9,8 +9,8 @@ export default function (node, logger) {
     if (typeof url != 'string') return url;
     const mark = url.indexOf(':');
     if (!(mark > 0)) return url;
-    return { scheme: url.substr(0, mark)
-           , data: url.substr(mark + 2)
+    return { scheme: url.substr(0, mark + 1)
+           , data: url.substr(mark + 1)
            };
   });
 
