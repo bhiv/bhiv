@@ -53,6 +53,8 @@ export default function (node, logger, Bee) {
 
   node.set('checks.Record', function (data) {
     const node = this;
+    if (data != null && typeof data != 'object')
+      throw new Error('Received: "' + data + '" for type ' + node.layout);
     node.field().map(name => {
       const field = node.field(name);
       if (field.options.required === true) {
