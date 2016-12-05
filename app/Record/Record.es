@@ -9,6 +9,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('get', new Bee()
+          .extract({ $routine: ':get',  $view: 'jp:@' })
           .pipe(':fetch')
           .pipe(':parse')
           .end()
@@ -57,7 +58,6 @@ export default function (node, logger, Bee) {
     const result = {};
     const fields = this.node.field();
     return Yolo.Async.each(fields, (field, callback) => {
-      if (typeof view == 'number') debugger;
       if (view && !(field in view)) return callback();
 
       const childType = this.node.field(field).node;
@@ -66,7 +66,8 @@ export default function (node, logger, Bee) {
         return callback('Missing type');
       }
       const subview = view && view[field] || null;
-      const fqn = subview && subview.$ || ':fetch';
+      // TODO FIXME: payload.$routine => ';get'
+      const fqn = subview && subview.$ || payload.$routine || ':fetch';
       return childType.send(fqn, subview, (err, value) => {
         if (err) return callback(err);
         result[field] = value;
