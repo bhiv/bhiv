@@ -9,10 +9,10 @@ export default function (node, logger) {
       throw new Error('Is not a valid url');
   });
 
-  node.patch('from-resource', function (resource, callback) {
-    if (!(typeof resource == 'object') || resource == null) return callback(null, resource);
-    if (!('scheme' in resource && 'data' in resource)) return callback(null, resource);
-    return callback(null, resource.scheme + resource.data);
+  node.patch('from-resource', function (resource) {
+    if (!(typeof resource == 'object') || resource == null) return resource;
+    if (!('scheme' in resource && 'data' in resource)) return resource;
+    return resource.scheme + resource.data;
   });
 
 };
