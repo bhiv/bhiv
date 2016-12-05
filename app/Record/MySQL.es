@@ -78,12 +78,6 @@ export default function (node, logger, Bee) {
     return { fields, filters, children };
   });
 
-  node.on('get', new Bee()
-          .pipe(':fetch')
-          .pipe(':parse')
-          .end()
-         );
-
   node.on('fetch', function (view, callback) {
     const table = this.node.get('table');
     if (table == null) return callback(new Error('Collection have not been configured'));

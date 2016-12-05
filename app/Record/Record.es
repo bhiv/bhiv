@@ -8,18 +8,31 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('parse', 'execute', function (data, callback) {
-    if (data == null) return callback(null, null);
-    return this.node.send('Type:parse', { node: this.node, data }, callback);
-  });
+  node.on('get', new Bee()
+          .pipe(':fetch')
+          .pipe(':parse')
+          .end()
+         );
 
-  node.on('parse', 'format', function (record, callback) {
-    if (record == null) return callback(null, null);
+  node.on('set', new Bee()
+          .pipe(':parse', 'jp:data', { data: 'jp:@' })
+          .pipe(':save')
+          .end()
+         );
+
+  node.on('map', function ({ data, iterator }, callback) {
+    if (data == null) return callback(null, null);
+    if (typeof iterator == 'string') {
+      const fqn = iterator;
+      iterator = (field, value, callback) => {
+        return this.node.send(fqn, { field, type: field.node, value }, callback);
+      };
+    }
     const result = {};
     return Yolo.Async.each(this.node.field(), (name, callback) => {
       const field = this.node.field(name);
-      const value = Yolo.Util.getIn(record, name);
-      return field.node.send(':parse', value, (err, value) => {
+      const value = Yolo.Util.getIn(data, name);
+      return iterator(field, value, (err, value) => {
         if (err) return callback(err);
         if (value != null) Yolo.Util.setIn(result, name, value);
         return callback();
@@ -29,11 +42,24 @@ export default function (node, logger, Bee) {
     });
   });
 
+  node.on('parse', 'execute', function (data, callback) {
+    if (data == null) return callback(null, null);
+    return this.node.send('Type:parse', { node: this.node, data }, callback);
+  });
+
+  node.on('parse', 'format', function (record, callback) {
+    return this.node.emit('map', { data: record, iterator: (field, value, callback) => {
+      return field.node.emit('parse', value, callback);
+    } }, callback);
+  });
+
   node.on('fetch', function (view, callback) {
     const result = {};
     const fields = this.node.field();
     return Yolo.Async.each(fields, (field, callback) => {
+      if (typeof view == 'number') debugger;
       if (view && !(field in view)) return callback();
+
       const childType = this.node.field(field).node;
       if (childType == null) {
         logger.warn(this.node.cwd(), 'field', field, 'is not loaded, use Type:preload');
@@ -67,11 +93,20 @@ export default function (node, logger, Bee) {
     return this.node.resolve(schema, data, callback);
   });
 
-  node.on('save', new Bee()
-          .then(':parse', 'jp:data', { data: 'jp:@' })
-          .then(':fetch', 'jp:merge(identity,`{"*":true}`)', { source: 'jp:@' })
-          .pipe(data => { console.log(data); return data; })
-          .end()
-         );
+  node.on('save', function (data, callback) {
+    return this.node.emit('map', { data, iterator: (field, data, callback) => {
+      if (data == null) return callback(null, null);
+      if (field.node.hasLayout('Record.Enum')) {
+        return field.node.emit('fetch', data, callback);
+      } else if (field.node.hasLayout('Collection')) {
+        return field.node.emit('save-relations', data, callback);
+      } else if (field.node.hasLayout('Primitive')) {
+        return callback(null, data);
+      } else {
+        const view = Yolo.Util.merge({ '*': true }, data);
+        return field.node.emit('fetch', view, callback);
+      }
+    } }, callback);
+  });
 
 };

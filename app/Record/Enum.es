@@ -12,10 +12,6 @@ export default function (node, logger) {
     return record;
   });
 
-  node.on('produce', function (view, callback) {
-    debugger;
-  });
-
   node.on('identity-of', function (value, callback) {
     if (value == null) return callback(null, null);
     if (parseInt(value, 10) === value) return callback(null, value);

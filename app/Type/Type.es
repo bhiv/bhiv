@@ -53,14 +53,15 @@ export default function (node, logger, Bee) {
 
   node.set('checks.Record', function (data) {
     const node = this;
+    const tn = '[' + node.layout + '] ';
     if (data != null && typeof data != 'object')
-      throw new Error('Received: "' + data + '" for type ' + node.layout);
+      throw new Error(tn + 'Received: "' + data + '" for type ' + node.layout);
     node.field().map(name => {
       const field = node.field(name);
       if (field.options.required === true) {
-        if (data == null) throw new Error('Data can not be null');
-        if (data instanceof Array) throw new Error('Data can not be an array');
-        if (data[name] == null) throw new Error('Field: ' + name + ' is required');
+        if (data == null) throw new Error(tn + 'Data can not be null');
+        if (data instanceof Array) throw new Error(tn + 'Data can not be an array');
+        if (data[name] == null) throw new Error(tn + 'Field: ' + name + ' is required');
       }
     });
   });
@@ -89,13 +90,14 @@ export default function (node, logger, Bee) {
               }
             });
           } else { // sync
+            let value = null;
             try {
-              const value = patch.call(node, data);
-              return walk.call(this, value, checks, patches, error);
+              value = patch.call(node, data);
             } catch (err) {
               logger.warn(err);
               return walk.call(this, data, checks, patches, error);
             }
+            return walk.call(this, value, checks, patches, error);
           }
         } else {
           return callback(e);

@@ -19,10 +19,18 @@ export default function (node, logger) {
   , 'some', 'sortBy'
   ].map((method) => {
     node.on(method, function (payload, callback) {
-      const fqn = payload.iterator || payload.fqn;
-      const node = this.node.type().node;
+      if (payload.data == null) return callback(null, null);
+      if (payload.data.length == 0) return callback(null, []);
+      let iterator = payload.iterator || payload.fqn;
+      if (typeof iterator == 'string') {
+        const fqn = iterator;
+        iterator = (type, value, callback) => {
+          return type.node.send(fqn, value, callback);
+        };
+      }
+      const type = this.node.type();
       return async[method](payload.data, (item, callback) => {
-        return node.send(fqn, item, callback);
+        return iterator(type, item, callback);
       }, callback);
     });
   });
