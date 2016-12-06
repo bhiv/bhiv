@@ -13,4 +13,8 @@ export default function (node) {
     return this.node.send('Type:parse', { node: this.node, data }, callback);
   });
 
+  node.on('map', function ({ data }, callback) {
+    return callback(null, data);
+  });
+
 };

@@ -9,9 +9,9 @@ export default function (node, logger, Bee) {
   });
 
   node.on('get', new Bee()
-          .extract({ $routine: ':get',  $view: 'jp:@' })
           .pipe(':fetch')
           .pipe(':parse')
+          .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
           .end()
          );
 
@@ -66,8 +66,7 @@ export default function (node, logger, Bee) {
         return callback('Missing type');
       }
       const subview = view && view[field] || null;
-      // TODO FIXME: payload.$routine => ';get'
-      const fqn = subview && subview.$ || payload.$routine || ':fetch';
+      const fqn = subview && subview.$ || ':fetch';
       return childType.send(fqn, subview, (err, value) => {
         if (err) return callback(err);
         result[field] = value;
@@ -94,19 +93,12 @@ export default function (node, logger, Bee) {
     return this.node.resolve(schema, data, callback);
   });
 
-  node.on('save', function (data, callback) {
-    return this.node.emit('map', { data, iterator: (field, data, callback) => {
-      if (data == null) return callback(null, null);
-      if (field.node.hasLayout('Record.Enum')) {
-        return field.node.emit('fetch', data, callback);
-      } else if (field.node.hasLayout('Collection')) {
-        return field.node.emit('save-relations', data, callback);
-      } else if (field.node.hasLayout('Primitive')) {
-        return callback(null, data);
-      } else {
-        const view = Yolo.Util.merge({ '*': true }, data);
-        return field.node.emit('fetch', view, callback);
-      }
+  node.on('walk', function ({ data, fqn }, callback) {
+    return this.node.emit('map', { data, iterator: function iterator(field, data, callback) {
+      return field.node.emit('map', { data, iterator }, (err, result) => {
+        if (err) return callback(err);
+        return field.node.send(fqn, result, callback);
+      });
     } }, callback);
   });
 

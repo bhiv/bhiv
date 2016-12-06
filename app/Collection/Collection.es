@@ -20,4 +20,14 @@ export default function (node, logger) {
     } }, callback);
   });
 
+  node.on('map', function ({ data, iterator }, callback) {
+    if (typeof iterator == 'string') {
+      const fqn = iterator;
+      iterator = (field, value, callback) => {
+        return this.node.send(fqn, { field, type: field.node, value }, callback);
+      };
+    }
+    return iterator(this.node.type(), data, callback);
+  });
+
 };
