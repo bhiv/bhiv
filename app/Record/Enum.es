@@ -2,6 +2,8 @@ export default function (node, logger) {
 
   node.kind('Record');
 
+  node.field('name', 'Primitive.String', { unique: true });
+
   node.on('parse', function (view) {
     if (typeof view == 'object') return view;
     const main = this.node.get('main_field') || 'name';

@@ -16,7 +16,8 @@ export default function (node, logger, Bee) {
          );
 
   node.on('set', new Bee()
-          .pipe(':parse', 'jp:data', { data: 'jp:@' })
+          .then(':parse', 'jp:data', { record: 'jp:@' })
+          .then(':walk', { data: 'jp:record', fqn: ':identify' }, { record: 'jp:@' })
           .pipe(':save')
           .end()
          );
@@ -45,11 +46,12 @@ export default function (node, logger, Bee) {
 
   node.on('parse', function (data, callback) {
     if (data == null) return callback(null, null);
-    return this.node.emit('map', { data, iterator: (field, value, callback) => {
-      return field.node.emit('parse', value, callback);
-    } }, (err, data) => {
+    return this.node.send('Type:parse', { node: this.node, data }, (err, data) => {
       if (err) return callback(err);
-      return this.node.send('Type:parse', { node: this.node, data }, callback);
+      if (data == null) return callback(null, null);
+      return this.node.emit('map', { data, iterator: (field, value, callback) => {
+        return field.node.emit('parse', value, callback);
+      } }, callback);
     });
   });
 
@@ -98,6 +100,28 @@ export default function (node, logger, Bee) {
         return field.node.send(fqn, result, callback);
       });
     } }, callback);
+  });
+
+  node.on('identify', function (data, callback) {
+    if (data == null) return callback(null, data);
+    if (this.node.field('this') != null) return callback(null, data);
+    const view = { '*': true };
+    let hasUnique = false;
+    for (const fieldName in data) {
+      const field = this.node.field(fieldName);
+      if (field == null) continue ;
+      if (field.options.unique) {
+        view[fieldName] = data[fieldName];
+        hasUnique = true;
+        break ;
+      }
+    }
+    if (!hasUnique) return callback(null, data);
+    return this.node.emit('fetch', view, (err, result) => {
+      if (err) return callback(err);
+      if (result == null) return callback(null, data);
+      return callback(null, result);
+    });
   });
 
   node.on('save', function (data) {

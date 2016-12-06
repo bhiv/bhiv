@@ -4,6 +4,8 @@ export default function (node, logger, Bee) {
 
   node.kind('Record');
 
+  node.field('id', 'Primitive.Offset', { uniq: true });
+
   node.on('-load', function (_, callback) {
     const config = { fqn: this.node.get('mysql.fqn')
                    , name: this.node.get('mysql.name')

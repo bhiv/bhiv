@@ -20,8 +20,8 @@ export default function (node, logger) {
 
   node.on('map', function (payload, callback) {
     const map = payload.data;
+    if (map == null) return callback(null, null);
     const list = Object.keys(map);
-    if (list == null) return callback(null, null);
     let iterator = payload.iterator || payload.fqn;
     if (typeof iterator == 'string') {
       const fqn = iterator;
