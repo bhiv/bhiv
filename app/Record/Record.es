@@ -43,15 +43,14 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('parse', 'execute', function (data, callback) {
+  node.on('parse', function (data, callback) {
     if (data == null) return callback(null, null);
-    return this.node.send('Type:parse', { node: this.node, data }, callback);
-  });
-
-  node.on('parse', 'format', function (record, callback) {
-    return this.node.emit('map', { data: record, iterator: (field, value, callback) => {
+    return this.node.emit('map', { data, iterator: (field, value, callback) => {
       return field.node.emit('parse', value, callback);
-    } }, callback);
+    } }, (err, data) => {
+      if (err) return callback(err);
+      return this.node.send('Type:parse', { node: this.node, data }, callback);
+    });
   });
 
   node.on('fetch', function (view, callback) {
@@ -59,7 +58,6 @@ export default function (node, logger, Bee) {
     const fields = this.node.field();
     return Yolo.Async.each(fields, (field, callback) => {
       if (view && !(field in view)) return callback();
-
       const childType = this.node.field(field).node;
       if (childType == null) {
         logger.warn(this.node.cwd(), 'field', field, 'is not loaded, use Type:preload');
@@ -100,6 +98,11 @@ export default function (node, logger, Bee) {
         return field.node.send(fqn, result, callback);
       });
     } }, callback);
+  });
+
+  node.on('save', function (data) {
+    debugger;
+    return data;
   });
 
 };
