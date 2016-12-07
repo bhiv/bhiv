@@ -1,10 +1,13 @@
 import async from 'async';
+import helper from './MySQL.helper.es';
 
 export default function (node, logger, Bee) {
 
   node.kind('Record');
 
-  node.field('id', 'Primitive.Offset', { uniq: true });
+  node.identity('id', ['id']);
+
+  node.field('id', 'Primitive.Offset');
 
   node.on('-load', function (_, callback) {
     const config = { fqn: this.node.get('mysql.fqn')
@@ -37,86 +40,150 @@ export default function (node, logger, Bee) {
     return value;
   });
 
-  node.on('extract-view-factors', function (view) {
-    let hasCollection = false;
-    const fields = [];
-    const filters = {};
-    const children = {};
-    if (view == null || '*' in view) {
-      if (view == null) view = {};
-      delete view['*'];
-      this.node.field().map(field => {
-        if (!(field in view))
-          view[field] = null;
-      });
-    }
-    for (var field in view) {
-      const child = this.node.field(field);
-      if (child == null) {
-        logger.warn(this.node.cwd(), 'has undefined field', field);
-        continue ;
+  node.on('fetch', new Bee()
+          .extract({ request: 'jp:@' })
+          .then(':fetch-prepare-fields')
+          .then(':fetch-prepare-filters')
+          .Each('unknowns', null, 'subrequest')
+          .  then(':fetch-prepare-unknowns-filters')
+          .close()
+          .then(':fetch-prepare-range')
+          .then(':fetch-build')
+          .then(':fetch-execute')
+          .then(':fetch-children')
+          .pipe(':fetch-format')
+          .end()
+         );
+
+  node.on('fetch-prepare-fields', function ({ request }) {
+    const result = { fields: [], children: {} };
+    const fields = this.node.field();
+    if (request['*']) {
+      for (let i = 0; i < fields.length; i++) {
+        const fieldName = fields[i];
+        const field = this.node.field(fieldName);
+        if (field.node.hasLayout('Collection')) {
+          result.fields.push(fieldName);
+          const child = Yolo.Util.getIn(request, fieldName) || {};
+          child['*'] = true;
+          result.children[fieldName] = child;
+        } else {
+          result.fields.push(fieldName);
+        }
       }
-      const v = view[field];
-      switch (child.node.kind()) {
-      case 'Primitive':
-        fields.push(field);
-        if (v != null) filters[field] = v;
-        break ;
-      case 'Record':
-        fields.push(field);
-        children[field] = v;
-        break ;
-      case 'Collection':
-        children[field] = v;
-        hasCollection = true;
-        break ;
-      default:
-        logger.warn(this.node.cwd(), 'has field', field, 'as unknown kind');
-        break ;
+    } else {
+      debugger;
+      for (const fieldName in request) {
+        const field = this.node.field(fieldName);
+        if (field == null) debugger;
       }
     }
-    if (hasCollection && !~fields.indexOf('id'))
-      fields.unshift('id');
-    return { fields, filters, children };
+    return result;
   });
 
-  node.on('fetch', function (view, callback) {
-    const table = this.node.get('table');
-    if (table == null) return callback(new Error('Collection have not been configured'));
-    return this.node.send(':extract-view-factors', view, (err, factor) => {
+  node.on('fetch-prepare-filters', function ({ request, fields, children }) {
+    const result = { filters: [], unknowns: [] };
+    for (let i = 0; i < fields.length; i++) {
+      const fieldName = fields[i];
+      const value = Yolo.Util.getIn(request, fieldName);
+      if (value == null) continue ;
+      const kind = this.node.field(fieldName).node.kind();
+      switch (kind) {
+      case 'Primitive':
+        const filter = { type: 'comparison', operator: '='
+                       , left: { type: 'field', name: fieldName }
+                       , right: { type: 'data', value }
+                       };
+        result.filters.push(filter);
+        break ;
+      case 'Record':
+        if (value.id > 0) {
+          const filter = { type: 'comparison', operator: '='
+                         , left: { type: 'field', name: fieldName }
+                         , right: { type: 'data', value: value.id }
+                         };
+          result.filters.push(filter);
+        } else {
+          result.unknowns.push({ name: fieldName, view: value });
+        }
+        break ;
+      case 'Collection':
+        debugger;
+        break ;
+      }
+    }
+    for (const fieldName in children) {
+      const collection = children[fieldName];
+      const criterias = Object.keys(collection);
+      if (criterias.length == 1 && collection['*']) continue ;
+      debugger;
+    }
+    return result;
+  });
+
+  node.on('fetch-prepare-unknowns-filters', function ({ subrequest: { name, view } }) {
+    view.id = null;
+    return this.node.field(name).node.emit('fetch', view, (err, record) => {
       if (err) return callback(err);
-      const link = this.node.get('link');
-      const query = table.clone();
-      query.first(factor.fields.map(n => link.raw('`' + n + '`')));
-      for (const key in factor.filters)
-        query.whereRaw('`' + key + '` = ?', [factor.filters[key]])
-      return query.asCallback((err, result) => {
-        if (err) return callback(err);
-        if (result == null) return callback(null, null);
-        const children = Object.keys(factor.children);
-        if (children.length == 0) return callback(null, result);
-        return async.map(children, (field, callback) => {
-          const view = factor.children[field] || { '*': null };
-          const child = this.node.field(field);
-          if (child.node.kind() == 'Collection') {
-            view.this = result.id;
-          } else if (result[field] != null) {
-            view.id = result[field];
-          } else {
-            return callback();
-          }
-          const fqn = view.$ || ':fetch';
-          return child.node.send(fqn, view, (err, value) => {
-            if (err) return callback(err);
-            result[field] = value;
-            return callback();
-          });
-        }, (err) => {
-          if (err) return callback(err);
-          return callback(null, result);
-        });
-      });
+      name;
+      debugger;
     });
+  });
+
+  node.on('fetch-prepare-range', function ({ request }) {
+    const result = { pagination: { offset: 0, limit: 1 } };
+    if (request.$limit != null) {
+      debugger;
+    }
+    if (request.$offset != null) {
+      debugger;
+    }
+    return result;
+  });
+
+  node.on('fetch-build', function ({ fields, filters, pagination }) {
+    const result = { query: null };
+    const link = this.node.get('link');
+    const table = this.node.get('table');
+    if (link == null || table == null)
+      throw new Error('Collection have not been configured');
+    const query = table.clone();
+    query.select(helper.escapeFields(fields, link));
+    for (let i = 0; i < filters.length; i++) {
+      const filter = helper.makeFilter(filters[i]);
+      query.whereRaw(filter.condition, filter.values);
+    }
+    query.limit(pagination.limit);
+    query.offset(pagination.offset);
+    result.query = query;
+    return result;
+  });
+
+  node.on('fetch-execute', function ({ query }, callback) {
+    return query.asCallback((err, result) => {
+      if (err) return callback(err);
+      return callback(null, { result });
+    });
+  });
+
+  node.on('fetch-children', function ({ children }) {
+    for (var firstChild in children) break ;
+    if (firstChild == null) return {};
+    debugger;
+  });
+
+  node.on('fetch-format', function ({ fields, pagination, result }) {
+    const lines = [];
+    for (let i = 0; i < result.length; i++) {
+      const row = {};
+      for (let ii = 0; ii < fields.length; ii++)
+        Yolo.Util.setIn(row, fields[ii], result[fields[ii]]);
+      lines.push(row);
+    }
+    if (pagination.from === 0 && pagination.limit === 1)
+      return lines[0] || null;
+    else
+      return lines;
   });
 
 };

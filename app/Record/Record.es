@@ -1,3 +1,5 @@
+import async from 'async';
+
 export default function (node, logger, Bee) {
 
   node.kind('Record');
@@ -16,8 +18,13 @@ export default function (node, logger, Bee) {
          );
 
   node.on('set', new Bee()
-          .then(':parse', 'jp:data', { record: 'jp:@' })
-          .then(':walk', { data: 'jp:record', fqn: ':identify' }, { record: 'jp:@' })
+          .Go()
+          .  map('!data', ':parse')
+          .  map('!data', ':walk', { data: 'jp:@', fqn: ':identify' })
+          .Go()
+          .  map('!identity', ':inflate')
+          .  map('!identity', ':identify')
+          .close({ max: 1 })
           .pipe(':save')
           .end()
          );
@@ -104,23 +111,43 @@ export default function (node, logger, Bee) {
 
   node.on('identify', function (data, callback) {
     if (data == null) return callback(null, data);
-    if (this.node.field('this') != null) return callback(null, data);
-    const view = { '*': true };
-    let hasUnique = false;
-    for (const fieldName in data) {
-      const field = this.node.field(fieldName);
-      if (field == null) continue ;
-      if (field.options.unique) {
-        view[fieldName] = data[fieldName];
-        hasUnique = true;
-        break ;
-      }
+    const identities = this.node.identity();
+    let fields = null;
+    id: for (let i = 0; i < identities.length; i++) {
+      const identity = this.node.identity(identities[i]);
+      for (let ii = 0; ii < identity.length; ii++)
+        if (Yolo.Util.getIn(data, identity[ii]) == null)
+          continue id;
+      fields = identity;
+      break ;
     }
-    if (!hasUnique) return callback(null, data);
+    if (fields == null) return callback(null, data);
+    const view = { '*': true };
+    for (let ii = 0; ii < fields.length; ii++)
+      Yolo.Util.setIn(view, fields[ii], Yolo.Util.getIn(data, fields[ii]));
     return this.node.emit('fetch', view, (err, result) => {
       if (err) return callback(err);
       if (result == null) return callback(null, data);
       return callback(null, result);
+    });
+  });
+
+  node.on('inflate', function (data, callback) {
+    if (data == null || typeof data != 'object') return data;
+    const fields = Object.keys(data);
+    const result = {};
+    return async.each(fields, (fieldName, callback) => {
+      const field = this.node.field(fieldName);
+      if (field == null) return callback();
+      const value = data[fieldName];
+      if (value == null) return callback();
+      return field.node.emit('parse', value, (err, value) => {
+        if (err) return callback(err);
+        Yolo.Util.setIn(result, fieldName, value);
+        return callback();
+      });
+    }, err => {
+      return callback(err, result);
     });
   });
 

@@ -21,7 +21,8 @@ export default function (node, logger) {
     view[this.node.get('main_field') || 'name'] = value;
     return this.node.emit('fetch', view, (err, result) => {
       if (err) return callback(err);
-      return callback(null, result.id || null);
+      if (result == null) return callback(null, null);
+      return callback(null, result.id);
     })
   });
 
