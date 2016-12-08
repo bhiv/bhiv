@@ -42,18 +42,28 @@ export default function (node, logger, Bee) {
 
   node.on('fetch', new Bee()
           .extract({ request: 'jp:@' })
+          .then(':fetch-prepare-range')
           .then(':fetch-prepare-fields')
           .then(':fetch-prepare-filters')
+          .trap('DEEP_FILTER_NOT_FOUND', ':fetch-format')
           .Each('unknowns', null, 'subrequest')
           .  then(':fetch-prepare-unknowns-filters')
           .close()
-          .then(':fetch-prepare-range')
           .then(':fetch-build')
           .then(':fetch-execute')
           .then(':fetch-children')
           .pipe(':fetch-format')
           .end()
          );
+
+  node.on('fetch-prepare-range', function ({ request }) {
+    const result = { pagination: { offset: 0, limit: 1 } };
+    if (request.$limit != null)
+      result.pagination.limit = request.$limit >= 0 ? request.$limit : null;
+    if (request.$offset != null)
+      result.pagination.offset = request.$offset > 0 ? request.$offset : 0;
+    return result;
+  });
 
   node.on('fetch-prepare-fields', function ({ request }) {
     const result = { fields: [], children: {} };
@@ -63,7 +73,6 @@ export default function (node, logger, Bee) {
         const fieldName = fields[i];
         const field = this.node.field(fieldName);
         if (field.node.hasLayout('Collection')) {
-          result.fields.push(fieldName);
           const child = Yolo.Util.getIn(request, fieldName) || {};
           child['*'] = true;
           result.children[fieldName] = child;
@@ -72,10 +81,13 @@ export default function (node, logger, Bee) {
         }
       }
     } else {
-      debugger;
       for (const fieldName in request) {
         const field = this.node.field(fieldName);
-        if (field == null) debugger;
+        if (field == null) {
+          debugger;
+        } else {
+          result.fields.push(fieldName);
+        }
       }
     }
     return result;
@@ -121,24 +133,19 @@ export default function (node, logger, Bee) {
     return result;
   });
 
-  node.on('fetch-prepare-unknowns-filters', function ({ subrequest: { name, view } }) {
+  node.on('fetch-prepare-unknowns-filters', function (payload, callback) {
+    const { filters, subrequest: { name, view } } = payload;
     view.id = null;
     return this.node.field(name).node.emit('fetch', view, (err, record) => {
       if (err) return callback(err);
-      name;
-      debugger;
+      if (record == null) return callback('DEEP_FILTER_NOT_FOUND');
+      filters.push( { type: 'comparison', operator: '='
+                    , left: { type: 'field', name }
+                    , right: { type: 'data', value: record.id }
+                    }
+                  );
+      return callback();
     });
-  });
-
-  node.on('fetch-prepare-range', function ({ request }) {
-    const result = { pagination: { offset: 0, limit: 1 } };
-    if (request.$limit != null) {
-      debugger;
-    }
-    if (request.$offset != null) {
-      debugger;
-    }
-    return result;
   });
 
   node.on('fetch-build', function ({ fields, filters, pagination }) {
@@ -153,7 +160,7 @@ export default function (node, logger, Bee) {
       const filter = helper.makeFilter(filters[i]);
       query.whereRaw(filter.condition, filter.values);
     }
-    query.limit(pagination.limit);
+    if (pagination.limit != null) query.limit(pagination.limit);
     query.offset(pagination.offset);
     result.query = query;
     return result;
@@ -166,21 +173,36 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('fetch-children', function ({ children }) {
+  node.on('fetch-children', function ({ result, children }, callback) {
     for (var firstChild in children) break ;
-    if (firstChild == null) return {};
-    debugger;
+    if (firstChild == null) return callback(null, {});
+    const childList = Object.keys(children);
+    return async.each(result, (row, callback) => {
+      return async.each(childList, (childName, callback) => {
+        const view = children[childName];
+        view.this = row.id;
+        view.$limit = -1;
+        return this.node.field(childName).node.emit('fetch', view, (err, result) => {
+          if (err) return callback(err);
+          row[childName] = result;
+          return callback();
+        });
+      }, callback);
+    }, err => {
+      return callback(err, { result })
+    });
   });
 
   node.on('fetch-format', function ({ fields, pagination, result }) {
     const lines = [];
+    if (result == null) result = [];
     for (let i = 0; i < result.length; i++) {
       const row = {};
       for (let ii = 0; ii < fields.length; ii++)
-        Yolo.Util.setIn(row, fields[ii], result[fields[ii]]);
+        Yolo.Util.setIn(row, fields[ii], result[i][fields[ii]]);
       lines.push(row);
     }
-    if (pagination.from === 0 && pagination.limit === 1)
+    if (pagination.offset === 0 && pagination.limit === 1)
       return lines[0] || null;
     else
       return lines;
