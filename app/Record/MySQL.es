@@ -129,7 +129,6 @@ export default function (node, logger, Bee) {
   });
 
   node.on('fetch-build', function ({ fields, filters, pagination }) {
-    const result = { query: null };
     const link = this.node.get('link');
     const table = this.node.get('table');
     if (link == null || table == null)
@@ -142,8 +141,7 @@ export default function (node, logger, Bee) {
     }
     if (pagination.limit != null) query.limit(pagination.limit);
     query.offset(pagination.offset);
-    result.query = query;
-    return result;
+    return { query };
   });
 
   node.on('fetch-execute', function ({ query }, callback) {
@@ -200,6 +198,7 @@ export default function (node, logger, Bee) {
           .  then(':upsert-dependency')
           .close()
           .then(':upsert-build')
+          .then(':upsert-execute')
           .Each('collections', null, 'collection')
           .  then(':upsert-collection')
           .close()
@@ -220,7 +219,7 @@ export default function (node, logger, Bee) {
         result.collections.push({ type: field, name: fieldName });
         return callback();
       case 'Record':
-        return this.node.emit('identity', value, (err, value) => {
+        return field.node.emit('identify', value, (err, value) => {
           if (err) return callback(err);
           if (value != null && typeof value == 'object' && value.id != null)
             result.record[fieldName] = value.id;
@@ -238,14 +237,13 @@ export default function (node, logger, Bee) {
   });
 
   node.on('upsert-dependency', function ({ request, dependency: { type, name } }, callback) {
-    return type.node.emit(':upsert', request[name], (err, result) => {
+    return type.node.emit('upsert', request[name], (err, result) => {
       if (err) return callback(err);
       return callback(null, { record: { [name]: result.id } });
     })
   });
 
   node.on('upsert-build', function ({ request, record }) {
-    const result = { query: null };
     const link = this.node.get('link');
     const table = this.node.get('table');
     if (link == null || table == null)
@@ -270,11 +268,15 @@ export default function (node, logger, Bee) {
   });
 
   node.on('upsert-collection', function ({ request, collection: { type, name } }, callback) {
-    return async.map(request[name], (entry, callback) => {
-      entry.this = request.id;
-      return type.node.emit('upsert', entry, callback);
-    }, (err, collection) => {
-      return callback(err, { record: { [name]: collection } });
+    return type.node.emit('delete', { this: request.id }, err => {
+      if (err) return callback(err);
+      const item = type.node.type();
+      return async.map(request[name], (entry, callback) => {
+        entry.this = request.id;
+        return item.node.emit('upsert', entry, callback);
+      }, (err, collection) => {
+        return callback(err, { record: { [name]: collection } });
+      });
     });
   });
 
@@ -283,6 +285,29 @@ export default function (node, logger, Bee) {
     for (let fieldName in record)
       Yolo.Util.setIn(result, fieldName, record[fieldName]);
     return result;
+  });
+
+  node.on('delete', new Bee()
+          .extract({ request: 'jp:@' })
+          .then('delete-prepare')
+          .Each('collections', null, 'collection')
+          .  then(':delete-collection')
+          .close()
+          .then('delete-record')
+          .end()
+         );
+
+  node.on('delete-collection', function ({ collection }) {
+    debugger;
+  });
+
+  node.on('delete-record', function (request, callback) {
+    debugger;
+    const link = this.node.get('link');
+    const table = this.node.get('table');
+    if (link == null || table == null)
+      throw new Error('Collection have not been configured');
+    return table.clone().where(request).del().asCallback(callback);
   });
 
 };
