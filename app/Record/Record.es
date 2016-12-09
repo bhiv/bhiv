@@ -11,6 +11,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('get', new Bee()
+          .pipe(':deflate')
           .pipe(':fetch')
           .pipe(':parse')
           .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
@@ -18,16 +19,25 @@ export default function (node, logger, Bee) {
          );
 
   node.on('set', new Bee()
-          .Go()
+          .Go('data')
           .  map('!data', ':parse')
-          .  map('!data', ':walk', { data: 'jp:@', fqn: ':identify' })
-          .Go()
-          .  map('!identity', ':inflate')
+          .  then(':walk', { data: 'jp:data', fqn: ':identify' }, { data: 'jp:@' })
+          .Go('identity')
+          .  map('!identity', ':deflate')
           .  map('!identity', ':identify')
-          .close({ max: 1 })
+          .close()
           .pipe(':save')
           .end()
          );
+
+  node.on('walk', function ({ data, fqn }, callback) {
+    return (function iterator(field, data, callback) {
+      return field.node.emit('map', { data, iterator }, (err, result) => {
+        if (err) return callback(err);
+        return field.node.send(fqn, result, callback);
+      });
+    })(this, data, callback);
+  });
 
   node.on('map', function ({ data, iterator }, callback) {
     if (data == null) return callback(null, null);
@@ -95,65 +105,57 @@ export default function (node, logger, Bee) {
     return result;
   });
 
-  node.on('produce', function ({ model, data }, callback) {
-    const schema = this.node.produce(model);
-    return this.node.resolve(schema, data, callback);
-  });
-
-  node.on('walk', function ({ data, fqn }, callback) {
-    return this.node.emit('map', { data, iterator: function iterator(field, data, callback) {
-      return field.node.emit('map', { data, iterator }, (err, result) => {
-        if (err) return callback(err);
-        return field.node.send(fqn, result, callback);
-      });
-    } }, callback);
-  });
-
   node.on('identify', function (data, callback) {
     if (data == null) return callback(null, data);
+    const view = { '*': false };
     const identities = this.node.identity();
     let fields = null;
-    id: for (let i = 0; i < identities.length; i++) {
+    for (let i = 0; i < identities.length; i++) {
       const identity = this.node.identity(identities[i]);
-      for (let ii = 0; ii < identity.length; ii++)
-        if (Yolo.Util.getIn(data, identity[ii]) == null)
-          continue id;
-      fields = identity;
-      break ;
+      for (let ii = 0; ii < identity.length; ii++) {
+        const fieldName = identity[ii];
+        if (!(fieldName in view))
+          view[fieldName] = data[fieldName] != null ? data[fieldName] : null;
+        if (fields != null) break ;
+        if (Yolo.Util.getIn(data, identity[ii]) == null) break ;
+        fields = identity;
+      }
     }
     if (fields == null) return callback(null, data);
-    const view = { '*': true };
-    for (let ii = 0; ii < fields.length; ii++)
-      Yolo.Util.setIn(view, fields[ii], Yolo.Util.getIn(data, fields[ii]));
     return this.node.emit('fetch', view, (err, result) => {
       if (err) return callback(err);
       if (result == null) return callback(null, data);
-      return callback(null, result);
+      for (const fieldName in result)
+        data[fieldName] = result[fieldName];
+      return callback(null, data);
     });
   });
 
-  node.on('inflate', function (data, callback) {
-    if (data == null || typeof data != 'object') return data;
-    const fields = Object.keys(data);
-    const result = {};
-    return async.each(fields, (fieldName, callback) => {
-      const field = this.node.field(fieldName);
-      if (field == null) return callback();
-      const value = data[fieldName];
+  node.on('deflate', function (data, callback) {
+    const fields = this.node.field();
+    const flat = { '*': !!data['*'] };
+    return async.each(fields, (name, callback) => {
+      const field = this.node.field(name);
+      const value = name in data ? data[name] : Yolo.Util.getIn(data, name);
       if (value == null) return callback();
-      return field.node.emit('parse', value, (err, value) => {
+      return field.node.emit('parse', value, (err, result) => {
         if (err) return callback(err);
-        Yolo.Util.setIn(result, fieldName, value);
+        flat[name] = result;
         return callback();
-      });
+      })
     }, err => {
-      return callback(err, result);
+      return callback(err, flat);
     });
   });
 
   node.on('save', function (data) {
     debugger;
     return data;
+  });
+
+  node.on('produce', function ({ model, data }, callback) {
+    const schema = this.node.produce(model);
+    return this.node.resolve(schema, data, callback);
   });
 
 };

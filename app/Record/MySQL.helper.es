@@ -38,4 +38,14 @@ export default new function () {
     }
   };
 
+  this.AST = new function () {
+    this.FieldValueEquality = function (field, value) {
+      return ( { type: 'comparison', operator: '='
+               , left: { type: 'field', name: field }
+               , right: { type: 'data', value: value }
+               }
+             );
+    };
+  };
+
 };

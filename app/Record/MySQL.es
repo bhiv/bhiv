@@ -45,9 +45,9 @@ export default function (node, logger, Bee) {
           .then(':fetch-prepare-range')
           .then(':fetch-prepare-fields')
           .then(':fetch-prepare-filters')
-          .trap('DEEP_FILTER_NOT_FOUND', ':fetch-format')
+          .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
           .Each('unknowns', null, 'subrequest')
-          .  then(':fetch-prepare-unknowns-filters')
+          .  then(':fetch-prepare-children-filters')
           .close()
           .then(':fetch-build')
           .then(':fetch-execute')
@@ -67,24 +67,29 @@ export default function (node, logger, Bee) {
 
   node.on('fetch-prepare-fields', function ({ request }) {
     const result = { fields: [], children: {} };
-    const fields = this.node.field();
     if (request['*']) {
+      const fields = this.node.field();
       for (let i = 0; i < fields.length; i++) {
         const fieldName = fields[i];
-        const field = this.node.field(fieldName);
+        if (fieldName in request) continue ;
+        request[fieldName] = { '*': true };
+      }
+    }
+    for (const fieldName in request) {
+      if (fieldName == '*' || fieldName.substr(0, 1) == '$') continue ;
+      const field = this.node.field(fieldName);
+      if (field == null) {
+        logger.warn(this.node.layout, 'Unknown field: ' + fieldName + ' has been requested');
+      } else {
         if (field.node.hasLayout('Collection')) {
           const child = Yolo.Util.getIn(request, fieldName) || {};
           child['*'] = true;
           result.children[fieldName] = child;
-        } else {
+        } else if (field.node.hasLayout('Record')) {
           result.fields.push(fieldName);
-        }
-      }
-    } else {
-      for (const fieldName in request) {
-        const field = this.node.field(fieldName);
-        if (field == null) {
-          debugger;
+          const child = Yolo.Util.getIn(request, fieldName) || {};
+          child['*'] = true;
+          result.children[fieldName] = child;
         } else {
           result.fields.push(fieldName);
         }
@@ -98,52 +103,34 @@ export default function (node, logger, Bee) {
     for (let i = 0; i < fields.length; i++) {
       const fieldName = fields[i];
       const value = Yolo.Util.getIn(request, fieldName);
-      if (value == null) continue ;
+      if (value == null || typeof value == 'object') continue ;
       const kind = this.node.field(fieldName).node.kind();
       switch (kind) {
       case 'Primitive':
-        const filter = { type: 'comparison', operator: '='
-                       , left: { type: 'field', name: fieldName }
-                       , right: { type: 'data', value }
-                       };
-        result.filters.push(filter);
+        result.filters.push(helper.AST.FieldValueEquality(fieldName, value));
         break ;
       case 'Record':
         if (value.id > 0) {
-          const filter = { type: 'comparison', operator: '='
-                         , left: { type: 'field', name: fieldName }
-                         , right: { type: 'data', value: value.id }
-                         };
-          result.filters.push(filter);
+          result.filters.push(helper.AST.FieldValueEquality(fieldName, value.id));
         } else {
           result.unknowns.push({ name: fieldName, view: value });
         }
         break ;
       case 'Collection':
-        debugger;
+        throw new Error('Filter through Collection is not yet implemented');
         break ;
       }
-    }
-    for (const fieldName in children) {
-      const collection = children[fieldName];
-      const criterias = Object.keys(collection);
-      if (criterias.length == 1 && collection['*']) continue ;
-      debugger;
     }
     return result;
   });
 
-  node.on('fetch-prepare-unknowns-filters', function (payload, callback) {
+  node.on('fetch-prepare-children-filters', function (payload, callback) {
     const { filters, subrequest: { name, view } } = payload;
     view.id = null;
     return this.node.field(name).node.emit('fetch', view, (err, record) => {
       if (err) return callback(err);
-      if (record == null) return callback('DEEP_FILTER_NOT_FOUND');
-      filters.push( { type: 'comparison', operator: '='
-                    , left: { type: 'field', name }
-                    , right: { type: 'data', value: record.id }
-                    }
-                  );
+      if (record == null) { debugger; return callback(new Error('DEEP_FILTER_NOT_FOUND')); }
+      filters.push(helper.AST.FieldValueEquality(name, record.id));
       return callback();
     });
   });
@@ -179,9 +166,14 @@ export default function (node, logger, Bee) {
     const childList = Object.keys(children);
     return async.each(result, (row, callback) => {
       return async.each(childList, (childName, callback) => {
+        const field = this.node.field(childName);
         const view = children[childName];
-        view.this = row.id;
-        view.$limit = -1;
+        if (field.node.hasLayout('Collection')) {
+          view.this = row.id;
+          view.$limit = -1;
+        } else {
+          view.id = row[childName];
+        }
         return this.node.field(childName).node.emit('fetch', view, (err, result) => {
           if (err) return callback(err);
           row[childName] = result;
