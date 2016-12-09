@@ -21,12 +21,13 @@ export default function (node, logger, Bee) {
   node.on('set', new Bee()
           .Go('data')
           .  map('!data', ':parse')
-          .  then(':walk', { data: 'jp:data', fqn: ':identify' }, { data: 'jp:@' })
+          .  map('!data', ':deflate')
           .Go('identity')
           .  map('!identity', ':deflate')
           .  map('!identity', ':identify')
           .close()
-          .pipe(':save')
+          .pipe(':upsert', 'jp:merge(data, { id: identity.id })')
+          .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
           .end()
          );
 
@@ -105,6 +106,23 @@ export default function (node, logger, Bee) {
     return result;
   });
 
+  node.on('deflate', function (data, callback) {
+    const fields = this.node.field();
+    const flat = {};
+    return async.each(fields, (name, callback) => {
+      const field = this.node.field(name);
+      const value = name in data ? data[name] : Yolo.Util.getIn(data, name);
+      if (value == null) return callback();
+      return field.node.emit('parse', value, (err, result) => {
+        if (err) return callback(err);
+        flat[name] = result;
+        return callback();
+      })
+    }, err => {
+      return callback(err, flat);
+    });
+  });
+
   node.on('identify', function (data, callback) {
     if (data == null) return callback(null, data);
     const view = { '*': false };
@@ -126,31 +144,10 @@ export default function (node, logger, Bee) {
       if (err) return callback(err);
       if (result == null) return callback(null, data);
       for (const fieldName in result)
-        data[fieldName] = result[fieldName];
+        if (!(fieldName in data))
+          data[fieldName] = result[fieldName];
       return callback(null, data);
     });
-  });
-
-  node.on('deflate', function (data, callback) {
-    const fields = this.node.field();
-    const flat = { '*': !!data['*'] };
-    return async.each(fields, (name, callback) => {
-      const field = this.node.field(name);
-      const value = name in data ? data[name] : Yolo.Util.getIn(data, name);
-      if (value == null) return callback();
-      return field.node.emit('parse', value, (err, result) => {
-        if (err) return callback(err);
-        flat[name] = result;
-        return callback();
-      })
-    }, err => {
-      return callback(err, flat);
-    });
-  });
-
-  node.on('save', function (data) {
-    debugger;
-    return data;
   });
 
   node.on('produce', function ({ model, data }, callback) {

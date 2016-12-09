@@ -33,13 +33,6 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('identity-of', 'format', function (value) {
-    if (value == null) return null;
-    if (parseInt(value, 10) === value) return value;
-    if (value.id > 0) return value.id;
-    return value;
-  });
-
   node.on('fetch', new Bee()
           .extract({ request: 'jp:@' })
           .then(':fetch-prepare-range')
@@ -110,7 +103,7 @@ export default function (node, logger, Bee) {
         result.filters.push(helper.AST.FieldValueEquality(fieldName, value));
         break ;
       case 'Record':
-        if (value.id > 0) {
+        if (value.id != null) {
           result.filters.push(helper.AST.FieldValueEquality(fieldName, value.id));
         } else {
           result.unknowns.push({ name: fieldName, view: value });
@@ -198,6 +191,98 @@ export default function (node, logger, Bee) {
       return lines[0] || null;
     else
       return lines;
+  });
+
+  node.on('upsert', new Bee()
+          .extract({ request: 'jp:@' })
+          .then(':upsert-prepare')
+          .Each('dependencies', null, 'dependency')
+          .  then(':upsert-dependency')
+          .close()
+          .then(':upsert-build')
+          .Each('collections', null, 'collection')
+          .  then(':upsert-collection')
+          .close()
+          .pipe(':upsert-format')
+          .end()
+         );
+
+  node.on('upsert-prepare', function ({ request }, callback) {
+    const result = { record: {}, dependencies: [], collections: [] };
+    const fields = this.node.field();
+    return async.each(fields, (fieldName, callback) => {
+      if (!(fieldName in request)) return callback();
+      if (fieldName == 'id') return callback();
+      const field = this.node.field(fieldName);
+      const value = request[fieldName];
+      switch (field.node.kind()) {
+      case 'Collection':
+        result.collections.push({ type: field, name: fieldName });
+        return callback();
+      case 'Record':
+        return this.node.emit('identity', value, (err, value) => {
+          if (err) return callback(err);
+          if (value != null && typeof value == 'object' && value.id != null)
+            result.record[fieldName] = value.id;
+          else
+            result.dependencies.push({ type: field, name: fieldName });
+          return callback();
+        });
+      case 'Primitive':
+        result.record[fieldName] = value;
+        return callback();
+      }
+    }, (err) => {
+      return callback(err, result);
+    });
+  });
+
+  node.on('upsert-dependency', function ({ request, dependency: { type, name } }, callback) {
+    return type.node.emit(':upsert', request[name], (err, result) => {
+      if (err) return callback(err);
+      return callback(null, { record: { [name]: result.id } });
+    })
+  });
+
+  node.on('upsert-build', function ({ request, record }) {
+    const result = { query: null };
+    const link = this.node.get('link');
+    const table = this.node.get('table');
+    if (link == null || table == null)
+      throw new Error('Collection have not been configured');
+    const query = table.clone();
+    if (request.id != null) {
+      query.where({ id: request.id }).update(record);
+    } else {
+      query.insert(record);
+    }
+    return { query };
+  });
+
+  node.on('upsert-execute', function ({ request, query }, callback) {
+    return query.asCallback((err, result) => {
+      if (err) return callback(err);
+      const flow = { request: {}, result };
+      if (request.id == null)
+        flow.request.id = result[0];
+      return callback(null, flow);
+    });
+  });
+
+  node.on('upsert-collection', function ({ request, collection: { type, name } }, callback) {
+    return async.map(request[name], (entry, callback) => {
+      entry.this = request.id;
+      return type.node.emit('upsert', entry, callback);
+    }, (err, collection) => {
+      return callback(err, { record: { [name]: collection } });
+    });
+  });
+
+  node.on('upsert-format', function (record) {
+    const result = {};
+    for (let fieldName in record)
+      Yolo.Util.setIn(result, fieldName, record[fieldName]);
+    return result;
   });
 
 };
