@@ -12,6 +12,7 @@ export default function (node, logger, Bee) {
 
   node.on('get', new Bee()
           .pipe(':deflate')
+          .pipe(':identify')
           .pipe(':fetch')
           .pipe(':parse')
           .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
@@ -119,13 +120,14 @@ export default function (node, logger, Bee) {
         return callback();
       })
     }, err => {
+      if (data['*']) flat['*'] = true;
       return callback(err, flat);
     });
   });
 
   node.on('identify', function (data, callback) {
     if (data == null) return callback(null, data);
-    const view = { '*': false };
+    const view = { '*': data['*'] || false };
     const identities = this.node.identity();
     let fields = null;
     for (let i = 0; i < identities.length; i++) {
