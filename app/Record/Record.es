@@ -12,7 +12,6 @@ export default function (node, logger, Bee) {
 
   node.on('get', new Bee()
           .pipe(':deflate')
-          .pipe(':identify')
           .pipe(':fetch')
           .pipe(':parse')
           .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
