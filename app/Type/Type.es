@@ -71,7 +71,6 @@ export default function (node, logger, Bee) {
     const checks = node.check().map(name => node.check(name));
     if (defaultCheck != null) checks.unshift(defaultCheck);
     return (function walk(data, checks, patches) {
-      if (data == 'Lucy Nyagah') debugger;
       const check = checks.shift();
       if (check == null) return callback(null, data);
       try { check.call(node, data); }
