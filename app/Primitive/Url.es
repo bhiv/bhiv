@@ -10,8 +10,8 @@ export default function (node, logger) {
   });
 
   node.patch('from-resource', function (resource) {
-    if (!(typeof resource == 'object') || resource == null) return resource;
-    if (!('scheme' in resource && 'data' in resource)) return resource;
+    if (!(typeof resource == 'object') || resource == null) return null;
+    if (!('scheme' in resource && 'data' in resource)) return null;
     return resource.scheme + resource.data;
   });
 

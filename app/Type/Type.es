@@ -70,35 +70,39 @@ export default function (node, logger, Bee) {
     const defaultCheck = this.node.get('checks.' + node.kind());
     const checks = node.check().map(name => node.check(name));
     if (defaultCheck != null) checks.unshift(defaultCheck);
-    return (function walk(data, checks, patches, error) {
+    return (function walk(data, checks, patches) {
+      if (data == 'Lucy Nyagah') debugger;
       const check = checks.shift();
-      if (check == null) return callback(error, data);
-      try {
-        check.call(node, data);
-      } catch (e) {
-        if (patches.length > 0) {
-          error = e;
-          checks.unshift(check);
-          const patch = node.patch(patches.shift());
+      if (check == null) return callback(null, data);
+      try { check.call(node, data); }
+      catch (e) {
+        checks.push(check);
+        (function transform(count, patches, rest, data) {
+          const patchName = patches.shift();
+          const patch = node.patch(patchName);
+
+          if (patch == null) {
+            if (count == rest.length) return callback(e);
+            else return walk.call(this, data, checks, rest);
+          }
+
           if (patch.length > 1) { // async
             return patch.call(node, data, (err, value) => {
               if (err) return callback(err);
-              return walk.call(this, value, checks, patches, error);
+              if (value == null) { rest.push(patchName); value = data; }
+              return transform.call(this, count, patches, rest, value);
             });
           } else { // sync
             let value = null;
-            try {
-              value = patch.call(node, data);
-            } catch (err) {
-              return callback(err);
-            }
-            return walk.call(this, value, checks, patches, error);
+            try { value = patch.call(node, data); }
+            catch (err) { return callback(err); }
+            if (value == null) { rest.push(patchName); value = data; }
+            return transform.call(this, count, patches, rest, value);
           }
-        } else {
-          return callback(e);
-        }
+
+        }).call(this, patches.length, patches, [], data);
       }
-      return walk.call(this, data, checks, patches, null);
+      return walk.call(this, data, checks, patches);
     }).call(this, data, checks, node.patch(), null, callback);
   });
 

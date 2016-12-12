@@ -1,4 +1,5 @@
 import knex from 'knex';
+import util from 'util';
 
 export default function (node, logger, Bee) {
 
@@ -17,7 +18,7 @@ export default function (node, logger, Bee) {
     const link = knex(config).on('query-error', (err, obj) => {
       logger.error(slot, obj.sql, JSON.stringify(obj.bindings));
     }).on('query', obj => {
-      logger.debug(slot, obj.sql, JSON.stringify(obj.bindings));
+      logger.debug(slot, obj.sql, util.inspect(obj.bindings));
     });
     node.set('links.' + name, link);
     return callback(null, link);

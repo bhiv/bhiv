@@ -122,7 +122,7 @@ export default function (node, logger, Bee) {
     view.id = null;
     return this.node.field(name).node.emit('fetch', view, (err, record) => {
       if (err) return callback(err);
-      if (record == null) { debugger; return callback(new Error('DEEP_FILTER_NOT_FOUND')); }
+      if (record == null) return callback(new Error('DEEP_FILTER_NOT_FOUND'));
       filters.push(helper.AST.FieldValueEquality(name, record.id));
       return callback();
     });
@@ -210,10 +210,9 @@ export default function (node, logger, Bee) {
     const result = { record: {}, dependencies: [], collections: [] };
     const fields = this.node.field();
     return async.each(fields, (fieldName, callback) => {
-      if (!(fieldName in request)) return callback();
       if (fieldName == 'id') return callback();
       const field = this.node.field(fieldName);
-      const value = request[fieldName];
+      const value = fieldName in request ? request[fieldName] : null;
       switch (field.node.kind()) {
       case 'Collection':
         result.collections.push({ type: field, name: fieldName });
@@ -237,24 +236,22 @@ export default function (node, logger, Bee) {
   });
 
   node.on('upsert-dependency', function ({ request, dependency: { type, name } }, callback) {
-    return type.node.emit('upsert', request[name], (err, result) => {
-      if (err) return callback(err);
-      return callback(null, { record: { [name]: result.id } });
-    })
+    const payload = request[name];
+    if (payload == null)
+      return callback(null, { record: { [name]: null } });
+    else
+      return type.node.emit('upsert', payload, (err, result) => {
+        if (err) return callback(err);
+        return callback(null, { record: { [name]: result.id } });
+      })
   });
 
-  node.on('upsert-build', function ({ request, record }) {
-    const link = this.node.get('link');
-    const table = this.node.get('table');
-    if (link == null || table == null)
-      throw new Error('Collection have not been configured');
-    const query = table.clone();
-    if (request.id != null) {
-      query.where({ id: request.id }).update(record);
+  node.on('upsert-build', function (payload, callback) {
+    if (payload.request.id != null) {
+      return this.node.emit('update-build', payload, callback);
     } else {
-      query.insert(record);
+      return this.node.emit('insert-build', payload, callback);
     }
-    return { query };
   });
 
   node.on('upsert-execute', function ({ request, query }, callback) {
@@ -285,6 +282,41 @@ export default function (node, logger, Bee) {
     for (let fieldName in record)
       Yolo.Util.setIn(result, fieldName, record[fieldName]);
     return result;
+  });
+
+  node.on('insert-build', function ({ request, record }) {
+    const link = this.node.get('link');
+    if (link == null) throw new Error('Collection have not been configured');
+    const fields = [];
+    const values = [];
+    for (const fieldName in record) {
+      fields.push(helper.escapeField(fieldName));
+      values.push(record[fieldName]);
+    }
+    const q = [ 'INSERT INTO', helper.escapeField(this.node.get('mysql.table'))
+              , '(', fields.join(', '), ')'
+              , 'VALUES (', fields.map(e => '?').join(', '), ')'
+              ];
+    const query = link.raw(q.join(' '), values);
+    return { query };
+  });
+
+  node.on('update-build', function ({ request, record }) {
+    const link = this.node.get('link');
+    if (link == null) throw new Error('Collection have not been configured');
+    const fields = [];
+    const values = [];
+    for (const fieldName in record) {
+      fields.push(helper.escapeField(fieldName) + ' = ?');
+      values.push(record[fieldName]);
+    }
+    const q = [ 'UPDATE', helper.escapeField(this.node.get('mysql.table'))
+              , 'SET', fields.join(', ')
+              , 'WHERE `id` = ?'
+              ];
+    values.push(request.id);
+    const query = link.raw(q.join(' '), values);
+    return { query };
   });
 
   node.on('delete', new Bee()
