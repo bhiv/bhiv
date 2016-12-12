@@ -82,20 +82,15 @@ export default function (node, logger, Bee) {
           const patch = node.patch(patches.shift());
           if (patch.length > 1) { // async
             return patch.call(node, data, (err, value) => {
-              if (err) {
-                logger.warn(err);
-                return walk.call(this, data, checks, patches, error);
-              } else {
-                return walk.call(this, value, checks, patches, error);
-              }
+              if (err) return callback(err);
+              return walk.call(this, value, checks, patches, error);
             });
           } else { // sync
             let value = null;
             try {
               value = patch.call(node, data);
             } catch (err) {
-              logger.warn(err);
-              return walk.call(this, data, checks, patches, error);
+              return callback(err);
             }
             return walk.call(this, value, checks, patches, error);
           }
