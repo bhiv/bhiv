@@ -18,6 +18,17 @@ export default function (node, logger) {
     });
   });
 
+
+  node.on('sanitize', function (map, callback) {
+    if (map == null) return callback(null, null);
+    const node = this.node.type().node;
+    return async.each(Object.keys(map), (key, callback) => {
+      return node.emit('sanitize', map[key], callback);
+    }, err => {
+      return callback(err, map);
+    });
+  });
+
   node.on('map', function (payload, callback) {
     const map = payload.data;
     if (map == null) return callback(null, null);

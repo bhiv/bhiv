@@ -33,6 +33,8 @@ export default function (node, logger, Bee) {
     });
   });
 
+  /***/
+
   node.on('fetch', new Bee()
           .extract({ request: 'jp:@' })
           .then(':fetch-prepare-range')
@@ -50,6 +52,7 @@ export default function (node, logger, Bee) {
          );
 
   node.on('fetch-prepare-range', function ({ request }) {
+    debugger;
     const result = { pagination: { offset: 0, limit: 1 } };
     if (request.$limit != null)
       result.pagination.limit = request.$limit >= 0 ? request.$limit : null;
@@ -74,17 +77,19 @@ export default function (node, logger, Bee) {
       if (field == null) {
         logger.warn(this.node.layout, 'Unknown field: ' + fieldName + ' has been requested');
       } else {
-        if (field.node.hasLayout('Collection')) {
-          const child = Yolo.Util.getIn(request, fieldName) || {};
+        switch (field.node.kind()) {
+        case 'Primitive':
+          result.fields.push(fieldName);
+          break ;
+        case 'Record':
+          result.fields.push(fieldName);
+          /* no break */
+        case 'Collection':
+          let child = Yolo.Util.getIn(request, fieldName);
+          child = child != null ? Object.create(child) : {};
           child['*'] = true;
           result.children[fieldName] = child;
-        } else if (field.node.hasLayout('Record')) {
-          result.fields.push(fieldName);
-          const child = Yolo.Util.getIn(request, fieldName) || {};
-          child['*'] = true;
-          result.children[fieldName] = child;
-        } else {
-          result.fields.push(fieldName);
+          break ;
         }
       }
     }
@@ -95,12 +100,12 @@ export default function (node, logger, Bee) {
     const result = { filters: [], unknowns: [] };
     for (let i = 0; i < fields.length; i++) {
       const fieldName = fields[i];
-      const value = Yolo.Util.getIn(request, fieldName);
-      if (value == null || typeof value == 'object') continue ;
-      const kind = this.node.field(fieldName).node.kind();
-      switch (kind) {
+      const value = request[fieldName];
+      if (value == null) continue ;
+      switch (this.node.field(fieldName).node.kind()) {
       case 'Primitive':
-        result.filters.push(helper.AST.FieldValueEquality(fieldName, value));
+        if (typeof value != 'object')
+          result.filters.push(helper.AST.FieldValueEquality(fieldName, value));
         break ;
       case 'Record':
         if (value.id != null) {
@@ -119,7 +124,16 @@ export default function (node, logger, Bee) {
 
   node.on('fetch-prepare-children-filters', function (payload, callback) {
     const { filters, subrequest: { name, view } } = payload;
-    view.id = null;
+    let hasFilter = false;
+    for (const fieldName in view) {
+      if (fieldName == '*') continue ;
+      if (fieldName.substr(0, 1) != '$') continue ;
+      if (view[fieldName] == null) continue ;
+      hasFilter = true;
+      break ;
+    }
+    if (!hasFilter) return callback(null, {});
+    if (!('id' in view)) view.id = null;
     return this.node.field(name).node.emit('fetch', view, (err, record) => {
       if (err) return callback(err);
       if (record == null) return callback(new Error('DEEP_FILTER_NOT_FOUND'));
@@ -194,6 +208,8 @@ export default function (node, logger, Bee) {
       return lines;
   });
 
+  /***/
+
   node.on('upsert', new Bee()
           .extract({ request: 'jp:@' })
           .then(':upsert-prepare')
@@ -221,6 +237,7 @@ export default function (node, logger, Bee) {
         result.collections.push({ type: field, name: fieldName });
         return callback();
       case 'Record':
+        result.record[fieldName] = null;
         return field.node.emit('identify', value, (err, value) => {
           if (err) return callback(err);
           if (value != null && typeof value == 'object' && value.id != null)
@@ -231,6 +248,8 @@ export default function (node, logger, Bee) {
         });
       case 'Primitive':
         result.record[fieldName] = value;
+        return callback();
+      default:
         return callback();
       }
     }, (err) => {
@@ -260,19 +279,23 @@ export default function (node, logger, Bee) {
   node.on('upsert-execute', function ({ request, query }, callback) {
     return query.asCallback((err, result) => {
       if (err) return callback(err);
-      const flow = { request: {}, result };
-      if (request.id == null)
-        flow.request.id = result[0];
+      const flow = { record: {}, result };
+      if (result[0] instanceof Object) {
+        if (result[0].insertId != null)
+          flow.record.id = result[0].insertId;
+      } else {
+        debugger;
+      }
       return callback(null, flow);
     });
   });
 
-  node.on('upsert-collection', function ({ request, collection: { type, name } }, callback) {
-    return type.node.emit('delete', { this: request.id }, err => {
+  node.on('upsert-collection', function ({ record, request, collection: { type, name } }, callback) {
+    return type.node.emit('delete', { this: record.id }, err => {
       if (err) return callback(err);
       const item = type.node.type();
       return async.map(request[name], (entry, callback) => {
-        entry.this = request.id;
+        entry.this = record.id;
         return item.node.emit('upsert', entry, callback);
       }, (err, collection) => {
         return callback(err, { record: { [name]: collection } });
@@ -280,10 +303,13 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('upsert-format', function (record) {
+  node.on('upsert-format', function ({ request, record, dependencies }) {
     const result = {};
-    for (let fieldName in record)
-      Yolo.Util.setIn(result, fieldName, record[fieldName]);
+    for (let fieldName in record) {
+      Yolo.Util.setIn(result, fieldName, request[fieldName]);
+      if (request[fieldName] == null)
+        Yolo.Util.setIn(result, fieldName, record[fieldName]);
+    }
     return result;
   });
 
@@ -321,6 +347,8 @@ export default function (node, logger, Bee) {
     const query = link.raw(q.join(' '), values);
     return { query };
   });
+
+  /***/
 
   node.on('delete', new Bee()
           .extract({ request: 'jp:@' })

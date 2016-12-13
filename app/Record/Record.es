@@ -10,7 +10,9 @@ export default function (node, logger, Bee) {
     });
   });
 
+  // inflated
   node.on('get', new Bee()
+          .pipe(':sanitize')
           .pipe(':deflate')
           .pipe(':fetch')
           .pipe(':parse')
@@ -18,11 +20,14 @@ export default function (node, logger, Bee) {
           .end()
          );
 
+  // inflated
   node.on('set', new Bee()
           .Go('data')
           .  map('!data', ':parse')
           .  map('!data', ':deflate')
           .Go('identity')
+          .  map('!identity', ':inflate')
+          .  map('!identity', ':sanitize')
           .  map('!identity', ':deflate')
           .  map('!identity', ':identify')
           .close()
@@ -31,6 +36,7 @@ export default function (node, logger, Bee) {
           .end()
          );
 
+  // inflated
   node.on('walk', function ({ data, fqn }, callback) {
     return (function iterator(field, data, callback) {
       return field.node.emit('map', { data, iterator }, (err, result) => {
@@ -40,6 +46,7 @@ export default function (node, logger, Bee) {
     })(this, data, callback);
   });
 
+  // inflated
   node.on('map', function ({ data, iterator }, callback) {
     if (data == null) return callback(null, null);
     if (typeof iterator == 'string') {
@@ -62,6 +69,7 @@ export default function (node, logger, Bee) {
     });
   });
 
+  // inflated
   node.on('parse', function (data, callback) {
     if (data == null) return callback(null, null);
     return this.node.send('Type:parse', { node: this.node, data }, (err, data) => {
@@ -73,6 +81,84 @@ export default function (node, logger, Bee) {
     });
   });
 
+  // inflated
+  node.on('sanitize', function (data, callback) {
+    if (data == null) return callback(null, null);
+    return this.node.send('Type:sanitize', { node: this.node, data }, (err, { data }) => {
+      if (err) return callback(err);
+      if (data == null) return callback(null, null);
+      return this.node.emit('map', { data, iterator: (field, value, callback) => {
+        return field.node.emit('sanitize', value, callback);
+      } }, callback);
+    });
+  });
+
+  // deflated
+  node.on('inflate', function (data) {
+    const fields = this.node.field();
+    const record = {};
+    for (const fieldName in data) {
+      if (fieldName.substr(0, 1) == '$') {
+        record[fieldName] = data[fieldName];
+      } else {
+        const field = this.node.field(fieldName);
+        if (field == null) continue ;
+        Yolo.Util.setIn(record, fieldName, data[fieldName]);
+      }
+    }
+    if (data['*']) record['*'] = true;
+    return record;
+  });
+
+  // inflated
+  node.on('deflate', function (data) {
+    const fields = this.node.field();
+    const flat = {};
+    for (let i = 0; i < fields.length; i++) {
+      const fieldName = fields[i];
+      const value = fieldName in data ? data[fieldName] : Yolo.Util.getIn(data, fieldName);
+      flat[fieldName] = value;
+    }
+    if (data['*']) flat['*'] = true;
+    return flat;
+  });
+
+  // deflated
+  node.on('identify', function (data, callback) {
+    if (data == null) return callback(null, data);
+    const view = { '*': data['*'] || false };
+    const identities = this.node.identity();
+    const fields = [];
+    let found = false;
+    id: for (let i = 0; i < identities.length; i++) {
+      const identity = this.node.identity(identities[i]);
+      for (let ii = 0; ii < identity.length; ii++) {
+        if (!(identity[ii] in view)) view[identity[ii]] = null;
+        if (!~fields.indexOf(identity[ii])) fields.push(identity[ii]);
+      }
+      if (!found) {
+        for (let ii = 0; ii < identity.length; ii++) {
+          const fieldName = identity[ii];
+          if (data[fieldName] == null) continue id;
+          view[fieldName] = data[fieldName];
+        }
+        found = true;
+      }
+    }
+    if (!found) return callback(null, data);
+    return this.node.emit('fetch', view, (err, result) => {
+      if (err) return callback(err);
+      if (result == null) return callback(null, data);
+      for (let  i = 0; i < fields.length; i++) {
+        const fieldName = fields[i];
+        const value = Yolo.Util.getIn(result, fieldName);
+        data[fieldName] = Yolo.Util.merge(data[fieldName], value);
+      }
+      return callback(null, data);
+    });
+  });
+
+  // deflated
   node.on('fetch', function (view, callback) {
     const result = {};
     const fields = this.node.field();
@@ -84,6 +170,7 @@ export default function (node, logger, Bee) {
         return callback('Missing type');
       }
       const subview = view && view[field] || null;
+      if (subview == null) return callback();
       const fqn = subview && subview.$ || ':fetch';
       return childType.send(fqn, subview, (err, value) => {
         if (err) return callback(err);
@@ -96,51 +183,7 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('deflate', function (data, callback) {
-    const fields = this.node.field();
-    const flat = {};
-    return async.each(fields, (name, callback) => {
-      const field = this.node.field(name);
-      const value = name in data ? data[name] : Yolo.Util.getIn(data, name);
-      if (value == null) return callback();
-      return field.node.emit('parse', value, (err, result) => {
-        if (err) return callback(err);
-        flat[name] = result;
-        return callback();
-      })
-    }, err => {
-      if (data['*']) flat['*'] = true;
-      return callback(err, flat);
-    });
-  });
-
-  node.on('identify', function (data, callback) {
-    if (data == null) return callback(null, data);
-    const view = { '*': data['*'] || false };
-    const identities = this.node.identity();
-    let fields = null;
-    for (let i = 0; i < identities.length; i++) {
-      const identity = this.node.identity(identities[i]);
-      for (let ii = 0; ii < identity.length; ii++) {
-        const fieldName = identity[ii];
-        if (!(fieldName in view))
-          view[fieldName] = data[fieldName] != null ? data[fieldName] : null;
-        if (fields != null) break ;
-        if (Yolo.Util.getIn(data, identity[ii]) == null) break ;
-        fields = identity;
-      }
-    }
-    if (fields == null) return callback(null, data);
-    return this.node.emit('fetch', view, (err, result) => {
-      if (err) return callback(err);
-      if (result == null) return callback(null, data);
-      for (const fieldName in result)
-        if (!(fieldName in data))
-          data[fieldName] = result[fieldName];
-      return callback(null, data);
-    });
-  });
-
+  // inflated
   node.on('produce', function ({ model, data }, callback) {
     const schema = this.node.produce(model);
     return this.node.resolve(schema, data, callback);

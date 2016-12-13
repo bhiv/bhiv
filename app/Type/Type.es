@@ -66,43 +66,53 @@ export default function (node, logger, Bee) {
     });
   });
 
+  node.on('sanitize', function ({ node, data, patches }, callback) {
+    if (patches == null) patches = node.patch();
+    return (function transform(count, patches, rest, data) {
+      const patchName = patches.shift();
+      const patch = node.patch(patchName);
+
+      if (patch == null) {
+        const result = { done: count - rest.length, patches: rest, data };
+        return callback(null, result);
+      }
+
+      if (patch.length > 1) { // async
+        return patch.call(node, data, (err, value) => {
+          if (err) return callback(err);
+          if (value == null) { rest.push(patchName); value = data; }
+          return transform(count, patches, rest, value);
+        });
+      } else { // sync
+        let value = null;
+        try { value = patch.call(node, data); }
+        catch (err) { return callback(err); }
+        if (value == null) { rest.push(patchName); value = data; }
+        return transform(count, patches, rest, value);
+      }
+
+    })(patches.length, patches, [], data);
+  });
+
   node.on('parse', function ({ node, data }, callback) {
     const defaultCheck = this.node.get('checks.' + node.kind());
     const checks = node.check().map(name => node.check(name));
     if (defaultCheck != null) checks.unshift(defaultCheck);
-    return (function walk(data, checks, patches) {
+    return (function walk(data, patches) {
       const check = checks.shift();
       if (check == null) return callback(null, data);
       try { check.call(node, data); }
       catch (e) {
         checks.push(check);
-        return (function transform(count, patches, rest, data) {
-          const patchName = patches.shift();
-          const patch = node.patch(patchName);
-
-          if (patch == null) {
-            if (count == rest.length) return callback(e);
-            else return walk.call(this, data, checks, rest);
-          }
-
-          if (patch.length > 1) { // async
-            return patch.call(node, data, (err, value) => {
-              if (err) return callback(err);
-              if (value == null) { rest.push(patchName); value = data; }
-              return transform.call(this, count, patches, rest, value);
-            });
-          } else { // sync
-            let value = null;
-            try { value = patch.call(node, data); }
-            catch (err) { return callback(err); }
-            if (value == null) { rest.push(patchName); value = data; }
-            return transform.call(this, count, patches, rest, value);
-          }
-
-        }).call(this, patches.length, patches, [], data);
+        const payload = { node, data, patches }
+        return this.node.emit('sanitize', payload, (err, { done, patches, data }) => {
+          if (err) return callback(err);
+          if (done == 0) return callback(e);
+          return walk.call(this, data, patches);
+        });
       }
       return walk.call(this, data, checks, patches);
-    }).call(this, data, checks, node.patch(), null, callback);
+    }).call(this, data, node.patch(), null, callback);
   });
 
 

@@ -33,8 +33,11 @@ export default function (node, logger) {
     const table = this.node.get('table');
     if (link == null || table == null)
       throw new Error('Collection have not been configured');
-    if (request.this == null) debugger;
-    return table.clone().where(request).del().asCallback(callback);
+    if (request.this == null) {
+      return callback('Must have `this` field constraint to proceed delete');
+    } else {
+      return table.clone().where(request).del().asCallback(callback);
+    }
   });
 
 };

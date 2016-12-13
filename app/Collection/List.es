@@ -16,6 +16,16 @@ export default function (node, logger) {
     }, callback);
   });
 
+  node.on('sanitize', function (list, callback) {
+    if (list == null) return callback(null, null);
+    if (!(list instanceof Array)) logger.warn('Expecting an array, got: ', list);
+    if (!(list.length > 0)) return callback(null, []);
+    const node = this.node.type().node;
+    return async.map(list, (item, callback) => {
+      return node.emit('sanitize', item, callback);
+    }, callback);
+  });
+
   [ 'concat', 'detect', 'each', 'eachOf'
   , 'every', 'map', 'reject'
   , 'some', 'sortBy'
