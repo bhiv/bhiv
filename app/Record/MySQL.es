@@ -151,7 +151,7 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('fetch-children', function ({ result, children }, callback) {
+  node.on('fetch-children', function ({ fields, result, children }, callback) {
     for (var firstChild in children) break ;
     if (firstChild == null) return callback(null, {});
     const childList = Object.keys(children);
@@ -162,6 +162,7 @@ export default function (node, logger, Bee) {
         if (field.node.hasLayout('Collection')) {
           view.this = row.id;
           view.$limit = -1;
+          fields.push(childName);
         } else {
           view.id = row[childName];
         }
@@ -172,11 +173,11 @@ export default function (node, logger, Bee) {
         });
       }, callback);
     }, err => {
-      return callback(err, { result })
+      return callback(err, { result, fields })
     });
   });
 
-  node.on('fetch-format', function ({ fields, pagination, result }) {
+  node.on('fetch-format', function ({ fields, children, pagination, result }) {
     const lines = [];
     if (result == null) result = [];
     for (let i = 0; i < result.length; i++) {
