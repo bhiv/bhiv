@@ -76,7 +76,7 @@ export default function (node, logger, Bee) {
       try { check.call(node, data); }
       catch (e) {
         checks.push(check);
-        (function transform(count, patches, rest, data) {
+        return (function transform(count, patches, rest, data) {
           const patchName = patches.shift();
           const patch = node.patch(patchName);
 
