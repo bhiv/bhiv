@@ -8,6 +8,8 @@ describe('Async', function () {
     [ ['should responde', [], 0]
     , ['with 1 sync', [42], 42]
     , ['with 1 async', [42], 42, true]
+    , ['with 3 sync', [13, 14, 15], 42]
+    , ['with 3 async', [13, 14, 15], 42, true]
     ].map(function ([name, array, response, async]) {
       var result = 0;
       it(name, function (cb) {
