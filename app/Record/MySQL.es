@@ -163,8 +163,10 @@ export default function (node, logger, Bee) {
           view.this = row.id;
           view.$limit = -1;
           fields.push(childName);
-        } else {
+        } else if (row[childName] != null) {
           view.id = row[childName];
+        } else {
+          return callback();
         }
         return this.node.field(childName).node.emit('fetch', view, (err, result) => {
           if (err) return callback(err);
