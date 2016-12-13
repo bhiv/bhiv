@@ -30,4 +30,10 @@ export default function (node, logger) {
     logger.notice('can not check', value);
   });
 
+  node.patch('wrap', function (data) {
+    const type = typeof data;
+    if (type != 'string' && type != 'number') return null;
+    return { name: data };
+  });
+
 };

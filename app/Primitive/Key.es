@@ -14,10 +14,11 @@ export default function (node) {
   });
 
   node.check('length', function (value) {
-    return value.length > 1;
+    if (!(value.length > 0)) throw new Error('Bad length');
   });
 
   node.patch('syntax', function (value) {
+    if (value == null) return null;
     return Yolo.Util.slugify(value);
   });
 
