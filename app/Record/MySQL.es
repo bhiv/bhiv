@@ -158,7 +158,7 @@ export default function (node, logger, Bee) {
     return async.each(result, (row, callback) => {
       return async.each(childList, (childName, callback) => {
         const field = this.node.field(childName);
-        const view = children[childName];
+        const view = Object.create(children[childName]);
         if (field.node.hasLayout('Collection')) {
           view.this = row.id;
           view.$limit = -1;
