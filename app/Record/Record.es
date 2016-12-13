@@ -96,16 +96,6 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('fetch', 'format', function (record) {
-    if (record == null) return null;
-    var result = {};
-    for (var key in record) {
-      if (~key.indexOf('.')) Yolo.Util.setIn(result, key, record[key]);
-      else result[key] = record[key];
-    }
-    return result;
-  });
-
   node.on('deflate', function (data, callback) {
     const fields = this.node.field();
     const flat = {};

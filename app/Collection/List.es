@@ -8,6 +8,7 @@ export default function (node, logger) {
 
   node.on('parse', function (list, callback) {
     if (list == null) return callback(null, null);
+    if (!(list instanceof Array)) logger.warn('Expecting an array, got: ', list);
     if (!(list.length > 0)) return callback(null, []);
     const node = this.node.type().node;
     return async.map(list, (item, callback) => {
