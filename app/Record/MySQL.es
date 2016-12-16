@@ -186,7 +186,7 @@ export default function (node, logger, Bee) {
           row[childName] = result;
           return callback();
         });
-      }, callback);
+      }, (e) => { callback(e) });
     }, err => {
       return callback(err, { result, fields })
     });
