@@ -45,4 +45,11 @@ export default function (node, logger) {
     });
   });
 
+  node.on('upsert', function (collection, callback) {
+    const type = this.node.type();
+    return async.map(collection, (entry, callback) => {
+      return type.node.emit('upsert', entry, callback);
+    }, callback);
+  });
+
 };

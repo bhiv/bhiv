@@ -52,7 +52,6 @@ export default function (node, logger, Bee) {
          );
 
   node.on('fetch-prepare-range', function ({ request }) {
-    debugger;
     const result = { pagination: { offset: 0, limit: 1 } };
     if (request.$limit != null)
       result.pagination.limit = request.$limit >= 0 ? request.$limit : null;
@@ -283,8 +282,6 @@ export default function (node, logger, Bee) {
       if (result[0] instanceof Object) {
         if (result[0].insertId != null)
           flow.record.id = result[0].insertId;
-      } else {
-        debugger;
       }
       return callback(null, flow);
     });
@@ -293,12 +290,30 @@ export default function (node, logger, Bee) {
   node.on('upsert-collection', function ({ record, request, collection: { type, name } }, callback) {
     return type.node.emit('delete', { this: record.id }, err => {
       if (err) return callback(err);
-      const item = type.node.type();
-      return async.map(request[name], (entry, callback) => {
-        entry.this = record.id;
-        return item.node.emit('upsert', entry, callback);
-      }, (err, collection) => {
-        return callback(err, { record: { [name]: collection } });
+      const collection = request[name];
+      if (collection == null) {
+        return callback();
+      } else if (collection instanceof Array) {
+        for (let i = 0; i < collection.length; i++) {
+          collection[i].this = record.id;
+        }
+      } else if (collection instanceof Object) {
+        for (const key in collection) {
+          const content = collection[key];
+          const hasList = content instanceof Array;
+          if (hasList) {
+            for (let ii = 0; ii < content.length; ii++)
+              content[ii].this = record.id;
+          } else {
+            collection[key].this = record.id;
+          }
+        }
+      } else {
+        throw new Error('Unbale to set relation id');
+      }
+      return type.node.emit('upsert', request[name], (err, collection) => {
+        if (err) return callback(err);
+        return callback(null, { record: { [name]: collection } });
       });
     });
   });
