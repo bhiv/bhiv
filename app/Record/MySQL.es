@@ -375,6 +375,11 @@ export default function (node, logger, Bee) {
           .end()
          );
 
+  node.on('delete-prepare', function ({ request }) {
+    debugger;
+    return {};
+  });
+
   node.on('delete-collection', function ({ collection }) {
     debugger;
   });
