@@ -4,6 +4,8 @@ export default function (node, logger) {
 
   node.field('name', 'Primitive.String', { unique: true });
 
+  node.set('dependency.update', false);
+
   node.on('parse', function (view) {
     if (typeof view == 'object') return view;
     const main = this.node.get('main_field') || 'name';
