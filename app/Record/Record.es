@@ -22,14 +22,14 @@ export default function (node, logger, Bee) {
 
   // inflated
   node.on('set', new Bee()
-          .Go('data')
-          .  map('!data', ':parse')
-          .  map('!data', ':deflate')
           .Go('identity')
           .  map('!identity', ':inflate')
           .  map('!identity', ':sanitize')
           .  map('!identity', ':deflate')
           .  map('!identity', ':identify')
+          .Go('data')
+          .  map('!data', ':parse')
+          .  map('!data', ':deflate')
           .close()
           .pipe(':upsert', 'jp:merge(data, { id: identity.id })')
           .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
