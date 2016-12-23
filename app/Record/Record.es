@@ -87,6 +87,7 @@ export default function (node, logger, Bee) {
     return this.node.send('Type:sanitize', { node: this.node, data }, (err, { data }) => {
       if (err) return callback(err);
       if (data == null) return callback(null, null);
+      if (typeof data != 'object') return callback(null, null);
       return this.node.emit('map', { data, iterator: (field, value, callback) => {
         return field.node.emit('sanitize', value, callback);
       } }, callback);
