@@ -36,19 +36,17 @@ export default function (node, logger) {
     return async.each(Object.keys(map), (key, callback) => {
       if (hasList) {
         return async.map(map[key], (item, callback) => {
-          return node.emit('sanitize', item, (err, result) => {
-            if (err) return callback(err);
-            return callback(null, result.data);
-          });
+          return node.emit('sanitize', item, callback);
         }, (err, list) => {
           if (err) return callback(err);
           map[key] = list;
           return callback();
         });
       } else {
-        return node.emit('sanitize', map[key], (err, result) => {
+        return node.emit('sanitize', map[key], (err, data) => {
           if (err) return callback(err);
-          return callback(null, result.data);
+          map[key] = data;
+          return callback();
         });
       }
     }, err => {
