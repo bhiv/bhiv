@@ -11,7 +11,7 @@ export default function (node, logger, Bee) {
     const hasList = this.node.get('arity');
     const keyType = this.node.type().node.field('key');
     return Yolo.Async.each(view, (item, callback) => {
-      return keyType.node.send(':get~format', item.key, (err, key) => {
+      return keyType.node.send(':key-of', item.key, (err, key) => {
         if (err) return callback(err);
         if (hasList) {
           if (result[key] == null) result[key] = [];
