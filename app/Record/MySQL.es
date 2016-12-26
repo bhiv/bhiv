@@ -278,11 +278,10 @@ export default function (node, logger, Bee) {
   node.on('upsert-execute', function ({ request, query }, callback) {
     return query.asCallback((err, result) => {
       if (err) return callback(err);
-      const flow = { record: {}, result };
-      if (result[0] instanceof Object) {
-        if (result[0].insertId != null)
+      const flow = { record: { id: request.id }, result };
+      if (result[0] instanceof Object)
+        if (result[0].insertId > 0)
           flow.record.id = result[0].insertId;
-      }
       return callback(null, flow);
     });
   });
@@ -295,6 +294,7 @@ export default function (node, logger, Bee) {
         return callback();
       } else if (collection instanceof Array) {
         for (let i = 0; i < collection.length; i++) {
+          collection[i].id = null;
           collection[i].this = record.id;
         }
       } else if (collection instanceof Object) {
@@ -302,9 +302,12 @@ export default function (node, logger, Bee) {
           const content = collection[key];
           const hasList = content instanceof Array;
           if (hasList) {
-            for (let ii = 0; ii < content.length; ii++)
+            for (let ii = 0; ii < content.length; ii++) {
+              content[ii].id = null;
               content[ii].this = record.id;
+            }
           } else {
+            collection[key].id = null;
             collection[key].this = record.id;
           }
         }
