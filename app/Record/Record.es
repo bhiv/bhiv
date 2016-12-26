@@ -43,7 +43,10 @@ export default function (node, logger, Bee) {
         if (err) return callback(err);
         return field.node.send(fqn, result, callback);
       });
-    })(this, data, callback);
+    })(this, data, (err, result) => {
+      if (err) return callback(err);
+      return this.node.send(fqn, result, callback);
+    });
   });
 
   // inflated
@@ -133,16 +136,19 @@ export default function (node, logger, Bee) {
     let found = false;
     id: for (let i = 0; i < identities.length; i++) {
       const identity = this.node.identity(identities[i]);
-      for (let ii = 0; ii < identity.length; ii++) {
-        if (!(identity[ii] in view)) view[identity[ii]] = null;
-        if (!~fields.indexOf(identity[ii])) fields.push(identity[ii]);
+      for (let ii = 0; ii < identity.fields.length; ii++) {
+        if (!(identity.fields[ii] in view)) view[identity.fields[ii]] = null;
+        if (!~fields.indexOf(identity.fields[ii])) fields.push(identity.fields[ii]);
       }
       if (!found) {
-        for (let ii = 0; ii < identity.length; ii++) {
-          const fieldName = identity[ii];
+        for (let ii = 0; ii < identity.fields.length; ii++) {
+          const fieldName = identity.fields[ii];
           if (data[fieldName] == null) continue id;
           view[fieldName] = data[fieldName];
         }
+        for (const key in identity.constraints)
+          if (identity.constraints[key] != data[key])
+            continue id;
         found = true;
       }
     }
