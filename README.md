@@ -16,19 +16,18 @@ A framework for scalabe and splittable backend, it bring a single design pattern
 Fully undocumented (sorry about that) but it should comming soon
 
 TODO:
-  * Force patch procedure ordered !
   * Refactor Collection using "field" instead of "type"
   * Allow Yaml format config files
-  * Add syntax for merging behavior
+  * Add syntax for configuration merging behavior
   * Handle react / redux (replacement of NSB https://github.com/np42/yolojs/tree/b1009616e66a7aa5c82d4582e7f84a49fdd10e10/app/Widget)
   * Server side rendering (for SEO)
-  * Add pattern matching, reduce,  basic async pattern to Bhiv (flow based execution)
+  * Add pattern matching, reduce, basic async pattern to Bhiv (flow based execution)
   * Add outlets api (e.g. node.when('subscribe', 'before', (payload, callback) => { ... }))
   * Fix inlets settings
   * Add hot code swapping
   * Add submodule based parser for Routing module
-  * Flow control (c.f: Bhiv)
-  * handle cross dependencies better
+  * Flow control (match, if-then-else, ...) c.f: Bhiv
+  * handle better cross dependencies
 
 # Yolo.Node Pattern:
 
@@ -96,5 +95,35 @@ The Yolo.Node pattern is an omnipotent object which can:
 ## Traveral
 
   * send(\<selector>, \<payload>, \<callback>)
-  * 
 
+## Yolo.Node.Flux
+
+### Standard callback
+  * callback() => callback.emit('done', null);
+  * callback(<data>) => callback.emit('error', <data>)
+  * callback(null, <data>) => callback.emit('done', <data>)
+
+### Evented callback
+  * callback.emit(<event-name>, <data>)
+
+```
+// at: Here
+node.on('handle', function (data, callback) {
+  const array = [];
+  return this.node.send('Some.Where:act', data, new function () {
+    this.done  = paylaod => { return callback(null, array); };
+    this.data  = payload => { array.push(chunk); };
+    this.error = payload => { return callback(payload); };
+  });
+});
+
+// at: Some.Where
+node.on('act', function (data, flux) {
+  for(let i = 0; i < 100; i++)
+    flux.emit('data', Math.random());
+  return flux();
+});
+```
+
+### Altering Flow callback
+  * callback.super(<data>) // Allow you to call the parent handle
