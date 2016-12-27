@@ -126,7 +126,7 @@ export default function (node, logger, Bee) {
     let hasFilter = false;
     for (const fieldName in view) {
       if (fieldName == '*') continue ;
-      if (fieldName.substr(0, 1) != '$') continue ;
+      if (fieldName.substr(0, 1) == '$') continue ;
       if (view[fieldName] == null) continue ;
       hasFilter = true;
       break ;
