@@ -37,6 +37,7 @@
     "babel-register": "^6.9.0",
     "bhiv": "^3.1.43",
     "chokidar": "1.6.0",
+    "colors": "^1.1.2",
     "glob": "^7.0.3",
     "jmespath": "^0.15.0",
     "kexec": "^2.0.2",
