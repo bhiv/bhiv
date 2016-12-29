@@ -191,10 +191,4 @@ export default function (node, logger, Bee) {
     });
   });
 
-  // inflated
-  node.on('produce', function ({ model, data }, callback) {
-    const schema = this.node.produce(model);
-    return this.node.resolve(schema, data, callback);
-  });
-
 };
