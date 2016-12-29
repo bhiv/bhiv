@@ -299,6 +299,7 @@ export default function (node, logger, Bee) {
         }
       } else if (collection instanceof Object) {
         for (const key in collection) {
+          if (collection[key] == null) collection[key] = {};
           const content = collection[key];
           const hasList = content instanceof Array;
           if (hasList) {
