@@ -5,6 +5,7 @@ export default function (node, logger, Bee) {
   const loading = new Yolo.Cache(-1);
 
   node.on('instanciate', function (type, callback) {
+    if (type == null) return callback(null, null);
     const key = 'types.' + Yolo.Digest(type.fqn);
     const node = this.node.get(key);
     if (node != null) {
@@ -34,9 +35,7 @@ export default function (node, logger, Bee) {
   node.on('inflate', function (node, callback) {
     switch (node.kind()) {
     case 'Collection':
-      return this.node.send(':instanciate', node.type(), err => {
-        return callback(err, node)
-      });
+      return this.node.send(':instanciate', node.type(), err => callback(err, node));
     case 'Record':
       const fields = node.field();
       return async.map(fields, (name, callback) => {
