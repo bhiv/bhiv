@@ -38,7 +38,7 @@ export default function (node, logger) {
         const fqn = iterator;
         iterator = (type, value, callback) => type.node.send(fqn, value, callback);
       }
-      const type = this.node.type();
+      const type = this.node.type() || this;
       return async[method](payload.data, (item, callback) => {
         return iterator(type, item, callback);
       }, callback);
