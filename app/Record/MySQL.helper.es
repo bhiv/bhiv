@@ -30,7 +30,7 @@ export default new function () {
       condition.push(this.escapeField(ast.name));
       break ;
     case 'data':
-      condition.push('?');
+      condition.push(ast.value instanceof Array ? '(?)' : '?');
       values.push(ast.value);
       break ;
     default :
@@ -40,7 +40,7 @@ export default new function () {
 
   this.AST = new function () {
     this.FieldValueEquality = function (field, value) {
-      return ( { type: 'comparison', operator: '='
+      return ( { type: 'comparison', operator: value instanceof Array ? 'in' : '='
                , left: { type: 'field', name: field }
                , right: { type: 'data', value: value }
                }

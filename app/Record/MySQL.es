@@ -75,7 +75,10 @@ export default function (node, logger, Bee) {
         request[fieldName] = { '*': true };
       }
     }
-    for (const fieldName in request) {
+    const fieldsList = [];
+    for (const field in request) fieldsList.push(field);
+    for (let i = 0; i < fieldsList.length; i++) {
+      const fieldName = fieldsList[i];
       if (fieldName == '*' || fieldName.substr(0, 1) == '$') continue ;
       const field = this.node.field(fieldName);
       if (field == null) {
@@ -93,6 +96,7 @@ export default function (node, logger, Bee) {
           child = child != null ? Object.create(child) : {};
           child['*'] = true;
           result.children[fieldName] = child;
+          if (!~fieldsList.indexOf('id')) fieldsList.push('id');
           break ;
         }
       }
@@ -141,7 +145,8 @@ export default function (node, logger, Bee) {
     return this.node.field(name).node.emit('fetch', view, (err, record) => {
       if (err) return callback(err);
       if (record == null) return callback(new Error('DEEP_FILTER_NOT_FOUND'));
-      filters.push(helper.AST.FieldValueEquality(name, record.id));
+      const ids = record instanceof Array ? record.map(r => r.id) : record.id;
+      filters.push(helper.AST.FieldValueEquality(name, ids));
       return callback();
     });
   });
@@ -183,6 +188,10 @@ export default function (node, logger, Bee) {
           fields.push(childName);
         } else if (row[childName] != null) {
           view.id = row[childName];
+          view.$limit = null;
+          view.$offset = null;
+          view.$order = null;
+          view.$rand = null;
         } else {
           return callback();
         }
