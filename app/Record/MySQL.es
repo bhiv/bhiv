@@ -35,6 +35,11 @@ export default function (node, logger, Bee) {
 
   /***/
 
+  node.on('fetch-all', function (view, callback) {
+    view.$limit = -1;
+    return this.node.emit('fetch', view, callback);
+  });
+
   node.on('fetch', new Bee()
           .extract({ request: 'jp:@' })
           .then(':fetch-prepare-range')
