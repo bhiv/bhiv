@@ -74,6 +74,14 @@ export default function (node, logger, Bee) {
         if (fieldName in request) continue ;
         request[fieldName] = { '*': true };
       }
+    } else {
+      const fields = this.node.field();
+      for (let i = 0; i < fields.length; i++) {
+        const fieldName = fields[i];
+        if (fieldName in request) continue ;
+        if (!this.node.field(fieldName).options.required) continue ;
+        request[fieldName] = { '*': true };
+      }
     }
     const fieldsList = [];
     for (const field in request) fieldsList.push(field);
@@ -112,7 +120,7 @@ export default function (node, logger, Bee) {
       if (value == null) continue ;
       switch (this.node.field(fieldName).node.kind()) {
       case 'Primitive':
-        if (typeof value != 'object')
+        if (typeof value != 'object' || value instanceof Array)
           result.filters.push(helper.AST.FieldValueEquality(fieldName, value));
         break ;
       case 'Record':
