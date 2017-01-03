@@ -106,6 +106,9 @@ export default function (node, logger, Bee) {
           result.children[fieldName] = child;
           if (!~fieldsList.indexOf('id')) fieldsList.push('id');
           break ;
+        default :
+          logger.warn(this.node.layout, 'Field: ' + fieldName + ' has no kind');
+          break ;
         }
       }
     }

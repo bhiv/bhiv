@@ -14,9 +14,14 @@ export default new function () {
     const condition = [];
     const values = [];
     if (ast.type == 'comparison') {
-      this.setFilterPart(ast.left, condition, values);
-      condition.push(ast.operator);
-      this.setFilterPart(ast.right, condition, values);
+      if (ast.operator != 'sql') {
+        this.setFilterPart(ast.left, condition, values);
+        condition.push(ast.operator);
+        this.setFilterPart(ast.right, condition, values);
+      } else {
+        this.setFilterPart(ast.left, condition, values);
+        condition.push(ast.right);
+      }
     } else {
       throw new Error('Unhandled filter type: ' + ast.type);
     }
@@ -40,11 +45,17 @@ export default new function () {
 
   this.AST = new function () {
     this.FieldValueEquality = function (field, value) {
-      return ( { type: 'comparison', operator: value instanceof Array ? 'in' : '='
+      if (typeof value == 'string' && value.substr(0, 4) == 'sql:') {
+        return { type: 'comparison', operator: 'sql'
+               , left: { type: 'field', name: field }
+               , right: value.substr(4)
+               };
+      } else {
+        return { type: 'comparison', operator: value instanceof Array ? 'in' : '='
                , left: { type: 'field', name: field }
                , right: { type: 'data', value: value }
-               }
-             );
+               };
+      }
     };
   };
 
