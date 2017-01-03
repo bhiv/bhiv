@@ -47,8 +47,9 @@ export default function (node, logger, Bee) {
     return new Clr(sql)
       .set(/select|insert|update|delete|create|drop/ig, 'blue')
       .set(/(distinct|set|into|left|right|join|on|union|values)\s/ig, 'yellow')
-      .set(/(group|where|having|limit|order|by|asc|desc|and|or|between|in)\s|!?=/ig, 'cyan')
-      .set(/\?/ig, 'red')
+      .set(/(group|where|having|limit|order|by|asc|desc)\s|!?=/ig, 'cyan')
+      .set(/(is|not|and|or|between|in)\s|!?=/ig, 'cyan')
+      .set(/\?|null/ig, 'red')
       .set(/`.+?`/ig, 'green')
       .s.replace(/(from)(.+?)(`.+?`(?:\s*\.\s*`.+?`)*)/ig, (_, key, space, source) => {
         return clrs.cyan(rst(key)) + space + clrs.magenta(rst(source));
