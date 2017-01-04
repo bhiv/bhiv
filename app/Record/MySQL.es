@@ -66,7 +66,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('fetch-prepare-fields', function ({ request }) {
-    const result = { fields: [], children: {} };
+    const result = { plucks: [], fields: [], children: {} };
     if (request['*']) {
       const fields = this.node.field();
       for (let i = 0; i < fields.length; i++) {
@@ -95,9 +95,11 @@ export default function (node, logger, Bee) {
         switch (field.node.kind()) {
         case 'Primitive':
           result.fields.push(fieldName);
+          if (!('$pluck' in request)) result.plucks.push(fieldName);
           break ;
         case 'Record':
           result.fields.push(fieldName);
+          if (!('$pluck' in request)) result.plucks.push(fieldName);
           /* no break */
         case 'Collection':
           let child = Yolo.Util.getIn(request, fieldName);
@@ -111,6 +113,11 @@ export default function (node, logger, Bee) {
           break ;
         }
       }
+    }
+    for (const name in request.$pluck) {
+      const value = request.$pluck[name];
+      if (value != null) result.plucks.push('sql:' + value + ' as `' + name + '`');
+      else result.plucks.push(name);
     }
     return result;
   });
@@ -162,13 +169,13 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('fetch-build', function ({ fields, filters, pagination }) {
+  node.on('fetch-build', function ({ plucks, filters, pagination }) {
     const link = this.node.get('link');
     const table = this.node.get('table');
     if (link == null || table == null)
       throw new Error('Collection have not been configured');
     const query = table.clone();
-    query.select(helper.escapeFields(fields, link));
+    query.select(helper.escapeFields(plucks, link));
     for (let i = 0; i < filters.length; i++) {
       const filter = helper.makeFilter(filters[i]);
       query.whereRaw(filter.condition, filter.values);
@@ -185,7 +192,7 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('fetch-children', function ({ fields, result, children }, callback) {
+  node.on('fetch-children', function ({ plucks, result, children }, callback) {
     for (var firstChild in children) break ;
     if (firstChild == null) return callback(null, {});
     const childList = Object.keys(children);
@@ -196,7 +203,7 @@ export default function (node, logger, Bee) {
         if (field.node.hasLayout('Collection')) {
           view.this = row.id;
           view.$limit = -1;
-          fields.push(childName);
+          plucks.push(childName);
         } else if (row[childName] != null) {
           view.id = row[childName];
           view.$limit = null;
@@ -213,17 +220,18 @@ export default function (node, logger, Bee) {
         });
       }, (e) => { callback(e) });
     }, err => {
-      return callback(err, { result, fields })
+      return callback(err, { result, plucks })
     });
   });
 
-  node.on('fetch-format', function ({ fields, children, pagination, result }) {
+  node.on('fetch-format', function ({ request, plucks, children, pagination, result }) {
     const lines = [];
     if (result == null) result = [];
+    if ('$pluck' in request) plucks = Object.keys(request.$pluck || {});
     for (let i = 0; i < result.length; i++) {
       const row = {};
-      for (let ii = 0; ii < fields.length; ii++)
-        Yolo.Util.setIn(row, fields[ii], result[i][fields[ii]]);
+      for (let ii = 0; ii < plucks.length; ii++)
+        Yolo.Util.setIn(row, plucks[ii], result[i][plucks[ii]]);
       lines.push(row);
     }
     if (pagination.offset === 0 && pagination.limit === 1)
