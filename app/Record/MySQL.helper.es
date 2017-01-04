@@ -5,9 +5,15 @@ export default new function () {
   };
 
   this.escapeField = function (field, link) {
-    const value = '`' + field.replace(/`/g, '``') + '`';
-    if (link != null) return link.raw(value);
-    return value;
+    if (field.substr(0, 4) == 'sql:') {
+      const value = field.substr(4);
+      if (link != null) return link.raw(value);
+      return value;
+    } else {
+      const value = '`' + field.replace(/`/g, '``') + '`';
+      if (link != null) return link.raw(value);
+      return value;
+    }
   };
 
   this.makeFilter = function (ast, link) {
