@@ -180,8 +180,8 @@ export default function (node, logger, Bee) {
       const filter = helper.makeFilter(filters[i]);
       query.whereRaw(filter.condition, filter.values);
     }
-    if (pagination.limit != null) query.limit(pagination.limit);
-    query.offset(pagination.offset);
+    if (pagination.limit != null) query.limit(pagination.limit | 0);
+    query.offset(pagination.offset | 0);
     return { query };
   });
 
