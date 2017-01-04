@@ -45,12 +45,13 @@ export default function (node, logger, Bee) {
 
   const colorize = function (sql) {
     return new Clr(sql)
-      .set(/select|insert|update|delete|create|drop/ig, 'blue')
-      .set(/(distinct|set|into|left|right|join|on|union|values)\s/ig, 'yellow')
-      .set(/(group|where|having|limit|order|by|asc|desc)\s|!?=/ig, 'cyan')
-      .set(/(is|not|and|or|between|in)\s|!?=/ig, 'cyan')
-      .set(/\?|null/ig, 'red')
-      .set(/`.+?`/ig, 'green')
+      .set(/(select|insert|update|delete|create|drop)(?=\s)/ig, 'blue')
+      .set(/\s(as|distinct|set|into|left|right|join|on|union|values)(?=\s)/ig, 'yellow')
+      .set(/(group|where|having|limit|offset|order|by|asc|desc)(?=\s)/ig, 'cyan')
+      .set(/(count|max|min|avg|concat|substring|now|left|right)(?=\s?\()/ig, 'cyan')
+      .set(/(is|not|and|or|between|in)(?=\s)|!?=/ig, 'cyan')
+      .set(/\?|null|'.*?'/ig, 'red')
+      .set(/`.+?`|\*/ig, 'green')
       .s.replace(/(from)(.+?)(`.+?`(?:\s*\.\s*`.+?`)*)/ig, (_, key, space, source) => {
         return clrs.cyan(rst(key)) + space + clrs.magenta(rst(source));
       });
