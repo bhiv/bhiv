@@ -20,13 +20,21 @@ export default new function () {
     const condition = [];
     const values = [];
     if (ast.type == 'comparison') {
-      if (ast.operator != 'sql') {
+      switch (ast.operator) {
+      default:
         this.setFilterPart(ast.left, condition, values);
         condition.push(ast.operator);
         this.setFilterPart(ast.right, condition, values);
-      } else {
+        break ;
+      case 'sql':
         this.setFilterPart(ast.left, condition, values);
         condition.push(ast.right);
+        break ;
+      case 'sql-fragment':
+        const field = this.escapeField(ast.field);
+        condition.push(ast.fragment.replace(/@/g, field));
+        Array.prototype.push.apply(values, ast.values);
+        break ;
       }
     } else {
       throw new Error('Unhandled filter type: ' + ast.type);
@@ -41,8 +49,17 @@ export default new function () {
       condition.push(this.escapeField(ast.name));
       break ;
     case 'data':
-      condition.push(ast.value instanceof Array ? '(?)' : '?');
-      values.push(ast.value);
+      if (ast.value instanceof Array) {
+        if (ast.value.length > 0) {
+          condition.push('(?)');
+          values.push(ast.value);
+        } else {
+          condition.push('(NULL)');
+        }
+      } else {
+        condition.push('?');
+        values.push(ast.value);
+      }
       break ;
     default :
       throw new Error('Unhandled filter part type: ' + ast.type);
@@ -50,16 +67,26 @@ export default new function () {
   };
 
   this.AST = new function () {
-    this.FieldValueEquality = function (field, value) {
-      if (typeof value == 'string' && value.substr(0, 4) == 'sql:') {
+    this.FieldValueComparison = function (field, value) {
+      const type = typeof value;
+      if (type == 'string' && value.substr(0, 4) == 'sql:') {
         return { type: 'comparison', operator: 'sql'
                , left: { type: 'field', name: field }
                , right: value.substr(4)
                };
-      } else {
-        return { type: 'comparison', operator: value instanceof Array ? 'in' : '='
+      } else if (type == 'object' && '$sql' in value) {
+        return { type: 'comparison', operator: 'sql-fragment'
+               , field, fragment: value.$sql.filter, values: value.$sql.values
+               };
+      } else if (value instanceof Array) {
+        return { type: 'comparison', operator: 'in'
                , left: { type: 'field', name: field }
-               , right: { type: 'data', value: value }
+               , right: { type: 'data', value }
+               };
+      } else {
+        return { type: 'comparison', operator: '='
+               , left: { type: 'field', name: field }
+               , right: { type: 'data', value }
                };
       }
     };
