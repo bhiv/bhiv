@@ -130,12 +130,14 @@ export default function (node, logger, Bee) {
       if (value == null) continue ;
       switch (this.node.field(fieldName).node.kind()) {
       case 'Primitive':
-        if (typeof value != 'object' || value instanceof Array)
-          result.filters.push(helper.AST.FieldValueEquality(fieldName, value));
+        if (value == null) break ;
+        const type = typeof value;
+        if (type != 'object' || value instanceof Array || '$sql' in value)
+          result.filters.push(helper.AST.FieldValueComparison(fieldName, value));
         break ;
       case 'Record':
         if (value.id != null) {
-          result.filters.push(helper.AST.FieldValueEquality(fieldName, value.id));
+          result.filters.push(helper.AST.FieldValueComparison(fieldName, value.id));
         } else {
           result.unknowns.push({ name: fieldName, view: value });
         }
@@ -164,7 +166,7 @@ export default function (node, logger, Bee) {
       if (err) return callback(err);
       if (record == null) return callback(new Error('DEEP_FILTER_NOT_FOUND'));
       const ids = record instanceof Array ? record.map(r => r.id) : record.id;
-      filters.push(helper.AST.FieldValueEquality(name, ids));
+      filters.push(helper.AST.FieldValueComparison(name, ids));
       return callback();
     });
   });
