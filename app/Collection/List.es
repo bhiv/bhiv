@@ -33,10 +33,18 @@ export default function (node, logger) {
     node.on(method, function (payload, callback) {
       if (payload.data == null) return callback(null, null);
       if (payload.data.length == 0) return callback(null, []);
-      let iterator = payload.iterator || payload.fqn;
-      if (typeof iterator == 'string') {
-        const fqn = iterator;
-        iterator = (type, value, callback) => type.node.send(fqn, value, callback);
+      const action = payload.iterator || payload.fqn;
+      let iterator = null;
+      switch (typeof action) {
+      case 'function':
+        iterator = action;
+        break ;
+      case 'string':
+        iterator = (type, value, callback) => type.node.send(action, value, callback);
+        break ;
+      default:
+        iterator = (type, value, callback) => type.node.resolve(action, value, callback);
+        break ;
       }
       const type = this.node.type() || this;
       return async[method](payload.data, (item, callback) => {
