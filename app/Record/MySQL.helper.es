@@ -36,6 +36,14 @@ export default new function () {
         Array.prototype.push.apply(values, ast.values);
         break ;
       }
+    } else if (ast.type == 'fulltext-search') {
+      condition.push('match');
+      this.setFilterPart(ast.source, condition);
+      condition.push('against(');
+      const field = { type: 'data', value: ast.value };
+      this.setFilterPart(field, condition, values);
+      if (ast.bool) condition.push('in boolean mode');
+      condition.push(')');
     } else {
       throw new Error('Unhandled filter type: ' + ast.type);
     }
@@ -67,16 +75,18 @@ export default new function () {
   };
 
   this.AST = new function () {
+    this.FieldValueRaw = function (field, value) {
+      return { type: 'comparison', operator: 'sql-fragment'
+             , field, fragment: value.$sql.filter, values: value.$sql.values
+             };
+    };
+
     this.FieldValueComparison = function (field, value) {
       const type = typeof value;
       if (type == 'string' && value.substr(0, 4) == 'sql:') {
         return { type: 'comparison', operator: 'sql'
                , left: { type: 'field', name: field }
                , right: value.substr(4)
-               };
-      } else if (type == 'object' && '$sql' in value) {
-        return { type: 'comparison', operator: 'sql-fragment'
-               , field, fragment: value.$sql.filter, values: value.$sql.values
                };
       } else if (value instanceof Array) {
         return { type: 'comparison', operator: 'in'
@@ -89,6 +99,14 @@ export default new function () {
                , right: { type: 'data', value }
                };
       }
+    };
+
+    this.FieldValueFullText = function (field, value) {
+      return { type: 'fulltext-search'
+             , source: { type: 'field', name: field }
+             , value: value.$ft
+             , bool: value.$bool === false ? false : true
+             };
     };
   };
 

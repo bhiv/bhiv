@@ -132,8 +132,14 @@ export default function (node, logger, Bee) {
       case 'Primitive':
         if (value == null) break ;
         const type = typeof value;
-        if (type != 'object' || value instanceof Array || '$sql' in value)
+        if (type != 'object' || value instanceof Array) {
           result.filters.push(helper.AST.FieldValueComparison(fieldName, value));
+        } else if (value && type == 'object') {
+          if ('$sql' in value)
+            result.filters.push(helper.AST.FieldValueRaw(fieldName, value));
+          else if ('$ft' in value)
+            result.filters.push(helper.AST.FieldValueFullText(fieldName, value));
+        }
         break ;
       case 'Record':
         if (value.id != null) {
