@@ -48,8 +48,8 @@ export default function (node, logger, Bee) {
       .set(/(select|insert|update|delete|create|drop)(?=\s)/ig, 'blue')
       .set(/\s(as|distinct|set|into|left|right|join|on|union|values)(?=\s)/ig, 'yellow')
       .set(/(group|where|having|limit|offset|order|by|asc|desc)(?=\s)/ig, 'cyan')
-      .set(/(count|max|min|avg|concat|substring|now|left|right)(?=\s?\()/ig, 'cyan')
-      .set(/(is|not|and|or|between|in)(?=\s)|[!<>]?=|[<>]/ig, 'cyan')
+      .set(/(count|max|min|avg|concat|substring|now|left|right|against)(?=\s?\()/ig, 'cyan')
+      .set(/(is|not|and|or|between|in|match|boolean|mode)(?=\s)|[!<>]?=|[<>]/ig, 'cyan')
       .set(/\?|null|'.*?'/ig, 'red')
       .set(/`.+?`|\*/ig, 'green')
       .s.replace(/(from)(.+?)(`.+?`(?:\s*\.\s*`.+?`)*)/ig, (_, key, space, source) => {
