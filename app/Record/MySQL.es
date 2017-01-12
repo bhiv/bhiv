@@ -41,10 +41,12 @@ export default function (node, logger, Bee) {
   });
 
   node.on('fetch', new Bee()
+          .trap({ type: 'LAZY' })
           .extract({ request: 'jp:@' })
           .then(':fetch-prepare-range')
           .then(':fetch-prepare-fields')
           .then(':fetch-prepare-filters')
+          .pipe({ $: { lazy: 3600000 } })
           .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
           .Each('unknowns', null, 'subrequest')
           .  then(':fetch-prepare-children-filters')
