@@ -10,7 +10,7 @@ export default function (node, logger) {
     });
   });
 
-  node.on('parse', 'execute', function (data, callback) {
+  node.on('parse', function (data, callback) {
     return this.node.send('Type:parse', { node: this.node, data }, callback);
   });
 
