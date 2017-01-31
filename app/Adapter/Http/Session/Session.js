@@ -54,12 +54,12 @@ module.exports = function (node, logger) {
 
   /***************************************/
 
-  node.on('-start', function (_, callback) {
+  node.on('-start', function (slice, callback) {
     var handler = ['Handler', node.get('handler') || 'File'].join('.');
     this.node.create(handler, 'Handler', function (err, result) {
       result.leaf.set('lifetime', node.get('lifetime') || defaultLifetime);
     });
-    return callback();
+    return this.super(slice, callback);
   });
 
   node.on('attach', function (transaction, callback) {

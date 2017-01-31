@@ -1,0 +1,59 @@
+structs:
+<task>: Fqn, Glue, Options
+
+verbes: $()
+
+.clone           // 
+
+.goto            // $1
+
+.get             // 
+.then            // 
+
+.race            // 
+.  at            // $1 as path to store result
+.  end
+
+.map             // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow} => value
+.  end
+.fold            // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow, accumulator} => accumulator
+.filter          // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow} => keep
+.detect          // 
+
+.shunt           // if $1 == true then go (err / out), glue
+.lazy            // $1 as duration (ms) or key => data, $2 as glue for key
+
+.match           // test $1 
+.  when          // $1 is a pattern, then execute <task>
+.  otherwise     // execute <task>
+.  end
+
+.trap            // if $1 == true then catch error and execute <task>
+.  end
+
+.unless          // if $1 == false then execute <task> before continue
+.  end
+
+.until           // execute block with { flow, times } until $1 test return true
+.  end
+
+.end             // terminate waterfall (if root return ast)
+
+----------------------------------------------------------------------------------
+
+[a, b, c]                           // list of parallel tasks
+{ a, b, c }                         // map of parallel tasks
+function (d, c) {}                  // asynchronous function
+function (d) {}                     // synchronous function
+'$:[...]'                           // query string syntax (jmespath or custom one)
+{ $: [A, B, C] }                    // waterfall - $()
+{ $: 'F.Q.N:method' }               // then
+{ $: { type: 'race', threads } }    // race
+{ $: { type: 'map', iterator } }    // map
+{ $: { type: 'fold', iterator } }   // fold
+{ $: { type: 'filter', iterator } } // filter
+{ $: { type: 'detect', iterator } } // detect
+
+
+
+

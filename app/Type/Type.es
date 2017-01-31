@@ -13,11 +13,11 @@ export default function (node, logger, Bee) {
       type.node = node;
       return callback(null, type);
     } else if (loading.has(type.fqn)) {
-      // type is been loading
+      // type is loading
       loading.get(type.fqn).push(node => { type.node = node });
       return callback(null, type);
     } else {
-      // type is not loading
+      // type is new
       loading.set(type.fqn, [node => { type.node = node }]);
       return this.node.create(type.fqn, (err, result) => {
         if (err) return callback(err);

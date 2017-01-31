@@ -7,8 +7,9 @@ export default function (node, logger, Bee) {
 
   /*************************/
 
-  node.on('-load', function ({}) {
+  node.on('-load', function (slice, callback) {
     if (this.node.get('credentials') == null) throw new Error('missing credentials');
+    return this.super(slice, callback);
   });
 
   node.on('authorize', function ({ scopes }, callback) {

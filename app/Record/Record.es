@@ -4,9 +4,10 @@ export default function (node, logger, Bee) {
 
   node.kind('Record');
 
-  node.on('-load', function (_, callback) {
+  node.on('-load', function (slice, callback) {
     return this.node.send('Type:inflate', this.node, err => {
-      return callback(err);
+      if (err) return callback(err);
+      return this.super(slice, callback);
     });
   });
 
@@ -16,7 +17,7 @@ export default function (node, logger, Bee) {
           .pipe(':deflate')
           .pipe(':fetch')
           .pipe(':parse')
-          .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
+          .pipe(':walk', { data: 'jp:@', fqn: ':format' })
           .end()
          );
 
@@ -32,7 +33,7 @@ export default function (node, logger, Bee) {
           .  map('!data', ':deflate')
           .close()
           .pipe(':upsert', 'jp:merge(data, { id: identity.id })')
-          .pipe(':walk', { data: 'jp:@', fqn: ':get~format' })
+          .pipe(':walk', { data: 'jp:@', fqn: ':format' })
           .end()
          );
 

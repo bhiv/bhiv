@@ -4,11 +4,12 @@ import KeyHole from './parser.keyhole.pegjs'
 
 export default function (node, logger, Bee) {
 
-  node.on('extract-http-access', 'prepare', function (payload, callback) {
+  node.on('extract-http-access', function (payload, callback) {
     const access = {};
     if (payload.params.access_token != null)
       access.token = payload.params.access_token;
-    return callback(null, { access });
+    const result = Yolo.Util.merge(payload, { access });
+    return this.super(result, callback);
   });
 
   node.on('when-granted', function ({ scopes, rights }, callback) {
