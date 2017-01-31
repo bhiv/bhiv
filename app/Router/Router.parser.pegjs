@@ -108,7 +108,7 @@ Http_Path_Defined = [a-zA-Z0-9.\-/_]+
 
 Http_Path_Variable = ':' [a-zA-Z] [a-zA-Z0-9]* [*+?]?
 
-Http_Path_Wildcard = '*'
+Http_Path_Wildcard = '*' / '+'
 
 Http_Methods = h:Http_Method t:(ws ',' ws Http_Method)* {
   var unicity = {};
