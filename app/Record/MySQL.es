@@ -46,7 +46,6 @@ export default function (node, logger, Bee) {
           .then(':fetch-prepare-range')
           .then(':fetch-prepare-fields')
           .then(':fetch-prepare-filters')
-          .pipe({ $: { lazy: 3600000 } })
           .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
           .Each('unknowns', null, 'subrequest')
           .  then(':fetch-prepare-children-filters')
@@ -175,7 +174,7 @@ export default function (node, logger, Bee) {
       if (record == null) return callback(new Error('DEEP_FILTER_NOT_FOUND'));
       const ids = record instanceof Array ? record.map(r => r.id) : record.id;
       filters.push(helper.AST.FieldValueComparison(name, ids));
-      return callback();
+      return callback(null, payload);
     });
   });
 
@@ -228,7 +227,9 @@ export default function (node, logger, Bee) {
           row[childName] = result;
           return callback();
         });
-      }, (e) => { callback(e) });
+      }, err => {
+        return callback(err)
+      });
     }, err => {
       return callback(err, { result, plucks })
     });

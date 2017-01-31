@@ -4,15 +4,18 @@ export default function (node, logger) {
   node.kind('Collection');
 
   node.on('-load', function (slice, callback) {
-    const type = this.node.type();
-    const config = { fqn: type.node.get('mysql.fqn')
-                   , name: type.node.get('mysql.name')
-                   , table: type.node.get('mysql.table')
-                   };
-    if (config.fqn == null) return callback(type.node.cwd() + ' needs a configuration');
-    return this.node.send(':prepare-workspace', config, err => {
+    return this.super(slice, (err, slice) => {
       if (err) return callback(err);
-      return this.super(slice, callback);
+      const type = this.node.type();
+      const config = { fqn: type.node.get('mysql.fqn')
+                     , name: type.node.get('mysql.name')
+                     , table: type.node.get('mysql.table')
+                     };
+      if (config.fqn == null) return callback(type.node.cwd() + ' needs a configuration');
+      return this.node.send(':prepare-workspace', config, err => {
+        if (err) return callback(err);
+        return callback(null, slice);
+      });
     });
   });
 
