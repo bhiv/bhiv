@@ -3,7 +3,7 @@ import async from 'async';
 export default function (node, logger) {
   node.kind('Collection');
 
-  node.on('-load', function (_, callback) {
+  node.on('-load', function (slice, callback) {
     const type = this.node.type();
     const config = { fqn: type.node.get('mysql.fqn')
                    , name: type.node.get('mysql.name')
@@ -12,7 +12,7 @@ export default function (node, logger) {
     if (config.fqn == null) return callback(type.node.cwd() + ' needs a configuration');
     return this.node.send(':prepare-workspace', config, err => {
       if (err) return callback(err);
-      return callback();
+      return this.super(slice, callback);
     });
   });
 

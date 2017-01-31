@@ -9,7 +9,7 @@ export default function (node, logger, Bee) {
 
   node.field('id', 'Primitive.Offset');
 
-  node.on('-load', function (_, callback) {
+  node.on('-load', function (slice, callback) {
     const config = { fqn: this.node.get('mysql.fqn')
                    , name: this.node.get('mysql.name')
                    , table: this.node.get('mysql.table')
@@ -17,7 +17,7 @@ export default function (node, logger, Bee) {
     if (config.fqn == null) return callback(this.node.cwd() + ' needs a configuration');
     return this.node.send(':prepare-workspace', config, err => {
       if (err) return callback(err);
-      return callback();
+      return this.super(slice, callback);
     });
   });
 

@@ -120,17 +120,19 @@ module.exports = function (node, logger) {
     return next();
   };
 
-  node.on('-load', function (_, callback) {
+  node.on('-load', function (slice, callback) {
     var responders = node.get('responders');
     var types = Object.keys(responders || {}) || [];
     return async.map(types, (type, callback) => {
       return this.node.send(':responder-add', { type, handler: responders[type] }, callback);
-    }, callback);
+    }, err => {
+      return this.super(slice, callback);
+    });
   });
 
   node.on('responder-add', function (description, callback) {
     responders[description.type] = description.handler;
-    return callback();
+    return callback(null, description);
   });
 
   node.on('get-server', function (data, callback) {
@@ -160,7 +162,7 @@ module.exports = function (node, logger) {
         request.middlewares.push(data.fqn);
         return next();
       });
-      return callback();
+      return callback(null, data);
     });
   });
 
@@ -173,7 +175,7 @@ module.exports = function (node, logger) {
         var name = server.settings.ip + ':' + server.settings.port;
         server[method](data.location, createHandler(data, name, callback));
       }
-      return callback();
+      return callback(null, data);
     });
   });
 
@@ -185,10 +187,10 @@ module.exports = function (node, logger) {
         var data = { _response: payload.http.response, message };
         return node.send(':response-error', data, flux);
       } else {
-        if (result == null) return flux();
+        if (result == null) return flux(null, null);
         payload.http.response.writeHead(result.code, result.headers);
         payload.http.response.end(result.body);
-        return flux();
+        return flux(null, null);
       }
     };
     if (payload.output) {

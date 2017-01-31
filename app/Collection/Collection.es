@@ -4,9 +4,10 @@ export default function (node, logger) {
 
   node.kind('Collection');
 
-  node.on('-load', function (_, callback) {
+  node.on('-load', function (slice, callback) {
     return this.node.send('Type:inflate', this.node, err => {
-      return callback(err);
+      if (err) return callback(err);
+      return this.super(slice, callback);
     });
   });
 

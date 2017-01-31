@@ -3,11 +3,11 @@ import mysql from 'node-wrapper/mysql';
 
 export default function (node, logger, Bee) {
 
-  node.on('-start', function (_, callback) {
+  node.on('-start', function (slice, callback) {
     const name = this.node.layout;
     const config = this.node.get('.');
     this.node.set('client', mysql.createConnection(name, config));
-    return callback();
+    return this.super(slice, callback);
   });
 
   node.on('query', new Bee()

@@ -4,7 +4,7 @@ import { default as Bhiv } from 'bhiv';
 
 export default function (node, logger, Bee) {
 
-  node.on('-load', function ({}, callback) {
+  node.on('-load', function (slice, callback) {
     const templates = this.node.get('templates');
     if (templates != null) {
       for (const method in templates) {
@@ -16,7 +16,7 @@ export default function (node, logger, Bee) {
         })(template));
       }
     }
-    return callback();
+    return this.super(slice, callback);
   });
 
   node.on('request-template', function ({ template, payload }, callback) {

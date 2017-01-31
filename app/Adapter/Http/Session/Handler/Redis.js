@@ -1,8 +1,8 @@
 module.exports = function (node, logger) {
 
-  node.on('-load', function (_, event) {
+  node.on('-load', function (slice, callback) {
     node.create('Adapter.Redis', 'Redis');
-    return event.reply();
+    return this.super(slice, callback);
   });
 
   node.on('read', function (payload, event) {

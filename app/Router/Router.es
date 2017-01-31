@@ -2,13 +2,13 @@ import Parser from './Router.parser.pegjs';
 
 export default function (node, logger, Bee) {
 
-  node.on('-start', function (_, callback) {
+  node.on('-start', function (slice, callback) {
     var routes = this.node.get('routes');
     return new Bee()
       .Map('routes', null, 'filepath')
       .  pipe(':route-map-add', 'jp:filepath')
       .close({ max: 1 })
-      .end({ routes: routes }, callback);
+      .end({ routes: routes }, this.next(callback));
   });
 
   node.on('route-map-add', new Bee()
