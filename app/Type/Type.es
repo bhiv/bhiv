@@ -37,6 +37,11 @@ export default function (node, logger, Bee) {
     case 'Collection':
       return this.node.send(':instanciate', node.type(), err => callback(err, node));
     case 'Record':
+      /* Avoid circular type loading failure */
+      /* when starting to load a type which is circular */
+      /* e.g. A -> B -> C -> A */
+      this.node.set('types.' + Yolo.Digest(node.layout), node);
+      /***************************************/
       const fields = node.field();
       return async.map(fields, (name, callback) => {
         return this.node.send(':instanciate', node.field(name), callback);
