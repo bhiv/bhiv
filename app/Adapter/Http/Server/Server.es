@@ -11,23 +11,6 @@ import S from 'underscore.string';
 module.exports = function (node, logger) {
   var responders = {};
 
-  var createServer = function (ip, port) {
-    var app = express();
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(cookieParser());
-    app.use(executeMiddleware);
-    logger.info('Listening on %s:%s', ip, port);
-    app.listen(port, ip);
-    app.on('error', function (err) {
-      logger.error(err);
-    });
-    Object.defineProperty(app.settings, 'ip', { value: ip });
-    Object.defineProperty(app.settings, 'port', { value: port });
-    app.settings['x-powered-by'] = 'YoloJS';
-    return app;
-  };
-
   var createHandler = function (data, source, flux) {
     logger.info('%s Routing [%s] %s %s', source, data.outlet, data.method, data.location);
     return function (request, response) {
@@ -135,6 +118,23 @@ module.exports = function (node, logger) {
     return callback(null, description);
   });
 
+  node.on('create-server', function ({ ip, port }) {
+    var app = express();
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(cookieParser());
+    app.use(executeMiddleware);
+    logger.info('Listening on %s:%s', ip, port);
+    app.listen(port, ip);
+    app.on('error', function (err) {
+      logger.error(err);
+    });
+    Object.defineProperty(app.settings, 'ip', { value: ip });
+    Object.defineProperty(app.settings, 'port', { value: port });
+    app.settings['x-powered-by'] = 'YoloJS';
+    return app;
+  });
+
   node.on('get-server', function (data, callback) {
     var ip = Yolo.Util.getIn(data, 'config.ip')
       || Yolo.Util.getIn(data, 'config.listen')
@@ -146,11 +146,14 @@ module.exports = function (node, logger) {
     var key = Yolo.Digest(name);
     var server = this.node.get('servers.' + key);
     if (server == null) {
-      try { server = createServer(ip, port); }
-      catch (e) { return callback(e); }
-      this.node.set('servers.' + key, server);
+      return this.node.emit('create-server', { ip, port }, (err, server) => {
+        if (err) return callback(err);
+        this.node.set('servers.' + key, server);
+        return callback(null, server);
+      });
+    } else {
+      return callback(null, server);
     }
-    return callback(null, server);
   });
 
   node.on('handle-middleware', function (data, callback) {
