@@ -4,9 +4,11 @@ export default function (node, logger, Bee) {
 
   node.inherit('Record.MySQL');
 
-  node.identity('this-key', ['this', 'key']);
+  const key = this.args.length > 0 ? this.args[0].substr(1) : 'key';
+
+  node.identity('this-' + key, ['this', key]);
 
   node.field('this', 'Primitive.Offset');
-  node.field('key', 'Primitive.Key');
+  node.field(key, 'Primitive.Key');
 
 };
