@@ -5,7 +5,8 @@ export default function (node, logger, Bee) {
   node.inherit('Collection.MysqlList<' + this.args[0] + '>');
   node.inherit('Collection.Map<' + this.args[0] + '>');
 
-  node.on('fetch-format', function (view, callback) {
+  node.on('fetch', function (view, callback) {
+    debugger;
     return this.super(view, (err, view) => {
       if (err) return callback(err);
       if (!(view.length > 0)) return callback(null, null);
