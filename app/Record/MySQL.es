@@ -41,7 +41,6 @@ export default function (node, logger, Bee) {
   });
 
   node.on('fetch', new Bee()
-          .trap({ type: 'LAZY' })
           .extract({ request: 'jp:@' })
           .then(':fetch-prepare-range')
           .then(':fetch-prepare-fields')
@@ -335,7 +334,7 @@ export default function (node, logger, Bee) {
       if (err) return callback(err);
       const collection = request[name];
       if (collection == null) {
-        return callback();
+        return callback(null, {});
       } else if (collection instanceof Array) {
         for (let i = 0; i < collection.length; i++) {
           collection[i].id = null;

@@ -38,6 +38,9 @@ export default function (node, logger, Bee) {
          );
 
   // inflated
+  node.on('put', { $: ':set', _: { data: 'jp:@' } });
+
+  // inflated
   node.on('walk', function ({ data, fqn }, callback) {
     return (function iterator(field, data, callback) {
       return field.node.emit('map', { data, iterator }, (err, result) => {
@@ -101,6 +104,7 @@ export default function (node, logger, Bee) {
 
   // deflated
   node.on('inflate', function (data) {
+    if (data == null) data = {};
     const fields = this.node.field();
     const record = {};
     for (const fieldName in data) {
