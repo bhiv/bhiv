@@ -3,12 +3,10 @@ structs:
 
 verbes: $()
 
-.clone           // 
+.goto            // $1 as path, $2 as closure
 
-.goto            // $1
-
-.get             // 
-.then            // 
+.format          // $1 as a glue
+.then            // execute a function
 
 .race            // 
 .  at            // $1 as path to store result
@@ -20,13 +18,14 @@ verbes: $()
 .filter          // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow} => keep
 .detect          // 
 
-.shunt           // if $1 == true then go (err / out), glue
-.lazy            // $1 as duration (ms) or key => data, $2 as glue for key
+.memoize         // $1 as duration (ms) or key => data, $2 as glue for key
 
 .match           // test $1 
 .  when          // $1 is a pattern, then execute <task>
 .  otherwise     // execute <task>
 .  end
+
+.shunt           // if $1 == true then go out, with $2 glue
 
 .trap            // if $1 == true then catch error and execute <task>
 .  end
