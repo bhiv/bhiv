@@ -43,7 +43,7 @@ export default function (node, logger) {
         iterator = (type, value, callback) => type.node.send(action, value, callback);
         break ;
       default:
-        iterator = (type, value, callback) => type.node.resolve(action, value, callback);
+        iterator = (type, value, callback) => type.node.eat(action, value, callback);
         break ;
       }
       const type = this.node.type() || this;
