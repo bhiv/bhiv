@@ -5,6 +5,7 @@ export default function (node, logger, Bee) {
   node.inherit('Record.MySQL');
 
   const key = this.args.length > 0 ? this.args[0].substr(1) : 'key';
+  node.set('Map.keyName', key);
 
   node.identity('this-' + key, ['this', key]);
 
