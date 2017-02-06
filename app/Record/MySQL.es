@@ -40,20 +40,24 @@ export default function (node, logger, Bee) {
     return this.node.emit('fetch', view, callback);
   });
 
-  node.on('fetch', new Bee()
-          .extract({ request: 'jp:@' })
-          .then(':fetch-prepare-range')
-          .then(':fetch-prepare-fields')
-          .then(':fetch-prepare-filters')
-          .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
-          .Each('unknowns', null, 'subrequest')
-          .  then(':fetch-prepare-children-filters')
-          .close()
-          .then(':fetch-build')
-          .then(':fetch-execute')
-          .then(':fetch-children')
-          .pipe(':fetch-format')
-          .end()
+  node.on( 'fetch'
+         , { $: { type: 'memoize', expire: { $: '[mysql.cache]' }
+                , then: new Bee()
+                  .extract({ request: 'jp:@' })
+                  .then(':fetch-prepare-range')
+                  .then(':fetch-prepare-fields')
+                  .then(':fetch-prepare-filters')
+                  .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
+                  .Each('unknowns', null, 'subrequest')
+                  .  then(':fetch-prepare-children-filters')
+                  .close()
+                  .then(':fetch-build')
+                  .then(':fetch-execute')
+                  .then(':fetch-children')
+                  .pipe(':fetch-format')
+                  .end()
+                }
+           }
          );
 
   node.on('fetch-prepare-range', function ({ request }) {
