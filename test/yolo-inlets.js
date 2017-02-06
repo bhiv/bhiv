@@ -32,6 +32,32 @@ describe('Yolo', function () {
 
     })();
 
+    [ [ null, 42, null ]
+    , [ false, 42, false ]
+    , [ true, 42, true ]
+    , [ 0, 42, 0 ]
+    , [ 1, 42, 1 ]
+    , [ '', 42, '' ]
+    , [ ' ', 42, ' ' ]
+    , [ 'value', 42, 'value' ]
+    , [ [1,2,3], 42, [1,2,3] ]
+    ].map(function (test, index) {
+      var t = 'test-' + index;
+      it('should resolve ' + t + ' ' + Yolo.Util.serialize(test[0]), function (done) {
+        var N = new Yolo.Node('N');
+        N.on(t, test[0]);
+        //debugger;
+        N.send(':' + t, test[1], function (err, result) {
+          if (err) return done(err);
+          try { assert.deepEqual(result, test[2]); }
+          catch (e) { return done(e); }
+          return done();
+        });
+      });
+
+    });
+
+
   });
 
 });
