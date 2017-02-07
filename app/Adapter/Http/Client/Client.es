@@ -42,18 +42,42 @@ export default function (node, logger, Bee) {
     }
     const http = new Http(Url.format(request));
     http.setMethod((request.method || 'get').toUpperCase());
-    for (const key in request.headers) {
+    const headers = Object.create(request.headers || {});
+    if (request.authorization != null) {
+      if (request.authorization.type == 'basic') {
+        const user = request.authorization.user;
+        const pass = request.authorization.password;
+        const userpassb64 = new Buffer([user, pass].join(':')).toString('base64')
+        headers.Authorization = 'Basic ' + userpassb64;
+      } else if (request.authorization.type != null) {
+        return callback(new Error('Only basic authorization, implemented'));
+      }
+    }
+    for (const key in headers) {
       switch (key.toLowerCase()) {
       case 'content-type':
-        http.setContentType(request.headers[key]);
+        http.setContentType(headers[key]);
       default:
-        http.setHeader(key, request.headers[key]);
+        http.setHeader(key, headers[key]);
       }
     }
     if (request.data != null)
       http.setDataObject(request.data);
-    http.setOutputType(request.fullresponse ? 'fullresponse' : 'bodyonly');
-    return http.execute(callback);
+
+    if (callback.has('data')) {
+      http.setOutput('emitter');
+      return http.execute((err, emitter) => {
+        emitter.on('head', head => callback.emit('head', head));
+        emitter.on('data', data => callback.emit('data', data));
+        emitter.on('end', () => callback(null, null));
+        emitter.on('error', err => callback(err));
+      });
+    } else {
+      if (typeof request.output == 'string')
+        http.setOutput(request.output);
+      http.setOutputType(request.fullresponse ? 'fullresponse' : 'bodyonly');
+      return http.execute(callback);
+    }
   });
 
 };
