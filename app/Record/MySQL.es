@@ -107,8 +107,7 @@ export default function (node, logger, Bee) {
           /* no break */
         case 'Collection':
           let child = Yolo.Util.getIn(request, fieldName);
-          child = child != null ? Object.create(child) : {};
-          child['*'] = true;
+          child = child != null ? Object.create(child) : { '*': true };
           result.children[fieldName] = child;
           if (!~fieldsList.indexOf('id')) fieldsList.push('id');
           break ;
