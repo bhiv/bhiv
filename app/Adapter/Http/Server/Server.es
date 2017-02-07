@@ -211,6 +211,7 @@ module.exports = function (node, logger) {
         case 'plain': case 'txt': case 'text': handler = ':response-plain'; break ;
         case 'file': handler = ':response-file'; break ;
         case 'redirect': case 'location': handler = ':response-redirect'; break ;
+        case 'proxy': handler = ':response-proxypass'; break ;
         default: handler = ':response-unknown'; break ;
         }
         payload.output._response = payload.http.response;
@@ -222,7 +223,7 @@ module.exports = function (node, logger) {
   });
 
   node.on('response-empty', function (output, callback) {
-    return callback(null, { code: 204
+    return callback(null, { code: output.code || 204
                           , headers: output.headers || {}
                           , body: new Buffer('')
                           }
@@ -320,6 +321,25 @@ module.exports = function (node, logger) {
     body.on('end', () => {
       output._response.end();
       return flux.emit('success', null);
+    });
+  });
+
+  node.on('response-proxypass', function (output, flux) {
+    const payload = { method: output.method || 'get'
+                    , url: output.url
+                    , headers: output.headers || null
+                    , authorization: output.authorization || null
+                    , data: output.data || null
+                    };
+    const runtime = this;
+    return this.send('Adapter.Http.Client:request', payload, new function () {
+      this.head = function (head) {
+        for (var key in head.headers)
+          output._response.setHeader(key, head.headers[key]);
+      };
+      this.data = function (chunk) { output._response.write(chunk); };
+      this.success = function () { output._response.end(); };
+      this.fail = function (err) { runtime.log('error', err); };
     });
   });
 
