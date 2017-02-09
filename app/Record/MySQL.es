@@ -40,6 +40,7 @@ export default function (node, logger, Bee) {
     return this.node.emit('fetch', view, callback);
   });
 
+  // TODO: add copy to avoid '*': true
   node.on( 'fetch'
          , { $: { type: 'memoize', expire: { $: '[mysql.cache]' }
                 , then: new Bee()
@@ -217,10 +218,10 @@ export default function (node, logger, Bee) {
           plucks.push(childName);
         } else if (row[childName] != null) {
           view.id = row[childName];
-          view.$limit = null;
+          view.$limit  = null;
           view.$offset = null;
-          view.$order = null;
-          view.$rand = null;
+          view.$order  = null;
+          view.$rand   = null;
         } else {
           return callback();
         }
@@ -237,20 +238,28 @@ export default function (node, logger, Bee) {
     });
   });
 
-  node.on('fetch-format', function ({ request, plucks, children, pagination, result }) {
+  node.on('fetch-format', function ({ request, plucks, children, pagination, result }, callback) {
     const lines = [];
     if (result == null) result = [];
     if ('$pluck' in request) plucks = Object.keys(request.$pluck || {});
-    for (let i = 0; i < result.length; i++) {
-      const row = {};
-      for (let ii = 0; ii < plucks.length; ii++)
-        Yolo.Util.setIn(row, plucks[ii], result[i][plucks[ii]]);
-      lines.push(row);
-    }
-    if (pagination.offset === 0 && pagination.limit === 1)
-      return lines[0] || null;
-    else
-      return lines;
+    return async.map(result, (row, callback) => {
+      const record = {};
+      return async.map(plucks, (field, callback) => {
+        return this.node.field(field).node.emit('format', row[field], (err, value) => {
+          if (err) return callback(err);
+          Yolo.Util.setIn(record, field, value);
+          return callback();
+        });
+      }, err => {
+        return callback(err, record);
+      });
+    }, (err, lines) => {
+      if (err) return callback
+      if (pagination.offset === 0 && pagination.limit === 1)
+        return callback(null, lines[0] || null);
+      else
+        return callback(null, lines);
+    });
   });
 
   /***/
@@ -273,26 +282,29 @@ export default function (node, logger, Bee) {
   node.on('upsert-prepare', function ({ request }, callback) {
     const result = { record: {}, dependencies: [], collections: [] };
     const fields = this.node.field();
+    result.mode = request.id != null ? 'update' : 'insert';
     return async.each(fields, (fieldName, callback) => {
       if (fieldName == 'id') return callback();
       const field = this.node.field(fieldName);
-      const value = fieldName in request ? request[fieldName] : null;
+      const value = request[fieldName];
       switch (field.node.kind()) {
       case 'Collection':
         result.collections.push({ type: field, name: fieldName });
         return callback();
       case 'Record':
-        result.record[fieldName] = null;
         return field.node.emit('identify', value, (err, value) => {
           if (err) return callback(err);
-          if (value != null && typeof value == 'object' && value.id != null)
+          if (value != null && typeof value == 'object' && value.id != null) {
             result.record[fieldName] = value.id;
-          else
+          } else if (fieldName in request || result.mode == 'insert') {
+            result.record[fieldName] = null;
             result.dependencies.push({ type: field, name: fieldName });
+          }
           return callback();
         });
       case 'Primitive':
-        result.record[fieldName] = value;
+        if (fieldName in request || result.mode == 'insert')
+          result.record[fieldName] = value;
         return callback();
       default:
         return callback();
@@ -314,11 +326,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('upsert-build', function (payload, callback) {
-    if (payload.request.id != null) {
-      return this.node.emit('update-build', payload, callback);
-    } else {
-      return this.node.emit('insert-build', payload, callback);
-    }
+    return this.node.emit(payload.mode + '-build', payload, callback);
   });
 
   node.on('upsert-execute', function ({ request, query }, callback) {
