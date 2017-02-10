@@ -245,11 +245,17 @@ export default function (node, logger, Bee) {
     return async.map(result, (row, callback) => {
       const record = {};
       return async.map(plucks, (field, callback) => {
-        return this.node.field(field).node.emit('format', row[field], (err, value) => {
-          if (err) return callback(err);
-          Yolo.Util.setIn(record, field, value);
+        const fieldType = this.node.field(field);
+        if (fieldType == null) {
+          Yolo.Util.setIn(record, field, row[field]);
           return callback();
-        });
+        } else {
+          return fieldType.node.emit('format', row[field], (err, value) => {
+            if (err) return callback(err);
+            Yolo.Util.setIn(record, field, value);
+            return callback();
+          });
+        }
       }, err => {
         return callback(err, record);
       });
@@ -393,7 +399,7 @@ export default function (node, logger, Bee) {
     const values = [];
     for (const fieldName in record) {
       fields.push(helper.escapeField(fieldName));
-      values.push(record[fieldName]);
+      values.push(record[fieldName] != null ? record[fieldName] : null);
     }
     const q = [ 'INSERT INTO', helper.escapeField(this.node.get('mysql.table'))
               , '(', fields.join(', '), ')'
@@ -410,7 +416,7 @@ export default function (node, logger, Bee) {
     const values = [];
     for (const fieldName in record) {
       fields.push(helper.escapeField(fieldName) + ' = ?');
-      values.push(record[fieldName]);
+      values.push(record[fieldName] != null ? record[fieldName] : null);
     }
     const q = [ 'UPDATE', helper.escapeField(this.node.get('mysql.table'))
               , 'SET', fields.join(', ')
