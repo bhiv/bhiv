@@ -44,6 +44,9 @@ export default new function () {
       this.setFilterPart(field, condition, values);
       if (ast.bool) condition.push('in boolean mode');
       condition.push(')');
+    } else if (ast.type == 'query') {
+      this.setFilterPart(ast.left, condition, values);
+      condition.push('in (', ast.query, ')');
     } else {
       throw new Error('Unhandled filter type: ' + ast.type);
     }
@@ -78,6 +81,13 @@ export default new function () {
     this.FieldValueRaw = function (field, value) {
       return { type: 'comparison', operator: 'sql-fragment'
              , field, fragment: value.$sql.filter, values: value.$sql.values
+             };
+    };
+
+    this.FieldValueQuery = function (field, value) {
+      return { type: 'query'
+             , left: { type: 'field', name: field }
+             , query: value
              };
     };
 

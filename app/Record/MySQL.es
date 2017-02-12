@@ -50,6 +50,7 @@ export default function (node, logger, Bee) {
                   .then(':fetch-prepare-filters')
                   .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
                   .Each('unknowns', null, 'subrequest')
+                  .  then(':fetch-prepare-children-constraints')
                   .  then(':fetch-prepare-children-filters')
                   .close()
                   .then(':fetch-build')
@@ -139,7 +140,9 @@ export default function (node, logger, Bee) {
         if (type != 'object' || value instanceof Array) {
           result.filters.push(helper.AST.FieldValueComparison(fieldName, value));
         } else if (value && type == 'object') {
-          if ('$sql' in value)
+          if (typeof value.toSQL == 'function')
+            result.filters.push(helper.AST.FieldValueQuery(fieldName, value));
+          else if ('$sql' in value)
             result.filters.push(helper.AST.FieldValueRaw(fieldName, value));
           else if ('$ft' in value)
             result.filters.push(helper.AST.FieldValueFullText(fieldName, value));
@@ -158,6 +161,19 @@ export default function (node, logger, Bee) {
       }
     }
     return result;
+  });
+
+  node.on('fetch-prepare-children-constraints', function (payload, callback) {
+    const { request, subrequest: { name, view } } = payload;
+    if (request.this == null || view.id != null) return callback(null, {});
+    const link = this.node.get('link');
+    const table = this.node.get('table');
+    if (link == null || table == null)
+      throw new Error('Collection have not been configured');
+    const query = table.clone();
+    query.select(helper.escapeField(name, link));
+    query.where('this', request.this); // TODO: discosiate data from query
+    return callback(null, { subrequest: { view: { id: query, $limit: -1 } } });
   });
 
   node.on('fetch-prepare-children-filters', function (payload, callback) {
@@ -281,6 +297,7 @@ export default function (node, logger, Bee) {
           .Each('collections', null, 'collection')
           .  then(':upsert-collection')
           .close()
+          .pipe(':clear-cache')
           .pipe(':upsert-format')
           .end()
          );
@@ -436,6 +453,7 @@ export default function (node, logger, Bee) {
           .  then(':delete-collection')
           .close()
           .then('delete-record')
+          .pipe(':clear-cache')
           .end()
          );
 
@@ -455,6 +473,13 @@ export default function (node, logger, Bee) {
     if (link == null || table == null)
       throw new Error('Collection have not been configured');
     return table.clone().where(request).del().asCallback(callback);
+  });
+
+  /***/
+
+  node.on('clear-cache', function (payload) {
+    // TODO
+    return payload;
   });
 
 };
