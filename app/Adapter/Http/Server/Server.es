@@ -196,6 +196,10 @@ module.exports = function (node, logger) {
         return flux(null, null);
       }
     };
+    if (!payload.output)
+      payload.output = { type: 'empty' };
+    else if (typeof payload.output != 'object')
+      payload.output = { type: 'text', content: payload.output + '' };
     if (payload.output) {
       if (payload.output.type in responders) {
         return node.send(responders[payload.output.type], payload.output, then);
