@@ -7,4 +7,8 @@ export default function (node, logger) {
     return JSON.stringify(data);
   });
 
+  node.on('format', function (data) {
+    return JSON.parse(data);
+  });
+
 };
