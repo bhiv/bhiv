@@ -45,7 +45,7 @@ export default function (node, logger, Bee) {
          , { $: { type: 'memoize', expire: { $: '[mysql.cache]' }
                 , then: new Bee()
                   .extract({ request: 'jp:@' })
-                  .then(':fetch-prepare-range')
+                  .then(':fetch-prepare-pagination')
                   .then(':fetch-prepare-fields')
                   .then(':fetch-prepare-filters')
                   .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
@@ -62,12 +62,18 @@ export default function (node, logger, Bee) {
            }
          );
 
-  node.on('fetch-prepare-range', function ({ request }) {
-    const result = { pagination: { offset: 0, limit: 1 } };
+  node.on('fetch-prepare-pagination', function ({ request }) {
+    const result = { pagination: { offset: 0, limit: 1, order: [] } };
     if (request.$limit != null)
       result.pagination.limit = request.$limit >= 0 ? request.$limit : null;
     if (request.$offset != null)
       result.pagination.offset = request.$offset > 0 ? request.$offset : 0;
+    if (request.$order != null) {
+      if (request.$order instanceof Array)
+        Array.prototype.push.apply(result.pagination.order, request.$order);
+      else
+        result.pagination.order.push(request.$order);
+    }
     return result;
   });
 
@@ -207,6 +213,12 @@ export default function (node, logger, Bee) {
     for (let i = 0; i < filters.length; i++) {
       const filter = helper.makeFilter(filters[i]);
       query.whereRaw(filter.condition, filter.values);
+    }
+    for (let i = 0; i < pagination.order.length; i++) {
+      if ('asc' in pagination.order[i])
+        query.orderBy(pagination.order[i].asc, 'asc');
+      else if ('desc' in pagination.order[i])
+        query.orderBy(pagination.order[i].desc, 'desc');
     }
     if (pagination.limit != null) query.limit(pagination.limit | 0);
     query.offset(pagination.offset | 0);
