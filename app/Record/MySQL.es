@@ -44,6 +44,7 @@ export default function (node, logger, Bee) {
          , { $: { type: 'memoize', expire: { $: '[mysql.cache]' }
                 , then:
                   { $: [ { $: { type: 'copy' } }
+                       , { $: { type: 'assert', match: 'jp:@ != null', message: 'BAD_REQUEST: null' } }
                        , { request: 'jp:@' }
                        , { $: ':fetch-prepare-pagination', $$: { type: 'merge', mode: 'root' } }
                        , { $: ':fetch-prepare-fields', $$: { type: 'merge', mode: 'root' } }
@@ -69,6 +70,7 @@ export default function (node, logger, Bee) {
                                }
                          }
                        ]
+                  , $$: { type: 'trap', when: 'jp:message', match: /BAD_REQUEST/, then: null }
                   }
                 }
            }
