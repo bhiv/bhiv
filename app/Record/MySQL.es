@@ -40,24 +40,36 @@ export default function (node, logger, Bee) {
     return this.node.emit('fetch', view, callback);
   });
 
-  // TODO: add copy to avoid '*': true
   node.on( 'fetch'
          , { $: { type: 'memoize', expire: { $: '[mysql.cache]' }
-                , then: new Bee()
-                  .extract({ request: 'jp:@' })
-                  .then(':fetch-prepare-pagination')
-                  .then(':fetch-prepare-fields')
-                  .then(':fetch-prepare-filters')
-                  .trap({ message: 'DEEP_FILTER_NOT_FOUND' }, ':fetch-format')
-                  .Each('unknowns', null, 'subrequest')
-                  .  then(':fetch-prepare-children-constraints')
-                  .  then(':fetch-prepare-children-filters')
-                  .close()
-                  .then(':fetch-build')
-                  .then(':fetch-execute')
-                  .then(':fetch-children')
-                  .pipe(':fetch-format')
-                  .end()
+                , then:
+                  { $: [ { $: { type: 'copy' } }
+                       , { request: 'jp:@' }
+                       , { $: ':fetch-prepare-pagination', $$: { type: 'merge', mode: 'root' } }
+                       , { $: ':fetch-prepare-fields', $$: { type: 'merge', mode: 'root' } }
+                       , { $: ':fetch-prepare-filters', $$: { type: 'merge', mode: 'root' } }
+                       , { $: [ { $: { type: 'each'
+                                     , source: 'jp:unknowns', as: 'subrequest'
+                                     , then:
+                                       { $: [ { $: ':fetch-prepare-children-constraints'
+                                              , $$: { type: 'merge', mode: 'root' }
+                                              }
+                                            , { $: ':fetch-prepare-children-filters' }
+                                            ]
+                                       }
+                                     }
+                                }
+                              , { $: ':fetch-build', $$: { type: 'merge', mode: 'root' } }
+                              , { $: ':fetch-execute', $$: { type: 'merge', mode: 'root' } }
+                              , { $: ':fetch-children', $$: { type: 'merge', mode: 'root' } }
+                              , { $: ':fetch-format' }
+                              ]
+                         , $$: { type: 'trap', when: 'jp:message', match: /DEEP_FILTER_NOT_FOUND/
+                               , then: { $: ':fetch-format', _: 'jp:payload' }
+                               }
+                         }
+                       ]
+                  }
                 }
            }
          );
