@@ -6,21 +6,41 @@ verbes: $()
 .goto            // $1 as path, $2 as closure
 
 .format          // $1 as a glue
-.then            // execute a function
+/** To execute a function */
+.then(<identifier>, <glue>)        => PostCall(This)
 
-.race            // 
-.  at            // $1 as path to store result
+/** To transform a value */
+.apply(<path>, <identifier>)       => This
+
+/** To execute multiple tasks in parallel */
+.Race(<glue>)                      => Race(This)
+.  At(<path>)                      => Waterfall(This)
+.end()                             => This
+
+/** To iterate over each element */
+/*    { key, value, flow } ->  value */
+.Map(<path>, <options>)            => Waterfall(This)
+.end()                             => This
+
+/** To iterate over a list in order to pass a accumulator from a function to the next */
+/*    { key, value, flow, accu } -> accu */
+.Fold(<path>, <options>)           => Waterfall(This)
+.end()                             => This
+
+/** To filter a collection */
+/*    { key, value, flow } -> Boolean:keep */
+.Filter(<glue>, <options>)
+.end()
+
+/** To filter a collection */
+/*    { key, value, flow } -> Boolean:keep */
+.Detect(<glue>, <options>)
+.end()
+
+.Memoize         // $1 as duration (ms) or key => data, $2 as glue for key
 .  end
 
-.map             // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow} => value
-.  end
-.fold            // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow, accumulator} => accumulator
-.filter          // $1 glue to iterate over each element, $2 as options, following block as {key, value, flow} => keep
-.detect          // 
-
-.memoize         // $1 as duration (ms) or key => data, $2 as glue for key
-
-.match           // test $1 
+.Match           // test $1 
 .  when          // $1 is a pattern, then execute <task>
 .  otherwise     // execute <task>
 .  end
@@ -30,10 +50,10 @@ verbes: $()
 .trap            // if $1 == true then catch error and execute <task>
 .  end
 
-.unless          // if $1 == false then execute <task> before continue
+.Unless          // if $1 == false then execute <task> before continue
 .  end
 
-.until           // execute block with { flow, times } until $1 test return true
+.Until           // execute block with { flow, times } until $1 test return true
 .  end
 
 .end             // terminate waterfall (if root return ast)
