@@ -1,62 +1,72 @@
-structs:
-<task>: Fqn, Glue, Options
+/** To change the current working node */
+.relocate(<location>)              => Self
 
-verbes: $()
+/** To transform the flow */
+.format(<glue>)                    => Self
 
-.goto            // $1 as path, $2 as closure
-
-.format          // $1 as a glue
 /** To execute a function */
-.then(<identifier>, <glue>)        => PostCall(This)
+.then(<identifier>, <glue>)        => Merger(Self)
+> .merge()                         => Parent
+> .wrap(<glue>)                    => Parent
+> .put(<path>)                     => Parent
+> .replace(<path>)                 => Parent
 
 /** To transform a value */
-.apply(<path>, <identifier>)       => This
+.apply(<path>, <identifier>)       => Self
+
+/** To execute a serie of tasks */
+.Waterfall()                       => Waterfall(Self)
+.  end()                           => Parent
 
 /** To execute multiple tasks in parallel */
-.Race(<glue>)                      => Race(This)
-.  At(<path>)                      => Waterfall(This)
-.end()                             => This
+/*    { flow, value } -> value */
+.Race(<glue>)                      => Race(Self)
+.  At(<path>)                      => RaceBranch(Self)
+.  end()                           => Parent
+
+/** To branch worflow */
+.Match(<glue>)                     => Match(Self)
+.  When(<test>)                    => MatchCase(Self)
+.  Otherwise()                     => Waterfall(Self)
+.  end()                           => Parent
+
+/** To execute a sub workflow only if condition do not satisfy */
+.Unless(<test>)                    => Waterfall(Self)
+.  end()                           => Parent
+
+/** To make an execution loop */
+/*    { flow, times } -> flow */
+.Until(<test>[, <delay>])          => Waterfall(Self)
+.  end()                           => Self
 
 /** To iterate over each element */
 /*    { key, value, flow } ->  value */
-.Map(<path>, <options>)            => Waterfall(This)
-.end()                             => This
+.Map(<path>[, <options>])          => Waterfall(Self)
+.  end()                           => Self
 
 /** To iterate over a list in order to pass a accumulator from a function to the next */
 /*    { key, value, flow, accu } -> accu */
-.Fold(<path>, <options>)           => Waterfall(This)
-.end()                             => This
+.Fold(<path>[, <options>])         => Waterfall(Self)
+.  end()                           => Self
 
 /** To filter a collection */
 /*    { key, value, flow } -> Boolean:keep */
-.Filter(<glue>, <options>)
-.end()
+.Filter(<glue>[, <options>])       => Waterfall(Self)
+.  end()                           => Self
 
-/** To filter a collection */
-/*    { key, value, flow } -> Boolean:keep */
-.Detect(<glue>, <options>)
-.end()
+/** To find the first item which respond positively */
+/*    { key, value, flow } -> value */
+.Detect(<glue>[, <options>])       => Waterfall(Self)
+.  end()                           => Self
 
-.Memoize         // $1 as duration (ms) or key => data, $2 as glue for key
-.  end
+/** To memoize a success execution result for a limited duration */
+.memoize(<duration>[, <key>])      => Waterfall(Self)
 
-.Match           // test $1 
-.  when          // $1 is a pattern, then execute <task>
-.  otherwise     // execute <task>
-.  end
+/** To return a value if specific condition */
+.shunt(<test>[, <glue>])           => Waterfall(Self)
 
-.shunt           // if $1 == true then go out, with $2 glue
-
-.trap            // if $1 == true then catch error and execute <task>
-.  end
-
-.Unless          // if $1 == false then execute <task> before continue
-.  end
-
-.Until           // execute block with { flow, times } until $1 test return true
-.  end
-
-.end             // terminate waterfall (if root return ast)
+/** To catch an error if pattern match */
+.trap()                            => Waterfall(Self)
 
 ----------------------------------------------------------------------------------
 
