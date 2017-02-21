@@ -31,17 +31,74 @@ describe('Yolo', function () {
   describe('VM.AST', function () {
 
     var A = new Yolo.Node('A');
+    A.on('plus-one', function (number) { return number + 1; });
+    A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
 
-    it('test format', function (done) {
+    it('format - declare', function () {
       A.on('test-format').format({ wrap: 'jp:@' }).end();
+    });
+    it('format - call', function (done) {
       A.emit('test-format', 42, check({ wrap: 42 }, done));
     });
 
-    it('test then/format', function (done) {
+    it('then / format - declare', function () {
       A.on('test-then-format').then(':test-format', 'jp:value').end();
+    });
+    it('then / format - call', function (done) {
       A.emit('test-then-format', { value: 42 }, check({ wrap: 42 }, done));
     });
 
-  })
+    it('then & wrap - declare', function () {
+      A.on('test-then-format-wrap')
+        .then(':plus-one', 'jp:value').wrap({ v: '$:payload.value', r: '$:result' })
+        .end();
+    });
+    it('then & wrap - call', function (done) {
+      A.emit('test-then-format-wrap', { value: 41 }, check({ v: 41, r: 42 }, done));
+    });
+
+    it('then & merge - declare', function () {
+      A.on('test-then-format-merge').then(':plus-one-as-foo', 'jp:value').merge().end();
+    });
+    it('then & merge - call', function (done) {
+      A.emit('test-then-format-merge', { value: 41 }, check({ value: 41, foo: 42 }, done));
+    });
+
+    it('then & put - declare', function () {
+      A.on('test-then-format-put').then(':plus-one', 'jp:value').put('auqlue').end();
+    });
+    it('then & put - call', function (done) {
+      A.emit('test-then-format-put', { value: 41 }, check({ auqlue: 42, value: 41 }, done));
+    });
+
+    it('then & replace - declare', function () {
+      A.on('test-then-format-replace').then(':plus-one', 'jp:value').replace('value').end();
+    });
+    it('then & replace - call', function (done) {
+      A.emit('test-then-format-replace', { value: 41 }, check({ value: 42 }, done));
+    });
+
+    it('apply - declare', function () {
+      A.on('test-apply').apply('val.ue', ':plus-one').end();
+    });
+    it('apply - call', function (done) {
+      A.emit('test-apply', { val: { ue: 41 } }, check({ val: { ue: 42 } }, done));
+    });
+
+    it('race - declare', function () {
+      A.on('test-race').format('$:some.where').Race()
+        .  At('field1', 'jp:@').then(':plus-one', '$:data')
+        .  At('field2').then(':plus-one', '$:data.two').then(':plus-one')
+        .  end()
+        .end();
+    });
+    it('race - call', function (done) {
+      A.emit( 'test-race'
+            , { some: { where: { data: 0 } } }
+            , check({ field1: 1, field2: 2 }, done)
+            );
+    });
+
+  });
 
 });
