@@ -99,6 +99,20 @@ describe('Yolo', function () {
             );
     });
 
+    it('until - declare - 1', function () {
+      A.on('test-until-1').Until('jp:times<`10`', '$:flow').then(':plus-one').end().end();
+    });
+    it('until - call - 1', function (done) {
+      A.emit('test-until-1', 0, check(10, done));
+    });
+
+    it('until - declare - 2', function () {
+      A.on('test-until-2').Until('jp:times<`10`').then(':plus-one', '$:flow').end().end();
+    });
+    it('until - call - 2', function (done) {
+      A.emit('test-until-2', 0, check(10, done));
+    });
+
   });
 
 });
