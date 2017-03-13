@@ -1,47 +1,66 @@
-/** To change the current working node */
+/** To change the current working node
+ */
 .relocate(<location>)              => Self
 
-/** To transform the flow */
+/** To transform the flow
+ */
 .format(<glue>)                    => Self
 
-/** To execute a function */
+/** To execute a function
+ */
 .then(<identifier>, <glue>)        => Merger(Self)
 > .merge()                         => Parent
 > .wrap(<glue>)                    => Parent
 > .put(<path>)                     => Parent
 > .replace(<path>)                 => Parent
 
-/** To transform a value */
+/** To transform a value
+ */
 .apply(<path>, <identifier>)       => Self
 
-/** To execute a serie of tasks */
+/** To execute a serie of tasks
+ */
 .Waterfall()                       => Waterfall(Self)
 .  end()                           => Parent
 
-/** To execute multiple tasks in parallel */
-/*    { flow, value } -> value */
+/** To execute multiple tasks in parallel
+ *    @subflow: { flow, value } -> value
+ *    @glue: to change the subflow
+ *    @path: branch to set or replace, can not be defined twice
+ */
 .Race(<glue>)                      => Race(Self)
 .  At(<path>)                      => RaceBranch(Self)
 .  end()                           => Parent
 
-/** To branch worflow */
-.Match(<glue>)                     => Match(Self)
+/** To branch worflow
+ */
+.Match(<subset>)                   => Match(Self)
 .  When(<test>)                    => MatchCase(Self)
 .  Otherwise()                     => Waterfall(Self)
 .  end()                           => Parent
 
-/** To execute a sub workflow only if condition do not satisfy */
+/** To execute a sub workflow only if condition do not satisfy
+ *    @test: * => execute subwaterfall unless @test return a truly value
+ */
 .Unless(<test>)                    => Waterfall(Self)
 .  end()                           => Parent
 
-/** To make an execution loop */
-/*    { flow, times } -> flow */
+/** To make an execution loop
+ *    @subflow: { flow, times } -> flow
+ *    @test: (*)       => execute subwaterfall until @test return a truly value
+ *    @delay: (number) => wait @delay before doing it again
+ */
 .Until(<test>[, <delay>])          => Waterfall(Self)
 .  end()                           => Self
 
-/** To iterate over each element */
-/*    { key, value, flow } ->  value */
-.Map(<path>[, <options>])          => Waterfall(Self)
+/** To iterate over each element
+ *    @subflow: { key, value, flow } ->  value
+ *    @source: (null | undefined | '.') => current flow
+ *    @source: (string)                 => path to array (e.g. path.to.array)
+ *    @source: (array)                  => it's source itself
+ *    @glue:
+ */
+.Map(<source>[, <glue>[, <options>]]) => Waterfall(Self)
 .  end()                           => Self
 
 /** To iterate over a list in order to pass a accumulator from a function to the next */
