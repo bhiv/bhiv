@@ -36,7 +36,7 @@ describe('Yolo', function () {
     A.on('left-plus-right', function (record) { return record.left + record.right; });
 
     it('format - declare', function () {
-      A.on('test-format').format({ wrap: 'jp:@' }).end();
+      A.on('test-format').as({ wrap: 'jp:@' }).end();
     });
     it('format - call', function (done) {
       A.emit('test-format', 42, check({ wrap: 42 }, done));
@@ -88,7 +88,7 @@ describe('Yolo', function () {
 
     // Control Flow
     it('race - declare', function () {
-      A.on('test-race').format('$:some.where').Race()
+      A.on('test-race').as('$:some.where').Race()
         .  At('field1', 'jp:@').then(':plus-one', '$:data')
         .  At('field2').then(':plus-one', '$:data.two').then(':plus-one')
         .  end()
@@ -118,7 +118,7 @@ describe('Yolo', function () {
 
     // Collections
     it('map - declare', function () {
-      A.on('test-map').Map('list').then(':plus-one').end().end();
+      A.on('test-map').Map('list').as('$:value').then(':plus-one').end().replace('list').end();
     });
     it('map - call', function (done) {
       A.emit('test-map', { list: [0,1,2,3] }, check({ list: [1,2,3,4] }, done));
@@ -126,7 +126,8 @@ describe('Yolo', function () {
 
     it('fold - declare', function () {
       A.on('test-fold')
-        .Fold(14, null, { left: '$:accu', right: '$:value' })
+        .Fold(14, null)
+        .  as({ left: '$:accu', right: '$:value' })
         .  then(':left-plus-right')
         .  end()
         .end();
@@ -137,7 +138,8 @@ describe('Yolo', function () {
 
     it('fold - declare - replace', function () {
       A.on('test-fold-replace')
-        .Fold(14, 'value', { left: '$:accu', right: '$:value' })
+        .Fold(14, 'value')
+        .  as({ left: '$:accu', right: '$:value' })
         .  then(':left-plus-right')
         .  end().replace('value')
         .end();
