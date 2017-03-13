@@ -9,10 +9,19 @@
 /** To execute a function
  */
 .then(<identifier>, <glue>)        => Merger(Self)
-> .merge()                         => Parent
-> .wrap(<glue>)                    => Parent
-> .put(<path>)                     => Parent
-> .replace(<path>)                 => Parent
+
+/** To merge result with flow
+ */
+.merge(<path>)                   => Parent
+
+/** To merge in specific way the reesult and flow
+ *    @subflow: { payload, result } -> flow
+ */
+.wrap(<glue>)                    => Parent
+
+/** To replace
+ */
+.replace(<path>)                 => Parent
 
 /** To transform a value
  */
@@ -32,19 +41,6 @@
 .  At(<path>)                      => RaceBranch(Self)
 .  end()                           => Parent
 
-/** To branch worflow
- */
-.Match(<subset>)                   => Match(Self)
-.  When(<test>)                    => MatchCase(Self)
-.  Otherwise()                     => Waterfall(Self)
-.  end()                           => Parent
-
-/** To execute a sub workflow only if condition do not satisfy
- *    @test: * => execute subwaterfall unless @test return a truly value
- */
-.Unless(<test>)                    => Waterfall(Self)
-.  end()                           => Parent
-
 /** To make an execution loop
  *    @subflow: { flow, times } -> flow
  *    @test: (*)       => execute subwaterfall until @test return a truly value
@@ -58,15 +54,20 @@
  *    @source: (null | undefined | '.') => current flow
  *    @source: (string)                 => path to array (e.g. path.to.array)
  *    @source: (array)                  => it's source itself
- *    @glue:
+ *    @glue: *                          => glue for custom subflow
  */
-.Map(<source>[, <glue>[, <options>]]) => Waterfall(Self)
+.Map([<source>[, <glue>]]) => Waterfall(Self)
 .  end()                           => Self
 
 /** To iterate over a list in order to pass a accumulator from a function to the next */
-/*    { key, value, flow, accu } -> accu */
-.Fold(<path>[, <options>])         => Waterfall(Self)
-.  end()                           => Self
+ *    @subflow: { key, value, flow, accu } ->  value
+ *    @accu: *
+ *    @source: (null | undefined | '.') => current flow
+ *    @source: (string)                 => path to array (e.g. path.to.array)
+ *    @source: (array)                  => it's source itself
+ *    @glue: *                          => glue for custom subflow
+.Fold(<accu>[, <source>[, <glue>]])         => Waterfall(Self)
+.  end()                           => Merger(Self)
 
 /** To filter a collection */
 /*    { key, value, flow } -> Boolean:keep */
@@ -77,6 +78,23 @@
 /*    { key, value, flow } -> value */
 .Detect(<glue>[, <options>])       => Waterfall(Self)
 .  end()                           => Self
+
+/** To iterate over a collection 
+ */
+.Each(<source>[, 
+
+/** To branch worflow
+ */
+.Match(<subset>)                   => Match(Self)
+.  When(<test>)                    => MatchCase(Self)
+.  Otherwise()                     => Waterfall(Self)
+.  end()                           => Parent
+
+/** To execute a sub workflow only if condition do not satisfy
+ *    @test: * => execute subwaterfall unless @test return a truly value
+ */
+.Unless(<test>)                    => Waterfall(Self)
+.  end()                           => Parent
 
 /** To memoize a success execution result for a limited duration */
 .memoize(<duration>[, <key>])      => Waterfall(Self)
