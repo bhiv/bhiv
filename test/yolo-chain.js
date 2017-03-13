@@ -33,6 +33,7 @@ describe('Yolo', function () {
     var A = new Yolo.Node('A');
     A.on('plus-one', function (number) { return number + 1; });
     A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
+    A.on('left-plus-right', function (record) { return record.left + record.right; });
 
     it('format - declare', function () {
       A.on('test-format').format({ wrap: 'jp:@' }).end();
@@ -65,7 +66,7 @@ describe('Yolo', function () {
     });
 
     it('then & put - declare', function () {
-      A.on('test-then-format-put').then(':plus-one', 'jp:value').put('auqlue').end();
+      A.on('test-then-format-put').then(':plus-one', 'jp:value').merge('auqlue').end();
     });
     it('then & put - call', function (done) {
       A.emit('test-then-format-put', { value: 41 }, check({ auqlue: 42, value: 41 }, done));
@@ -85,6 +86,7 @@ describe('Yolo', function () {
       A.emit('test-apply', { val: { ue: 41 } }, check({ val: { ue: 42 } }, done));
     });
 
+    // Control Flow
     it('race - declare', function () {
       A.on('test-race').format('$:some.where').Race()
         .  At('field1', 'jp:@').then(':plus-one', '$:data')
@@ -98,7 +100,7 @@ describe('Yolo', function () {
             , check({ field1: 1, field2: 2 }, done)
             );
     });
-    // test errors
+    // TODO:test race errors
 
     it('until - declare - 1', function () {
       A.on('test-until-1').Until('jp:times<`10`', '$:flow').then(':plus-one').end().end();
@@ -114,6 +116,7 @@ describe('Yolo', function () {
       A.emit('test-until-2', 0, check(10, done));
     });
 
+    // Collections
     it('map - declare', function () {
       A.on('test-map').Map('list').then(':plus-one').end().end();
     });
@@ -121,6 +124,29 @@ describe('Yolo', function () {
       A.emit('test-map', { list: [0,1,2,3] }, check({ list: [1,2,3,4] }, done));
     });
 
+    it('fold - declare', function () {
+      A.on('test-fold')
+        .Fold(14, null, { left: '$:accu', right: '$:value' })
+        .  then(':left-plus-right')
+        .  end()
+        .end();
+    });
+    it('fold - call', function (done) {
+      A.emit('test-fold', [1,2,3,4,5,6,7], check(42, done));
+    });
+
+    it('fold - declare - replace', function () {
+      A.on('test-fold-replace')
+        .Fold(14, 'value', { left: '$:accu', right: '$:value' })
+        .  then(':left-plus-right')
+        .  end().replace('value')
+        .end();
+    });
+    it('fold - call - replace', function (done) {
+      A.emit('test-fold-replace', { value: [1,2,3,4,5,6,7] }, check({ value: 42 }, done));
+    });
+
+    // Flow routing
   });
 
 });
