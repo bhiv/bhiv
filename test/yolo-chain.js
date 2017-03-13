@@ -98,6 +98,7 @@ describe('Yolo', function () {
             , check({ field1: 1, field2: 2 }, done)
             );
     });
+    // test errors
 
     it('until - declare - 1', function () {
       A.on('test-until-1').Until('jp:times<`10`', '$:flow').then(':plus-one').end().end();
@@ -111,6 +112,13 @@ describe('Yolo', function () {
     });
     it('until - call - 2', function (done) {
       A.emit('test-until-2', 0, check(10, done));
+    });
+
+    it('map - declare', function () {
+      A.on('test-map').Map('list').then(':plus-one').end().end();
+    });
+    it('map - call', function (done) {
+      A.emit('test-map', { list: [0,1,2,3] }, check({ list: [1,2,3,4] }, done));
     });
 
   });
