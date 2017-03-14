@@ -35,6 +35,19 @@ describe('Yolo', function () {
     A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
     A.on('left-plus-right', function (record) { return record.left + record.right; });
     A.on('is-even', function (number) { return !!(number % 2); });
+    A.on('is-even-async', function (number, cb) {
+      return setTimeout(function () { cb(null, !!(number % 2)); }, Math.random() * 30 | 0);
+    });
+    A.on('is-even-not-div4', function (number) {
+      if (number > 0 && (number % 4) == 0) throw new Error('Dividable by 4 not permited');
+      return !!(number % 2);
+    });
+    A.on('is-even-not-div4-async', function (number, cb) {
+      return setTimeout(function () {
+        if (number > 0 && (number % 4) == 0) return cb(new Error('Dividable by 4 not permited'));
+        return cb(null, !!(number % 2));
+      }, Math.random() * 30 | 0);
+    });
 
     it('format - declare', function () {
       A.on('test-format').as({ wrap: 'jp:@' }).end();
@@ -144,6 +157,60 @@ describe('Yolo', function () {
     });
     it('filter - call', function (done) {
       A.emit('test-filter', [0,1,2,3], check({ evens: [1,3], list: [0,1,2,3] }, done));
+    });
+
+    it('detect - declare - sync success', function () {
+      A.on('test-detect-sync-success')
+        .Detect().then(':is-even', '$:value').end()
+        .end();
+    });
+    it('detect - call - sync success', function (done) {
+      A.emit('test-detect-sync-success', [0,2,3,4,6,8], check(3, done));
+    });
+
+    it('detect - declare - async success', function () {
+      A.on('test-detect-async-success')
+        .Detect().then(':is-even-async', '$:value').end()
+        .end();
+    });
+    it('detect - call - async success 1', function (done) {
+      A.emit('test-detect-async-success', [0,2,3,4,6,8], check(3, done));
+    });
+    it('detect - call - async success 2', function (done) {
+      A.emit('test-detect-async-success', [3,4,6,0,2,8], check(3, done));
+    });
+    it('detect - call - async success 3', function (done) {
+      A.emit('test-detect-async-success', [0,2,4,6,8,3], check(3, done));
+    });
+
+    it('detect - declare - sync with error', function () {
+      A.on('test-detect-sync-with-errors')
+        .Detect().then(':is-even-not-div4', '$:value').end()
+        .end();
+    });
+    it('detect - call - sync with error', function (done) {
+      A.emit('test-detect-sync-with-errors', [0,2,4,6,3,8], check(3, done));
+    });
+
+    it('detect - declare - async with error', function () {
+      A.on('test-detect-async-with-errors')
+        .Detect().then(':is-even-not-div4-async', '$:value').end()
+        .end();
+    });
+    it('detect - call - async with error', function (done) {
+      A.emit('test-detect-async-with-errors', [0,2,4,6,3,8], check(3, done));
+    });
+
+    it('detect - declare - error', function () {
+      A.on('test-detect-async-error')
+        .Detect().then(':is-even-not-div4-async', '$:value').end()
+        .end();
+    });
+    it('detect - call - async with error', function (done) {
+      A.emit('test-detect-async-error', [4,8,16,24], function (err) {
+        if (err) return done();
+        else return done('Exptect an error');
+      });
     });
 
     // Flow routing
