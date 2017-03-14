@@ -66,10 +66,6 @@
 .Detect([<source>]) => Waterfall(Self)
 .  end()            => Merger(Self)
 
-/** To iterate over a collection 
- */
-.Each(<source>[, 
-
 /** To branch worflow
  */
 .Match(<subset>)                   => Match(Self)

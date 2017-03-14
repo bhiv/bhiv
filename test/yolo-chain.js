@@ -34,6 +34,7 @@ describe('Yolo', function () {
     A.on('plus-one', function (number) { return number + 1; });
     A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
     A.on('left-plus-right', function (record) { return record.left + record.right; });
+    A.on('is-even', function (number) { return !!(number % 2); });
 
     it('format - declare', function () {
       A.on('test-format').as({ wrap: 'jp:@' }).end();
@@ -118,7 +119,7 @@ describe('Yolo', function () {
 
     // Collections
     it('map - declare', function () {
-      A.on('test-map').Map('list').as('$:value').then(':plus-one').end().replace('list').end();
+      A.on('test-map').Map('list').then(':plus-one', '$:value').end().replace('list').end();
     });
     it('map - call', function (done) {
       A.emit('test-map', { list: [0,1,2,3] }, check({ list: [1,2,3,4] }, done));
@@ -126,26 +127,23 @@ describe('Yolo', function () {
 
     it('fold - declare', function () {
       A.on('test-fold')
-        .Fold(14, null)
-        .  as({ left: '$:accu', right: '$:value' })
-        .  then(':left-plus-right')
-        .  end()
-        .end();
-    });
-    it('fold - call', function (done) {
-      A.emit('test-fold', [1,2,3,4,5,6,7], check(42, done));
-    });
-
-    it('fold - declare - replace', function () {
-      A.on('test-fold-replace')
         .Fold(14, 'value')
-        .  as({ left: '$:accu', right: '$:value' })
-        .  then(':left-plus-right')
+        .  then(':left-plus-right', { left: '$:accu', right: '$:value' })
         .  end().replace('value')
         .end();
     });
-    it('fold - call - replace', function (done) {
-      A.emit('test-fold-replace', { value: [1,2,3,4,5,6,7] }, check({ value: 42 }, done));
+    it('fold - call', function (done) {
+      A.emit('test-fold', { value: [1,2,3,4,5,6,7] }, check({ value: 42 }, done));
+    });
+
+    it('filter - declare', function () {
+      A.on('test-filter')
+        .Filter().then(':is-even', '$:value').end()
+        .wrap({ evens: '$:result', list: '$:payload' })
+        .end();
+    });
+    it('filter - call', function (done) {
+      A.emit('test-filter', [0,1,2,3], check({ evens: [1,3], list: [0,1,2,3] }, done));
     });
 
     // Flow routing
