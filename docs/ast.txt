@@ -56,12 +56,18 @@
 
 /** To filter a collection */
  *    @subflow: { key, value, flow } -> Boolean:keep
+ *    @source: (null | undefined | '.') => current flow
+ *    @source: (string)                 => path to array (e.g. path.to.array)
+ *    @source: (array)                  => it's source itself
  */
 .Filter([<source>]) => Waterfall(Self)
 .  end()            => Merger(Self)
 
 /** To find the first item which respond positively
  *    @subflow: { key, value, flow } -> value
+ *    @source: (null | undefined | '.') => current flow
+ *    @source: (string)                 => path to array (e.g. path.to.array)
+ *    @source: (array)                  => it's source itself
  */
 .Detect([<source>]) => Waterfall(Self)
 .  end()            => Merger(Self)
