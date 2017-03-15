@@ -221,6 +221,7 @@ describe('Yolo', function () {
         .  When(/reqexp-match/).as('when-regexp-match')
         .  When(function (a) { return (a + '').indexOf('42') > 0; }).as('when-function-succeed')
         .  When('$:field').as('when-query-field')
+        .  WhenType('Date').as('when-type-date')
         .  Otherwise().as('when-no-case-match')
         .  end()
         .end();
@@ -236,6 +237,9 @@ describe('Yolo', function () {
     });
     it('match - call - query', function (done) {
       A.emit('test-match-when', { value: { field: true } }, check('when-query-field', done));
+    });
+    it('match - call - type', function (done) {
+      A.emit('test-match-when', { value: new Date() }, check('when-type-date', done));
     });
     it('match - call - otherwise', function (done) {
       A.emit('test-match-when', { value: null }, check('when-no-case-match', done));

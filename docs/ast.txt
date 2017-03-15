@@ -8,7 +8,7 @@
 
 /** To execute a function
  */
-.then(<identifier>[, <glue>]) => Merger(Self)
+.then(<identifier>[, <glue>]) => Merger Self
 
 /** To transform a value
  */
@@ -16,7 +16,7 @@
 
 /** To execute a serie of tasks
  */
-.Waterfall() => Waterfall(Self)
+.Waterfall() => Waterfall Self
 .  end()     => Parent
 
 /** To execute multiple tasks in parallel
@@ -24,16 +24,16 @@
  *    @glue: to change the subflow
  *    @path: branch to set or replace, can not be defined twice
  */
-.Race(<glue>)                      => Race(Self)
-.  At(<path>)                      => RaceBranch(Self)
-.  end()                           => Merger(Parent)
+.Race(<glue>)                      => Race Self
+.  At(<path>)                      => RaceBranch Self
+.  end()                           => Merger Parent
 
 /** To make an execution loop
  *    @subflow: { flow, times } -> flow
  *    @test: (*)       => execute subwaterfall until @test return a truly value
  *    @delay: (number) => wait @delay before doing it again
  */
-.Until(<test>[, <delay>])          => Waterfall(Self)
+.Until(<test>[, <delay>])          => Waterfall Self
 .  end()                           => Self
 
 /** To iterate over each element
@@ -42,8 +42,8 @@
  *    @source: (string)                 => path to array (e.g. path.to.array)
  *    @source: (array)                  => it's source itself
  */
-.Map([<source>]) => Waterfall(Self)
-.  end()         => Merger(Self)
+.Map([<source>]) => Waterfall Self
+.  end()         => Merger Self
 
 /** To iterate over a list in order to pass a accumulator from a function to the next */
  *    @subflow: { key, value, flow, accu } ->  value
@@ -51,8 +51,8 @@
  *    @source: (null | undefined | '.') => current flow
  *    @source: (string)                 => path to array (e.g. path.to.array)
  *    @source: (array)                  => it's source itself
-.Fold([<accu>[, <source>]]) => Waterfall(Self)
-.  end()                    => Merger(Self)
+.Fold([<accu>[, <source>]]) => Waterfall Self
+.  end()                    => Merger Self
 
 /** To filter a collection */
  *    @subflow: { key, value, flow } -> Boolean:keep
@@ -60,8 +60,8 @@
  *    @source: (string)                 => path to array (e.g. path.to.array)
  *    @source: (array)                  => it's source itself
  */
-.Filter([<source>]) => Waterfall(Self)
-.  end()            => Merger(Self)
+.Filter([<source>]) => Waterfall Self
+.  end()            => Merger Self
 
 /** To find the first item which respond positively
  *    @subflow: { key, value, flow } -> value
@@ -69,30 +69,36 @@
  *    @source: (string)                 => path to array (e.g. path.to.array)
  *    @source: (array)                  => it's source itself
  */
-.Detect([<source>]) => Waterfall(Self)
-.  end()            => Merger(Self)
+.Detect([<source>]) => Waterfall Self
+.  end()            => Merger Self
 
-/** To branch worflow
+/** To branch workflow
+ *    @view: (string | Object)                => a query to extract from flow a subset of data
+ *    @test: (string | Function | RegExp)     => 
+ *    @value: (null | bool | number | string) => 
+ *    @type: (string)
  */
-.Match(<subset>)                   => Match(Self)
-.  When(<test>)                    => MatchCase(Self)
-.  Otherwise()                     => Waterfall(Self)
-.  end()                           => Parent
+.Match([<view>])           => Match Self
+.  When(<test>)            => MatchCase Waterfall Self
+.  WhenEqual(<value>)      => MatchCase Waterfall Self
+.  WhenType(<type>[, ...]) => MatchCase Waterfall Self
+.  Otherwise()             => Waterfall Self
+.  end()                   => Merger Parent
 
 /** To execute a sub workflow only if condition do not satisfy
  *    @test: * => execute subwaterfall unless @test return a truly value
  */
-.Unless(<test>)                    => Waterfall(Self)
+.Unless(<test>)                    => Waterfall Self
 .  end()                           => Parent
 
 /** To memoize a success execution result for a limited duration */
-.memoize(<duration>[, <key>])      => Waterfall(Self)
+.memoize(<duration>[, <key>])      => Waterfall Self
 
 /** To return a value if specific condition */
-.shunt(<test>[, <glue>])           => Waterfall(Self)
+.shunt(<test>[, <glue>])           => Waterfall Self
 
 /** To catch an error if pattern match */
-.trap()                            => Waterfall(Self)
+.trap()                            => Waterfall Self
 
 --------------------------------------------
 
