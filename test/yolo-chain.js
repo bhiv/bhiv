@@ -36,6 +36,11 @@ describe('Yolo', function () {
     A.on('plus-one', function (number) { return number + 1; });
     A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
     A.on('left-plus-right', function (record) { return record.left + record.right; });
+    A.on('concat-left-right-10ms-async', function (record, callback) {
+      return setTimeout(function () {
+        return callback(null, [record.left, record.right].join(''));
+      }, (Math.random() * 4 | 0) + 8);
+    });
     A.on('is-even', function (number) { return !!(number % 2); });
     A.on('is-even-async', function (number, cb) {
       return setTimeout(function () { cb(null, !!(number % 2)); }, Math.random() * 30 | 0);
@@ -149,6 +154,32 @@ describe('Yolo', function () {
     });
     it('fold - call', function (done) {
       A.emit('test-fold', { value: [1,2,3,4,5,6,7] }, check({ value: 42 }, done));
+    });
+
+    it('reduce - declare', function () {
+      A.on('test-reduce').Reduce().then(':concat-left-right-10ms-async').end().end();
+    });
+    it('reduce - call - empty', function (done) {
+      A.emit('test-reduce', [], check(null, done));
+    });
+    it('reduce - call - single', function (done) {
+      A.emit('test-reduce', [1], check(1, done));
+    });
+    it('reduce - call - multi (self timed)', function (done) {
+      var str = 'abcdefghi';
+      var returned = false;
+      var mydone = function () {
+        if (!returned) {
+          returned = true;
+          return done.apply(this, arguments);
+        }
+      };
+      setTimeout(function () {
+        if (returned) return ;
+        returned = true;
+        return done('did not execute reduce in parallel');
+      }, ((str.length - 1) * 10) - 5);
+      A.emit('test-reduce', str.split(''), check(str, mydone));
     });
 
     it('filter - declare', function () {

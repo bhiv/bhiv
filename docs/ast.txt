@@ -55,7 +55,7 @@
 .  end()                    => Merger Self
 
 /** To iterate over each element
- *    @subflow: { key, value, flow } ->  value
+ *    @subflow: { left, right, flow } ->  value
  *    @source: (null | undefined | '.') => current flow
  *    @source: (string)                 => path to array (e.g. path.to.array)
  *    @source: (array)                  => it's source itself
