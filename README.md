@@ -16,18 +16,23 @@ A framework for scalabe and splittable backend, it bring a single design pattern
 Fully undocumented (sorry about that) but it should comming soon
 
 TODO:
-  * Refactor Collection using "field" instead of "type"
-  * Allow Yaml format config files
-  * Add syntax for configuration merging behavior
-  * Handle react / redux (replacement of NSB https://github.com/np42/yolojs/tree/b1009616e66a7aa5c82d4582e7f84a49fdd10e10/app/Widget)
-  * Server side rendering (for SEO)
-  * Add pattern matching, reduce, basic async pattern to Bhiv (flow based execution)
-  * Add outlets api (e.g. node.when('subscribe', 'before', (payload, callback) => { ... }))
-  * Fix inlets settings
-  * Add hot code swapping
-  * Add submodule based parser for Routing module
-  * Flow control (match, if-then-else, ...) c.f: Bhiv
-  * handle better cross dependencies
+  * Yolo.Core:
+    * Clean old functions not used anymore
+    * Implement custom DSL for: VM ("$" scheme keyword), Node (* scheme)
+    * Refactor Collection using "field" instead of "type"
+    * Add outlets api (e.g. node.when('subscribe', 'before', (payload, callback) => { ... }))
+    * Add hot code swapping
+    * Add submodule based parser for Routing module
+    * Handle better cross dependencies
+  * Yolo.Framework:
+    * Allow Yaml, XML, ... config files formats
+    * Add syntax for configuration merging behavior
+  * Yolo.Packages:
+    * Create a package manager environment
+    * Handle react / redux or smth else (replacement of NSB https://github.com/np42/yolojs/tree/b1009616e66a7aa5c82d4582e7f84a49fdd10e10/app/Widget)
+    * Server side rendering (for SEO)
+  * Yolo.Shell:
+    * Add command to add / remove / list packages
 
 # Yolo.Node Pattern:
 

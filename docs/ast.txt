@@ -6,6 +6,10 @@
  */
 .as(<glue>) => Self
 
+/** To duplicate flow in order to avoid side effect
+ */
+.copy() => Merger Self
+
 /** To execute a function
  */
 .then(<identifier>[, <glue>]) => Merger Self
@@ -14,12 +18,7 @@
  */
 .apply(<path>, <identifier>) => Self
 
-/** To execute a serie of tasks
- */
-.Waterfall() => Waterfall Self
-.  end()     => Parent
-
-/** To execute multiple tasks in parallel
+/** To execute multiple tasks in parallel in order to build an object
  *    @subflow: { flow, value } -> value
  *    @glue: to change the subflow
  *    @path: branch to set or replace, can not be defined twice
@@ -97,17 +96,25 @@
 /** To execute a sub workflow only if condition do not satisfy
  *    @test: * => execute subwaterfall unless @test return a truly value
  */
-.Unless(<test>)                    => Waterfall Self
-.  end()                           => Parent
+.Unless(<test>) => Waterfall Self
+.  end()        => Parent
 
-/** To memoize a success execution result for a limited duration */
-.memoize(<duration>[, <key>])      => Waterfall Self
+/** To memoize a success execution result for a limited duration
+ *  
+ */
+.memoize(<duration>[, <key>]) => Waterfall Self
 
-/** To return a value if specific condition */
-.shunt(<test>[, <glue>])           => Waterfall Self
+/** To return a value if specific condition
+ */
+.shunt(<test>[, <glue>]) => Waterfall Self
 
-/** To catch an error if pattern match */
-.trap()                            => Waterfall Self
+/** To stop execution
+ */
+.assert(<test>[, <glue>]) => Waterfall Self
+
+/** To catch an error if pattern match
+ */
+.trap(<test>[, ) => Waterfall Self
 
 --------------------------------------------
 
@@ -123,23 +130,3 @@
 /** To replace
  */
 .replace(<path>)                 => Parent
-
-
-----------------------------------------------------------------------------------
-
-[a, b, c]                           // list of parallel tasks
-{ a, b, c }                         // map of parallel tasks
-function (d, c) {}                  // asynchronous function
-function (d) {}                     // synchronous function
-'$:[...]'                           // query string syntax (jmespath or custom one)
-{ $: [A, B, C] }                    // waterfall - $()
-{ $: 'F.Q.N:method' }               // then
-{ $: { type: 'race', threads } }    // race
-{ $: { type: 'map', iterator } }    // map
-{ $: { type: 'fold', iterator } }   // fold
-{ $: { type: 'filter', iterator } } // filter
-{ $: { type: 'detect', iterator } } // detect
-
-
-
-

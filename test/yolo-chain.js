@@ -31,6 +31,7 @@ describe('Yolo', function () {
   describe('VM.AST', function () {
 
     var A = new Yolo.Node('A');
+
     A.on('dump', function (alpha) { console.log(alpha); return alpha; });
     A.on('get-one', function (number) { return 1; });
     A.on('plus-one', function (number) { return number + 1; });
@@ -40,6 +41,11 @@ describe('Yolo', function () {
       return setTimeout(function () {
         return callback(null, [record.left, record.right].join(''));
       }, (Math.random() * 4 | 0) + 8);
+    });
+    A.on('concat-left-right-20ms-async', function (record, callback) {
+      return setTimeout(function () {
+        return callback(null, [record.left, record.right].join(''));
+      }, (Math.random() * 4 | 0) + 18);
     });
     A.on('is-even', function (number) { return !!(number % 2); });
     A.on('is-even-async', function (number, cb) {
@@ -55,6 +61,8 @@ describe('Yolo', function () {
         return cb(null, !!(number % 2));
       }, Math.random() * 30 | 0);
     });
+
+    /***************************/
 
     it('as - declare', function () {
       A.on('test-format').as({ wrap: 'jp:@' }).end();
@@ -241,7 +249,7 @@ describe('Yolo', function () {
         .Match('$:value')
         .  WhenEquiv(1).as('when-equal-1')
         .  When(/reqexp-match/).as('when-regexp-match')
-        .  When(function (a) { return (a + '').indexOf('42') > 0; }).as('when-function-succeed')
+        .  When(function (a) { return (a + '').indexOf('XX42') > 0; }).as('when-function-succeed')
         .  When('$:field').as('when-query-field')
         .  WhenType('Date').as('when-type-date')
         .  Otherwise().as('when-no-case-match')
@@ -255,7 +263,7 @@ describe('Yolo', function () {
       A.emit('test-match-when', { value: 'blreqexp-matcha' }, check('when-regexp-match', done));
     });
     it('match - call - fn', function (done) {
-      A.emit('test-match-when', { value: 'bla42bla' }, check('when-function-succeed', done));
+      A.emit('test-match-when', { value: 'blaXX42bla' }, check('when-function-succeed', done));
     });
     it('match - call - query', function (done) {
       A.emit('test-match-when', { value: { field: true } }, check('when-query-field', done));
@@ -277,6 +285,40 @@ describe('Yolo', function () {
     });
     it('unless - call', function (done) {
       A.emit('test-unless', {}, check(2, done));
+    });
+
+    it('memoize - declare', function () {
+      A.on('test-memoize')
+        .memoize(100)
+        .then(':concat-left-right-20ms-async')
+        .end();
+    });
+    it('memoize - call', function (done) {
+      this.timeout(39);
+      var flow = { left: 'a', right: 'b' };
+      return A.emit('test-memoize', flow, function (err, r1) {
+        if (err) return done(err);
+        return A.emit('test-memoize', flow, function (err, r2) {
+          if (err) return done(err);
+          if (r1 != r2) return done('Should return same result');
+          return check('ab', done)(null, r2);
+        });
+      });
+    });
+
+    it('shunt - declare', function () {
+      A.on('test-shunt')
+        .shunt('$:shouldIReturn', '$:whatIShouldReturn')
+        .as(42)
+        .end();
+    });
+    it('shunt - call - pass', function (done) {
+      var data = { shouldIReturn: false, whatIShouldReturn: new Error('Bad Value') };
+      A.begin(data).then(':test-shunt').end(check(42, done));
+    });
+    it('shunt - call - return', function (done) {
+      var data = { shouldIReturn: true, whatIShouldReturn: 'yolo' };
+      A.begin(data).then(':test-shunt').end(check('yolo', done));
     });
 
   });
