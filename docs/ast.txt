@@ -54,6 +54,15 @@
 .Fold([<accu>[, <source>]]) => Waterfall Self
 .  end()                    => Merger Self
 
+/** To iterate over each element
+ *    @subflow: { key, value, flow } ->  value
+ *    @source: (null | undefined | '.') => current flow
+ *    @source: (string)                 => path to array (e.g. path.to.array)
+ *    @source: (array)                  => it's source itself
+ */
+.Reduce([<source>]) => Waterfall Self
+.  end()            => Merger Self
+
 /** To filter a collection */
  *    @subflow: { key, value, flow } -> Boolean:keep
  *    @source: (null | undefined | '.') => current flow

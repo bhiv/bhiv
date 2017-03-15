@@ -31,6 +31,8 @@ describe('Yolo', function () {
   describe('VM.AST', function () {
 
     var A = new Yolo.Node('A');
+    A.on('dump', function (alpha) { console.log(alpha); return alpha; });
+    A.on('get-one', function (number) { return 1; });
     A.on('plus-one', function (number) { return number + 1; });
     A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
     A.on('left-plus-right', function (record) { return record.left + record.right; });
@@ -49,10 +51,10 @@ describe('Yolo', function () {
       }, Math.random() * 30 | 0);
     });
 
-    it('format - declare', function () {
+    it('as - declare', function () {
       A.on('test-format').as({ wrap: 'jp:@' }).end();
     });
-    it('format - call', function (done) {
+    it('as - call', function (done) {
       A.emit('test-format', 42, check({ wrap: 42 }, done));
     });
 
@@ -243,6 +245,18 @@ describe('Yolo', function () {
     });
     it('match - call - otherwise', function (done) {
       A.emit('test-match-when', { value: null }, check('when-no-case-match', done));
+    });
+
+    it('unless - declare', function () {
+      A.on('test-unless')
+        .Unless('$:requiredValue')
+        .  then(':get-one').merge('requiredValue')
+        .  end()
+        .then(':plus-one', '$:requiredValue')
+        .end();
+    });
+    it('unless - call', function (done) {
+      A.emit('test-unless', {}, check(2, done));
     });
 
   });
