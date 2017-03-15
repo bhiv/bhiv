@@ -217,7 +217,7 @@ describe('Yolo', function () {
     it('match - declare', function () {
       A.on('test-match-when')
         .Match('$:value')
-        .  WhenEqual(1).as('when-equal-1')
+        .  WhenEquiv(1).as('when-equal-1')
         .  When(/reqexp-match/).as('when-regexp-match')
         .  When(function (a) { return (a + '').indexOf('42') > 0; }).as('when-function-succeed')
         .  When('$:field').as('when-query-field')
