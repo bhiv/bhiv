@@ -165,21 +165,10 @@ describe('Yolo', function () {
     it('reduce - call - single', function (done) {
       A.emit('test-reduce', [1], check(1, done));
     });
-    it('reduce - call - multi (self timed)', function (done) {
+    it('reduce - call - multi with time checking', function (done) {
       var str = 'abcdefghi';
-      var returned = false;
-      var mydone = function () {
-        if (!returned) {
-          returned = true;
-          return done.apply(this, arguments);
-        }
-      };
-      setTimeout(function () {
-        if (returned) return ;
-        returned = true;
-        return done('did not execute reduce in parallel');
-      }, ((str.length - 1) * 10) - 5);
-      A.emit('test-reduce', str.split(''), check(str, mydone));
+      this.timeout(((str.length - 1) * 10) - 5);
+      A.emit('test-reduce', str.split(''), check(str, done));
     });
 
     it('filter - declare', function () {
