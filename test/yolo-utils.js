@@ -36,8 +36,35 @@ describe('Utils', function () {
         return assert.equal(Yolo.Util.serialize(e[0]), e[1]);
       });
     });
+  });
 
-
+  describe('Compare', function () {
+    [ [ 'null / undefined', undefined, null, 0 ]
+    , [ 'bool', true, false, 1 ]
+    , [ 'num 1', 0, 0, 0 ]
+    , [ 'num 2', 1, 1, 0 ]
+    , [ 'num 3', -1, 0, -1 ]
+    , [ 'num 4', Infinity, 1000, 1 ]
+    , [ 'num 5', NaN, NaN, 0 ]
+    , [ 'date 1', new Date(), new Date('2017-03-15'), 1 ]
+    , [ 'string 1', '', '', 0 ]
+    , [ 'string 2', 'a', 'b', -1 ]
+    , [ 'string 3', 'A', 'a', -1 ]
+    , [ 'fn 1', function () {}, function () {}, 0 ]
+    , [ 'fn 2', function (a) {}, function () {}, 1 ]
+    , [ 'fn 3', function (a) {}, function (b) {}, -1 ]
+    , [ '[] <> []', [], [], 0 ]
+    , [ 'array 1', new Array(10), new Array(20), -1 ]
+    , [ 'array 2', [1], [2], -1 ]
+    , [ 'array 3', [5], [1, 2], -1 ]
+    , [ '{} <> {}', {}, {}, 0 ]
+    , [ 'obj 1', { a: 1 }, {}, 1 ]
+    , [ 'obj 2', { a: 1 }, { a: 2 }, -1 ]
+    ].map(function (e) {
+      it('should compare correcty: ' + e[0], function () {
+        return assert.equal(Yolo.Util.compare(e[1], e[2]), e[3]);
+      });
+    });
   });
 
 });
