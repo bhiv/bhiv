@@ -214,6 +214,33 @@ describe('Yolo', function () {
     });
 
     // Flow routing
+    it('match - declare', function () {
+      A.on('test-match-when')
+        .Match('$:value')
+        .  WhenEqual(1).as('when-equal-1')
+        .  When(/reqexp-match/).as('when-regexp-match')
+        .  When(function (a) { return (a + '').indexOf('42') > 0; }).as('when-function-succeed')
+        .  When('$:field').as('when-query-field')
+        .  Otherwise().as('when-no-case-match')
+        .  end()
+        .end();
+    });
+    it('match - call - 1', function (done) {
+      A.emit('test-match-when', { value: 1 }, check('when-equal-1', done));
+    });
+    it('match - call - rxp', function (done) {
+      A.emit('test-match-when', { value: 'blreqexp-matcha' }, check('when-regexp-match', done));
+    });
+    it('match - call - fn', function (done) {
+      A.emit('test-match-when', { value: 'bla42bla' }, check('when-function-succeed', done));
+    });
+    it('match - call - query', function (done) {
+      A.emit('test-match-when', { value: { field: true } }, check('when-query-field', done));
+    });
+    it('match - call - otherwise', function (done) {
+      A.emit('test-match-when', { value: null }, check('when-no-case-match', done));
+    });
+
   });
 
 });
