@@ -1,8 +1,14 @@
+/*********************/
+/**** Waterfall ******/
+/*********************/
+
 /** To change the current working node
+ *    @param: <location>: (string) =>
  */
 .relocate(<location>) => Self
 
 /** To transform the flow
+ *    @param: <glue>: (*) =>
  */
 .as(<glue>) => Self
 
@@ -11,80 +17,84 @@
 .copy() => Merger Self
 
 /** To execute a function
+ *    @param: <identifier>: (string | function) =>
+ *    @param: <glue>: (*)                       =>
  */
 .then(<identifier>[, <glue>]) => Merger Self
 
 /** To transform a value
+ *    @param: <path>: (string)                  =>
+ *    @param: <identifier>: (string | function) =>
  */
 .apply(<path>, <identifier>) => Self
 
 /** To execute multiple tasks in parallel in order to build an object
  *    @subflow: { flow, value } -> value
- *    @glue: to change the subflow
- *    @path: branch to set or replace, can not be defined twice
+ *    @param: <glue>: (*)      => to change the subflow
+ *    @param: <path>: (string) => branch to set or replace, can not be defined twice
  */
-.Race(<glue>)                      => Race Self
-.  At(<path>)                      => RaceBranch Self
-.  end()                           => Merger Parent
+.Race(<glue>) => Race Self
+.  At(<path>) => RaceoBranch Self
+.  end()      => Merger Parent
 
 /** To make an execution loop
  *    @subflow: { flow, times } -> flow
- *    @test: (*)       => execute subwaterfall until @test return a truly value
- *    @delay: (number) => wait @delay before doing it again
+ *    @param: <test>: (*)       => execute subwaterfall until @test return a truly value
+ *    @param: <delay>: (number) => wait @delay (ms) before doing it again [default: 0]
  */
-.Until(<test>[, <delay>])          => Waterfall Self
-.  end()                           => Self
+.Until(<test>[, <delay>[, <glue>]]) => Waterfall Self
+.  end()                            => Self
 
 /** To iterate over each element
  *    @subflow: { key, value, flow } ->  value
- *    @source: (null | undefined | '.') => current flow
- *    @source: (string)                 => path to array (e.g. path.to.array)
- *    @source: (array)                  => it's source itself
+ *    @param: <source>: (null | undefined | '.') => current flow
+ *    @param: <source>: (string)                 => path to array (e.g. path.to.array)
+ *    @param: <source>: (array)                  => it's source itself
  */
 .Map([<source>]) => Waterfall Self
 .  end()         => Merger Self
 
 /** To iterate over a list in order to pass a accumulator from a function to the next */
  *    @subflow: { key, value, flow, accu } ->  value
- *    @accu: *
- *    @source: (null | undefined | '.') => current flow
- *    @source: (string)                 => path to array (e.g. path.to.array)
- *    @source: (array)                  => it's source itself
+ *    @param: <accu>: (*)                        => the initial value
+ *    @param: <source>: (null | undefined | '.') => current flow
+ *    @param: <source>: (string)                 => path to array (e.g. path.to.array)
+ *    @param: <source>: (array)                  => it's source itself
 .Fold([<accu>[, <source>]]) => Waterfall Self
 .  end()                    => Merger Self
 
 /** To iterate over each element
  *    @subflow: { left, right, flow } ->  value
- *    @source: (null | undefined | '.') => current flow
- *    @source: (string)                 => path to array (e.g. path.to.array)
- *    @source: (array)                  => it's source itself
+ *    @param: <source>: (null | undefined | '.') => current flow
+ *    @param: <source>: (string)                 => path to array (e.g. path.to.array)
+ *    @param: <source>: (array)                  => it's source itself
  */
 .Reduce([<source>]) => Waterfall Self
 .  end()            => Merger Self
 
 /** To filter a collection */
  *    @subflow: { key, value, flow } -> Boolean:keep
- *    @source: (null | undefined | '.') => current flow
- *    @source: (string)                 => path to array (e.g. path.to.array)
- *    @source: (array)                  => it's source itself
+ *    @param: <source>: (null | undefined | '.') => current flow
+ *    @param: <source>: (string)                 => path to array (e.g. path.to.array)
+ *    @param: <source>: (array)                  => it's source itself
  */
 .Filter([<source>]) => Waterfall Self
 .  end()            => Merger Self
 
 /** To find the first item which respond positively
  *    @subflow: { key, value, flow } -> value
- *    @source: (null | undefined | '.') => current flow
- *    @source: (string)                 => path to array (e.g. path.to.array)
- *    @source: (array)                  => it's source itself
+ *    @param: <source>: (null | undefined | '.') => current flow
+ *    @param: <source>: (string)                 => path to array (e.g. path.to.array)
+ *    @param: <source>: (array)                  => it's source itself
  */
 .Detect([<source>]) => Waterfall Self
 .  end()            => Merger Self
 
 /** To branch workflow
- *    @view: (string | Object)                => a query to extract from flow a subset of data
- *    @test: (string | Function | RegExp)     => 
- *    @value: (null | bool | number | string) => 
- *    @type: (string)
+ *    @param: <view>: (string | Object)                => a query to extract from flow a subset of data
+ *    @param: <test>: (string | Function | RegExp)     => 
+ *    @param: <value>: (null | bool | number | string) => 
+ *    @param: <type>: (string)
  */
 .Match([<view>])           => Match Self
 .  When(<test>)            => MatchCase Waterfall Self
@@ -94,31 +104,48 @@
 .  end()                   => Merger Parent
 
 /** To execute a sub workflow only if condition do not satisfy
- *    @test: * => execute subwaterfall unless @test return a truly value
+ *    @param: <test>: (*) => execute subwaterfall unless @test return a truly value
  */
 .Unless(<test>) => Waterfall Self
 .  end()        => Parent
 
 /** To memoize a success execution result for a limited duration
- *  
+ *    @param: <duration>: (number) => delay before cache expire
+ *    @param: <key>: (string)      => 
  */
 .memoize(<duration>[, <key>]) => Waterfall Self
 
 /** To return a value if specific condition
+ *    @param: <test>: (*)
+ *    @param: <identifier>: (string | function) =>
+ *    @param: <glue>: (*)                       =>
  */
-.shunt(<test>[, <glue>]) => Waterfall Self
+.shunt(<test>[, <identifier>[, <glue>]]) => Waterfall Self
+
+/** To catch an error if pattern match
+ *    @param: <test>: (*)                       =>
+ *    @param: <identifier>: (string | function) =>
+ *    @param: <glue>: (*)                       =>
+ */
+.trap(<test>[, identifier[, <glue>]]) => Waterfall Self
 
 /** To stop execution
+ *    @param: <test>: (*)
+ *    @param: <glue>: (*)
  */
 .assert(<test>[, <glue>]) => Waterfall Self
 
 /** To catch an error if pattern match
+ *    @param: <error>: (string)
  */
-.trap(<test>[, ) => Waterfall Self
+.failWith(error) => Self
 
---------------------------------------------
+/*******************/
+/***** Merger ******/
+/*******************/
 
 /** To merge result with flow
+ *    @param: <path>
  */
 .merge(<path>) => Parent
 

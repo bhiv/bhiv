@@ -126,12 +126,22 @@ describe('Yolo', function () {
     // TODO:test race errors
 
     it('until - declare - 1', function () {
-      A.on('test-until-1').Until('jp:times<`10`', '$:flow').then(':plus-one').end().end();
+      A.on('test-until-1').Until('jp:times<`10`', 0, '$:flow').then(':plus-one').end().end();
     });
     it('until - call - 1', function (done) {
       A.emit('test-until-1', 0, check(10, done));
     });
-
+    it('until - declare - delayed', function () {
+      A.on('test-until-1-bis').Until('jp:times<`2`', 10, '$:flow').then(':plus-one').end().end();
+    });
+    it('until - call - delayed', function (done) {
+      var canResponde = false
+      setTimeout(function () { canResponde = true }, 20);
+      A.emit('test-until-1-bis', 0, function (err, suc) {
+        if (canResponde) return check(2, done)(err, suc);
+        return done('has responded too early');
+      });
+    });
     it('until - declare - 2', function () {
       A.on('test-until-2').Until('jp:times<`10`').then(':plus-one', '$:flow').end().end();
     });
