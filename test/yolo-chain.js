@@ -3,19 +3,13 @@ var Yolo = require('../lib/Yolo.js');
 var assert = require('assert');
 var jmespath = require('jmespath');
 
-var old_runtime_resolve = Yolo.VM.Runtime.prototype.resolve;
-Yolo.VM.Runtime.prototype.resolve = function (str, data, callback) {
-  switch (str.substr(0, str.indexOf(':'))) {
-  case 'jp':
-    try { data = jmespath.search(data, str.substr(3)); }
-    catch (e) {
-      console.warn(e);
-      return callback(null, null);
-    }
-    return callback(null, data);
-  default:
-    return old_runtime_resolve(str, data, callback);
+Yolo.VM.DSL.jp = function (ast, data, callback) {
+  try { data = jmespath.search(data, ast.$.substr(3)); }
+  catch (e) {
+    console.warn(e);
+    return callback(null, null);
   }
+  return callback(null, data);
 };
 
 var check = function (data, done) {
@@ -320,6 +314,15 @@ describe('Yolo', function () {
       var data = { shouldIReturn: true, whatIShouldReturn: 'yolo' };
       A.begin(data).then(':test-shunt').end(check('yolo', done));
     });
+
+    /*
+    it('trap - declare', function () {
+      A.on('test-trap')
+        .trap('jp:code = `42`', )
+        .failWith({ code: 42 })
+        .end();
+    });
+    */
 
   });
 
