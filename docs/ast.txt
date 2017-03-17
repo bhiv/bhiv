@@ -116,7 +116,7 @@
 .memoize(<duration>[, <key>]) => Waterfall Self
 
 /** To return a value if specific condition
- *    @param: <test>: (*)
+ *    @param: <test>: (*)                       =>
  *    @param: <identifier>: (string | function) =>
  *    @param: <glue>: (*)                       =>
  */
@@ -130,13 +130,13 @@
 .trap(<test>[, identifier[, <glue>]]) => Waterfall Self
 
 /** To stop execution
- *    @param: <test>: (*)
- *    @param: <glue>: (*)
+ *    @param: <test>: (*) =>
+ *    @param: <glue>: (*) =>
  */
 .assert(<test>[, <glue>]) => Waterfall Self
 
 /** To catch an error if pattern match
- *    @param: <error>: (string)
+ *    @param: <error>: (string) =>
  */
 .failWith(error) => Self
 

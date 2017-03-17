@@ -325,14 +325,13 @@ describe('Yolo', function () {
       A.begin(data).then(':test-shunt').end(check('yolo', done));
     });
 
-    /*
     it('trap - declare', function () {
       A.on('test-trap')
-        .trap('jp:code = `42`', )
+        .trap('jp:code = `42`', ':get-one')
         .failWith({ code: 42 })
         .end();
+      //console.log(A.inlets['test-trap'])
     });
-    */
 
   });
 
