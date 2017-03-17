@@ -251,12 +251,12 @@ describe('Yolo', function () {
     it('match - declare', function () {
       A.on('test-match-when')
         .Match('$:value')
-        .  WhenEquiv(1).as('when-equal-1')
-        .  When(/reqexp-match/).as('when-regexp-match')
-        .  When(function (a) { return (a + '').indexOf('XX42') > 0; }).as('when-function-succeed')
-        .  When('$:field').as('when-query-field')
-        .  WhenType('Date').as('when-type-date')
-        .  Otherwise().as('when-no-case-match')
+        .  WhenEquiv(1).put('when-equal-1')
+        .  When(/reqexp-match/).put('when-regexp-match')
+        .  When(function (a) { return (a + '').indexOf('XX42') > 0; }).put('when-function-succeed')
+        .  When('$:field').put('when-query-field')
+        .  WhenType('Date').put('when-type-date')
+        .  Otherwise().put('when-no-case-match')
         .  end()
         .end();
     });
@@ -313,7 +313,7 @@ describe('Yolo', function () {
     it('shunt - declare', function () {
       A.on('test-shunt')
         .shunt('$:shouldIReturn', '$:whatIShouldReturn')
-        .as(42)
+        .put(42)
         .end();
     });
     it('shunt - call - pass', function (done) {
@@ -330,7 +330,9 @@ describe('Yolo', function () {
         .trap('jp:code = `42`', ':get-one')
         .failWith({ code: 42 })
         .end();
-      //console.log(A.inlets['test-trap'])
+    });
+    it('trap - call', function (done) {
+      A.begin('bad-value').then(':test-trap').end(check(1, done));
     });
 
   });
