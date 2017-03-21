@@ -57,7 +57,7 @@ yolo_init () {
         echo 'node_modules' >> "$ignore"
     fi
 
-    mkdir -p app config test
+    mkdir -p app config test docs resources
 }
 
 yolo_create () {
