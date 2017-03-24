@@ -122,6 +122,7 @@ export default function (node, logger, Bee) {
 
   // inflated
   node.on('deflate', function (data) {
+    if (data == null) data = {};
     const fields = this.node.field();
     const flat = {};
     for (let i = 0; i < fields.length; i++) {

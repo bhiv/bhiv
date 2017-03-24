@@ -327,7 +327,7 @@ describe('Yolo', function () {
 
     it('trap - declare', function () {
       A.on('test-trap')
-        .trap('jp:error.code == `42`', ':get-one')
+        .trap('jp:error.code == `42`', A.begin().then(':get-one').end())
         .failWith({ code: 42 })
         .end();
     });
