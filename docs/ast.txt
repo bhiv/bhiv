@@ -152,8 +152,8 @@
 /** To merge in specific way the reesult and flow
  *    @subflow: { payload, result } -> flow
  */
-.wrap(<glue>)                    => Parent
+.wrap(<glue>) => Parent
 
 /** To replace
  */
-.replace(<path>)                 => Parent
+.replace(<path>) => Parent
