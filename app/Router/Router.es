@@ -1,26 +1,24 @@
 import Parser from './Router.parser.pegjs';
 
-export default function (node, logger, Bee) {
+export default function (node, logger) {
 
-  node.on('-start', function (slice, callback) {
-    var routes = this.node.get('routes');
-    return new Bee()
-      .Map('routes', null, 'filepath')
-      .  pipe(':route-map-add', 'jp:filepath')
-      .close({ max: 1 })
-      .end({ routes: routes }, this.next(callback));
-  });
+  node.on('-start')
+    .as({ node: '$:@' })
+    .then(function (flow) { return this.node.get('routes'); }).merge('routes')
+    .Map('routes')
+    .  then(':route-map-add', '$:value')
+    .  end()
+    .end();
 
-  node.on('route-map-add', new Bee()
-          .extract({ filepath: 'jp:@' })
-          .then('Util.Retriever:request', 'jp:filepath', { raw: 'jp:@' })
-          .then(':parse', 'jp:raw', { rules: 'jp:@' })
-          .pipe(':config-attach')
-          .Map('rules', null, 'rule')
-          .  then(':rule-add', 'jp:rule', {})
-          .close({ max: 1 })
-          .end()
-         );
+  node.on('route-map-add')
+    .as({ filepath: '$:@' })
+    .then('Util.Retriever:request', '$:filepath').merge('raw')
+    .then(':parse', '$:raw').merge('rules')
+    .then(':config-attach')
+    .Map('rules')
+    .  then(':rule-add', '$:value')
+    .  end()
+    .end();
 
   node.on('parse', function (content, callback) {
     try { var rules = Parser.parse(content); }
