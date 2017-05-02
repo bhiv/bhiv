@@ -45,6 +45,15 @@
 .Until(<test>[, <delay>[, <glue>]]) => Waterfall Self
 .  end()                            => Self
 
+/** To retry a subflow each time an error occure
+ *    @subflow: { flow, times } -> flow
+ *    @param: <test>: (*)       => 
+ *    @param: <delay>: (number) => delay before next retry
+ *    @param: <count>: (number) => 
+ */
+.Retry(<number>, <delay>, <test>)
+.  end()
+
 /** To iterate over each element
  *    @subflow: { key, value, flow } ->  value
  *    @param: <source>: (null | undefined | '.') => current flow
