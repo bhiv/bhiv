@@ -33,7 +33,7 @@ module.exports = function (node, logger) {
     case 'http:': case 'https:':
       return this.node.send(':http-' + method, request, flux);
     default:
-      return flux(new Error('Protocol not yet implemented'));
+      return flux(new Error('Protocol: "'+request.protocol+'" not yet implemented'));
     }
   });
 
