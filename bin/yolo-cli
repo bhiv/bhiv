@@ -18,6 +18,9 @@ yolo_cli () {
         stop)    yolo_stop $@;;
         restart) yolo_restart $@;;
 
+        bind-module)   yolo_bind_module $@;;
+        unbind-module) yolo_unbind_module $@;;
+
         help)    yolo_synopsis $@;;
         *)       yolo_synopsis $@;;
     esac
@@ -146,6 +149,24 @@ yolo_stop () {
 
 yolo_restart () {
     echo
+}
+
+################################################################
+
+yolo_bind_module () {
+    NAME="$1"
+    DEPENDENCIES="config/elders.txt"
+    MODULE='node_modules/'"$NAME"
+    if grep "$MODULE" "$DEPENDENCIES" 2> /dev/null > /dev/null
+    then
+        echo "($NAME) Already bound"
+    else
+        echo "$MODULE" >> "$DEPENDENCIES"
+    fi
+}
+
+yolo_unbind_module () {
+    echo $@
 }
 
 ################################################################

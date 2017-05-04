@@ -1,6 +1,6 @@
 {
   "name": "yolojs",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "A framework for RIA website",
   "main": "lib/index.js",
   "scripts": {
