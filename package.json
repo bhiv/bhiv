@@ -1,7 +1,7 @@
 {
   "name": "yolojs",
   "version": "1.0.0",
-  "description": "A framework for RIA website",
+  "description": "An unified framework",
   "main": "lib/index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec",
