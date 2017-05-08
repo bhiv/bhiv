@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+
+require('pegjs-require');
+const Yolo = require('../lib/Yolo.js');
+const fs = require('fs');
+
+const file = process.argv[2];
+const action = process.argv[3];
+const args = Array.prototype.slice.call(process.argv, 4);
+
+const content = fs.readFileSync(file).toString();
+const json = JSON.parse(content);
+
+switch (action) {
+case 'set-string':
+  Yolo.Util.setIn(json, args[0], args[1]);
+  break ;
+default:
+  throw new Error('Unknown action');
+}
+
+fs.writeFileSync(file, JSON.stringify(json, null, 2));
