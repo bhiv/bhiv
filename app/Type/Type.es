@@ -1,3 +1,4 @@
+// UroxGvT3uDMQCT1va20i43ZZSxo
 import async from 'async';
 
 export default function (node, logger, Bee) {
@@ -46,7 +47,10 @@ export default function (node, logger, Bee) {
       return async.map(fields, (name, callback) => {
         return this.node.send(':instanciate', node.field(name), callback);
       }, err => {
-        return callback(err, node);
+        if (err) return callback(err);
+        return node.emit('-inflated', fields, err => {
+          return callback(err, node);
+        });
       });
     case 'Primitive':
       return callback(null, node);

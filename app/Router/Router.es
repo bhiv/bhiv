@@ -1,3 +1,4 @@
+/*!UroxGvT3uDMQCT1va20i43ZZSxo*/
 import Parser from './Router.parser.pegjs';
 
 export default function (node, logger) {

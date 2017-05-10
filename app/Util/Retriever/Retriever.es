@@ -1,3 +1,4 @@
+/*!UroxGvT3uDMQCT1va20i43ZZSxo*/
 var Url    = require('url');
 var fs     = require('fs');
 var path   = require('path');
