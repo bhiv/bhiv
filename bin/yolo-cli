@@ -2,7 +2,7 @@
 
 yolo_cli () {
     action="$1";
-    shift;
+    if [ -n "$1" ]; then shift; fi
     case "$action" in
         install) yolo_install $@;;
         update)  yolo_update $@;;
@@ -29,10 +29,10 @@ yolo_cli () {
 }
 
 ################################################################
-THIS=$(dirname "$0")
+THIS=$(dirname "$(readlink "$0" || echo "$0")")
 errcho () { echo $@ 1>&2; }
 capitalize () { echo "$(echo -n "$1" | cut -c1 | tr '[a-z]' '[A-Z]')$(echo -n "$1" | cut -c2-)"; }
-json () { "$THIS/json" $@; }
+json () { "$THIS/json" "$1" "$2" "$3" "$4" "$5"; }
 
 VERSION=$(json "$THIS/../package.json" "get-string" "version")
 
@@ -62,6 +62,7 @@ yolo_init () {
         echo '.#*#' >> "$ignore"
         echo '#*#' >> "$ignore"
         echo 'node_modules' >> "$ignore"
+        echo 'npm-debug.log' >> "$ignore"
     fi
 
     mkdir -p app config test docs resources
@@ -184,7 +185,7 @@ yolo_restart () {
 ################################################################
 
 yolo_bind_module () {
-    NAME="$1"
+    NAME="$(basename $(pwd))"
     DEPENDENCIES="config/elders.txt"
     MODULE='node_modules/'"$NAME"
     if grep "$MODULE" "$DEPENDENCIES" 2> /dev/null > /dev/null
@@ -202,7 +203,7 @@ yolo_unbind_module () {
 ################################################################
 
 yolo_synopsis () {
-
+    echo "SYNOPSIS: yolo-cli <action> [<args>]"
     if [ "$0" = "help" ]; then exit 0;
     else exit 1; fi
 }

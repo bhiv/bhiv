@@ -14,9 +14,12 @@ const json = JSON.parse(content);
 switch (action) {
 case 'set-string':
   Yolo.Util.setIn(json, args[0], args[1]);
+  fs.writeFileSync(file, JSON.stringify(json, null, 2));
+  break ;
+case 'get-string':
+  console.log(Yolo.Util.getIn(json, args[0]));
   break ;
 default:
   throw new Error('Unknown action');
 }
 
-fs.writeFileSync(file, JSON.stringify(json, null, 2));
