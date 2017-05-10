@@ -10,7 +10,7 @@
 /** To transform the flow
  *    @param: <glue>: (*) =>
  */
-.as(<glue>) => Self
+.as(<glue>) => Merger Self
 
 /** To duplicate flow in order to avoid side effect
  */
@@ -21,6 +21,12 @@
  *    @param: <glue>: (*)                       =>
  */
 .then(<identifier>[, <glue>]) => Merger Self
+
+/** To execute a function in parallel but do not wait for response
+ *    @param: <identifier>: (string | function) =>
+ *    @param: <glue>: (*)                       =>
+ */
+.defer(<identifier>[, <glue>]) => Self
 
 /** To transform a value
  *    @param: <path>: (string)                  =>
@@ -36,6 +42,12 @@
 .Race(<glue>) => Race Self
 .  At(<path>) => RaceoBranch Self
 .  end()      => Merger Parent
+
+/** To execute a waterfall in parallel but do not wait for response
+ *    @subflow: flow -> value
+ */
+.Sideway() => Waterfall Self
+.  end()   => Merger Parent
 
 /** To make an execution loop
  *    @subflow: { flow, times } -> flow
@@ -166,3 +178,23 @@
 /** To replace
  */
 .replace(<path>) => Parent
+
+/**********************/
+/***** Templating *****/
+/**********************/
+
+/** To create a anchor which can help an other function to use it as template
+ *    @param: <tags>: (string) => anchor tags
+ */
+.Block(<tags>) => Waterfall Self
+.  end()
+
+/** To use an other function but changing some part (c.f. block)
+ *    @param: <fqn>: (string) => a function identifier
+ */
+.Use(<fqn>)         => Self MetaCall
+.  At(<tags>)       => Self MetaCall Position
+.    inject(<data>) => Self MetaCall Position Merger
+.    Do()           => Self MetaCall Position Waterfall
+.      .end()
+.  end()
