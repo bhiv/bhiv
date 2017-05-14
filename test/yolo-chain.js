@@ -20,6 +20,11 @@ var check = function (data, done) {
   };
 };
 
+var dump = function (value) {
+  console.log(value);
+  return value;
+};
+
 describe('Yolo', function () {
 
   describe('VM.AST', function () {
@@ -61,14 +66,14 @@ describe('Yolo', function () {
     /***************************/
 
     it('as - declare', function () {
-      A.on('test-format').as({ wrap: 'jp:@' }).end();
+      A.on('test-format').as({ wrap: '$:@' }).end();
     });
     it('as - call', function (done) {
       A.emit('test-format', 42, check({ wrap: 42 }, done));
     });
 
     it('then / format - declare', function () {
-      A.on('test-then-format').then(':test-format', 'jp:value').end();
+      A.on('test-then-format').then(':test-format', '$:value').end();
     });
     it('then / format - call', function (done) {
       A.emit('test-then-format', { value: 42 }, check({ wrap: 42 }, done));
@@ -76,7 +81,7 @@ describe('Yolo', function () {
 
     it('then & wrap - declare', function () {
       A.on('test-then-format-wrap')
-        .then(':plus-one', 'jp:value').wrap({ v: '$:payload.value', r: '$:result' })
+        .then(':plus-one', '$:value').wrap({ v: '$:payload.value', r: '$:result' })
         .end();
     });
     it('then & wrap - call', function (done) {
@@ -84,21 +89,21 @@ describe('Yolo', function () {
     });
 
     it('then & merge - declare', function () {
-      A.on('test-then-format-merge').then(':plus-one-as-foo', 'jp:value').merge().end();
+      A.on('test-then-format-merge').then(':plus-one-as-foo', '$:value').merge().end();
     });
     it('then & merge - call', function (done) {
       A.emit('test-then-format-merge', { value: 41 }, check({ value: 41, foo: 42 }, done));
     });
 
     it('then & put - declare', function () {
-      A.on('test-then-format-put').then(':plus-one', 'jp:value').merge('auqlue').end();
+      A.on('test-then-format-put').then(':plus-one', '$:value').merge('auqlue').end();
     });
     it('then & put - call', function (done) {
       A.emit('test-then-format-put', { value: 41 }, check({ auqlue: 42, value: 41 }, done));
     });
 
     it('then & replace - declare', function () {
-      A.on('test-then-format-replace').then(':plus-one', 'jp:value').replace('value').end();
+      A.on('test-then-format-replace').then(':plus-one', '$:value').replace('value').end();
     });
     it('then & replace - call', function (done) {
       A.emit('test-then-format-replace', { value: 41 }, check({ value: 42 }, done));
@@ -114,7 +119,7 @@ describe('Yolo', function () {
     // Control Flow
     it('race - declare', function () {
       A.on('test-race').as('$:some.where').Race()
-        .  At('field1', 'jp:@').then(':plus-one', '$:data')
+        .  At('field1').then(':plus-one', '$:data')
         .  At('field2').then(':plus-one', '$:data.two').then(':plus-one')
         .  end()
         .end();
@@ -337,6 +342,8 @@ describe('Yolo', function () {
       A.begin('bad-value').then(':test-trap').end(check(1, done));
     });
 
+    // TODO: test sideway
+
     it('TOP 1 - declare', function () {
       A.on('test-top-1')
         .then(':plus-one')
@@ -357,6 +364,37 @@ describe('Yolo', function () {
         .  Replace('plus-one').then(':plus-two')
         .  end()
         .end(check(7, done));
+    });
+
+    it('TOP 2 - declare - 1', function () {
+      A.on('test-top-2')
+        .as({ init: '$:@', value: 20 })
+        .Race()
+        .  At('init').as('$:init').Block('init').then(':plus-one').end()
+        .  At('value').as('$:value').Block('value').then(':plus-ten').end()
+        .  end()
+        .then(':left-plus-right', { left: '$:init', right: '$:value' })
+        .end()
+    });
+    it('TOP 2 - call - 1', function (done) {
+      A.begin(0).then(':test-top-2').end(check(31, done));
+    });
+    it('TOP 2 - declare - 2', function () {
+      A.on('test-top-2-overloaded')
+        .Then(':test-top-2')
+        .  Prepend('init').as(1)
+        .  end()
+        .end();
+    });
+    it('TOP 2 - call - 2', function (done) {
+      A.begin(0).then(':test-top-2-overloaded').end(check(32, done));
+    });
+    it('TOP 2 - call - 3', function (done) {
+      A.begin(0)
+        .Then(':test-top-2-overloaded')
+        .  Prepend('value').then(':plus-ten')
+        .  end()
+        .end(check(42, done));
     });
 
   });
