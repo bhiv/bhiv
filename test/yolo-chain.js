@@ -29,6 +29,8 @@ describe('Yolo', function () {
     A.on('dump', function (alpha) { console.log(alpha); return alpha; });
     A.on('get-one', function (number) { return 1; });
     A.on('plus-one', function (number) { return number + 1; });
+    A.on('plus-two', function (number) { return number + 2; });
+    A.on('plus-ten', function (number) { return number + 10; });
     A.on('plus-one-as-foo', function (number) { return { foo: number + 1 }; });
     A.on('left-plus-right', function (record) { return record.left + record.right; });
     A.on('concat-left-right-10ms-async', function (record, callback) {
@@ -333,6 +335,28 @@ describe('Yolo', function () {
     });
     it('trap - call', function (done) {
       A.begin('bad-value').then(':test-trap').end(check(1, done));
+    });
+
+    it('TOP 1 - declare', function () {
+      A.on('test-top-1')
+        .then(':plus-one')
+        .Block('plus-ten').then(':plus-ten').end()
+        .Block('plus-one').then(':plus-one').end()
+        .end()
+    });
+    it('TOP 1 - call - 0', function (done) {
+      A.begin(0).then(':test-top-1').end(check(12, done));
+    });
+    it('TOP 1 - call - 1', function (done) {
+      A.begin(0).Then(':test-top-1').end().end(check(12, done));
+    });
+    it('TOP 1 - call - 2', function (done) {
+      A.begin(0)
+        .Then(':test-top-1')
+        .  Replace('plus-ten', 4).then(':plus-one')
+        .  Replace('plus-one').then(':plus-two')
+        .  end()
+        .end(check(7, done));
     });
 
   });
