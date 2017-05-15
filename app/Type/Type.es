@@ -55,7 +55,7 @@ export default function (node, logger, Bee) {
     case 'Primitive':
       return callback(null, node);
     default :
-      return callback('Unhandled model kind');
+      return callback('Unhandled model kind: ' + node.kind());
     }
   });
 

@@ -12,6 +12,8 @@ yolo_cli () {
         init-module) yolo_init_module $@;;
         link)        yolo_link $@;;
 
+        set-magic)   yolo_set_magic $@;;
+
         run)     yolo_run $@;;
         test)    yolo_test $@;;
 
@@ -156,6 +158,18 @@ EOF
 
 yolo_link () {
     npm link -no-bin-links yolojs
+}
+
+################################################################
+
+yolo_set_magic () {
+
+    while [ -n "$1" ]
+    do
+        ex "$1" +1 -c 'i|/*!UroxGvT3uDMQCT1va20i43ZZSxo*/' -c x
+        shift
+    done
+
 }
 
 ################################################################
