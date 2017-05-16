@@ -7,7 +7,7 @@ export default function (node, logger, Bee) {
 
   node.on('instanciate', function (type, callback) {
     if (type == null) return callback(null, null);
-    const key = 'types.' + Yolo.Digest(type.fqn);
+    const key = 'types.' + type.fqn.replace(/\./g, '_');
     const node = this.node.get(key);
     if (node != null) {
       // type is loaded
@@ -41,7 +41,7 @@ export default function (node, logger, Bee) {
       /* Avoid circular type loading failure */
       /* when starting to load a type which is circular */
       /* e.g. A -> B -> C -> A */
-      this.node.set('types.' + Yolo.Digest(node.layout), node);
+      this.node.set('types.' + node.layout.replace(/\./g, '_'), node);
       /***************************************/
       const fields = node.field();
       return async.map(fields, (name, callback) => {
