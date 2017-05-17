@@ -3,8 +3,8 @@ var Yolo = require('../lib/Yolo.js');
 var assert = require('assert');
 var jmespath = require('jmespath');
 
-Yolo.VM.DSL.jp = function (ast, data, callback) {
-  try { data = jmespath.search(data, ast.$.substr(3)); }
+Yolo.VM.DSL.jp = function (dsl, data, callback) {
+  try { data = jmespath.search(data, dsl.substr(3)); }
   catch (e) {
     console.warn(e);
     return callback(null, null);
