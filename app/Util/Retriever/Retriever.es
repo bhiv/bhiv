@@ -21,7 +21,8 @@ module.exports = function (node, logger) {
       var count = cache.queue(request.cache_key, flux);
       if (count > 1) return ;
     }
-    logger.log('Retrieving %s', Url.format(request));
+    const uri = request.protocol == 'file:' ? request.filepath : Url.format(request);
+    logger.log('Retrieving %s', uri);
     switch (request.protocol) {
     case 'file:':
       var fp = request.path || request.filepath || request.url;
