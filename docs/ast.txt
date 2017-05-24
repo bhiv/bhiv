@@ -2,6 +2,15 @@
 /**** Waterfall ******/
 /*********************/
 
+/** To insert a breakpoint for debugging
+ */
+.debug() => Self
+
+/** To alter flow
+ *    @param: <method>: ('copy' | ) =>
+ */
+.relocate(<location>) => Self
+
 /** To change the current working node
  *    @param: <location>: (string) =>
  */
@@ -119,7 +128,7 @@
  */
 .Match([<view>])           => Match Self
 .  When(<test>)            => MatchCase Waterfall Self
-.  WhenEqual(<value>)      => MatchCase Waterfall Self
+.  WhenEquiv(<value>)      => MatchCase Waterfall Self
 .  WhenType(<type>[, ...]) => MatchCase Waterfall Self
 .  Otherwise()             => Waterfall Self
 .  end()                   => Merger Parent
@@ -166,9 +175,10 @@
 /*******************/
 
 /** To merge result with flow
- *    @param: <path>
+ *    @param: <path>: String => merge result to content
+ *    @param: <path>: Object => merge 
  */
-.merge(<path>) => Parent
+.merge(<path>[, <glue>]) => Parent
 
 /** To merge in specific way the reesult and flow
  *    @subflow: { payload, result } -> flow
@@ -178,6 +188,10 @@
 /** To replace
  */
 .replace(<path>) => Parent
+
+/** To discard returned value and keep the flow as it
+ */
+.dismiss() => Parent
 
 /**********************/
 /***** Templating *****/
