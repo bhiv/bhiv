@@ -199,6 +199,7 @@ yolo_restart () {
 ################################################################
 
 yolo_bind_module () {
+    return 
     NAME="$(basename $(pwd))"
     DEPENDENCIES="config/elders.txt"
     MODULE='node_modules/'"$NAME"
