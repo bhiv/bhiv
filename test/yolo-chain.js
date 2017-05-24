@@ -332,9 +332,11 @@ describe('Yolo', function () {
       A.begin(data).then(':test-shunt').end(check('yolo', done));
     });
 
+    // TODO: test assert
+
     it('trap - declare', function () {
       A.on('test-trap')
-        .trap('jp:error.code == `42`', A.begin().then(':get-one').end())
+        .trap('jp:error.code == `42`', ':get-one')
         .failWith({ code: 42 })
         .end();
     });
