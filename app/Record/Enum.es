@@ -1,3 +1,5 @@
+/*!UroxGvT3uDMQCT1va20i43ZZSxo*/
+
 export default function (node, logger) {
 
   node.kind('Record');
@@ -25,7 +27,7 @@ export default function (node, logger) {
       if (err) return callback(err);
       if (result == null) return callback(null, null);
       return callback(null, result.id);
-    })
+    });
   });
 
   node.check('is-one-of', function (value) {
