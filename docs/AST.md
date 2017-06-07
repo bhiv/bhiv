@@ -7,9 +7,9 @@
 .debug() => Self
 
 /** To alter flow
- *    @param: <method>: ('copy' | ) =>
+ *    @param: <method>: ('copy' | 'inherit') =>
  */
-.relocate(<location>) => Self
+.flow(<method>) => Self
 
 /** To change the current working node
  *    @param: <location>: (string) =>
@@ -20,10 +20,6 @@
  *    @param: <glue>: (*) =>
  */
 .as(<glue>) => Merger Self
-
-/** To duplicate flow in order to avoid side effect
- */
-.copy() => Merger Self
 
 /** To execute a function
  *    @param: <identifier>: (string | function) =>
@@ -170,6 +166,18 @@
  */
 .failWith(error) => Self
 
+/*******************/
+/** Dependencies ***/
+/*******************/
+
+/** To require a sub typed object
+ *    @param: <module>: String => required module path e.g. Mailer.SMTP
+ *    @param: <name>: String => glue to define child name
+ *    @param: <lifetime>: Number => duration (ms) if this module not called will be garbage collected
+
+.Require(<module>, <name>, <lifetime>)
+.  end()
+ 
 /*******************/
 /***** Merger ******/
 /*******************/
