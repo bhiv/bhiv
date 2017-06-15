@@ -158,8 +158,9 @@
 /** To stop execution
  *    @param: <test>: (*) =>
  *    @param: <glue>: (*) =>
+ *    @param: <code>: (String | Number) =>
  */
-.assert(<test>[, <glue>]) => Waterfall Self
+.assert(<test>[, <glue>[, <code>]]) => Waterfall Self
 
 /** To catch an error if pattern match
  *    @param: <error>: (string) =>
