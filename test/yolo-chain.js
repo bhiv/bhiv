@@ -399,6 +399,22 @@ describe('Yolo', function () {
         .end(check(42, done));
     });
 
+    it('Dynamic Module access - declare', function () {
+      var B = new Yolo.Node('B');
+      B.on('test', () => 'rep:B');
+      var C = new Yolo.Node('C');
+      C.on('test', () => 'rep:C');
+      A.attach(B, 'B');
+      A.attach(C, 'C');
+      A.on('test-dyn-mod-access').then('.{.}:test').end();
+    });
+    it('Dynamic Module access - call B', function (done) {
+      A.send(':test-dyn-mod-access', 'B', check('rep:B', done));
+    });
+    it('Dynamic Module access - call C', function (done) {
+      A.send(':test-dyn-mod-access', 'C', check('rep:C', done));
+    });
+
   });
 
 });
