@@ -7,11 +7,12 @@
 
 ## scheme: `%'
   syntax for constructing string include several sub interpolation:
-  #{ ... } to get data from node data 
+  #{ ... } to get value from node data 
   %{ ... } to get node property like name, cwd, ...
-  &{ ... } to get data from Global Config exemple Full.Module.Path:then.path.to.data
-  ${ ... } to get data from flow
+  &{ ... } to get value from Global Config exemple Full.Module.Path:then.path.to.data
+  ${ ... } to get value from flow
   ={ ... } to insert expression as it
+  >{ ... } to execute ast 
 
 
 
