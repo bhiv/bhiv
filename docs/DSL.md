@@ -5,6 +5,9 @@
   syntax for getting data from flow, currently only support path.to.data access style and @ for flow itself
   a complete language like jmespath or jq syntax will be implemented
 
+## scheme: `#'
+  get value from node data
+  
 ## scheme: `%'
   syntax for constructing string include several sub interpolation:
   #{ ... } to get value from node data 

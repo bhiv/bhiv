@@ -33,11 +33,10 @@
  */
 .defer(<identifier>[, <glue>]) => Self
 
-/** To transform a value
- *    @param: <path>: (string)                  =>
- *    @param: <identifier>: (string | function) =>
+/** Create a pipe flow
  */
-.apply(<path>, <identifier>) => Self
+.Pipe()  => Waterfall
+.  end() => Merger Parent
 
 /** To execute multiple tasks in parallel in order to build an object
  *    @subflow: { flow, value } -> value
@@ -197,6 +196,14 @@
 /** To replace
  */
 .replace(<path>) => Parent
+
+/** To push data into an array
+ */
+.append(<path>) => Parent
+
+/** To unshift data into an array
+ */
+.prepend(<path>) => Parent
 
 /** To discard returned value and keep the flow as it
  */
