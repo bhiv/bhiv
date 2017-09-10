@@ -69,14 +69,14 @@ describe('Yolo', function () {
       A.on('test-format').as({ wrap: '$:@' }).end();
     });
     it('as - call', function (done) {
-      A.emit('test-format', 42, check({ wrap: 42 }, done));
+      A.execute('test-format', 42, check({ wrap: 42 }, done));
     });
 
     it('then / format - declare', function () {
       A.on('test-then-format').then(':test-format', '$:value').end();
     });
     it('then / format - call', function (done) {
-      A.emit('test-then-format', { value: 42 }, check({ wrap: 42 }, done));
+      A.execute('test-then-format', { value: 42 }, check({ wrap: 42 }, done));
     });
 
     it('then & wrap - declare', function () {
@@ -85,35 +85,35 @@ describe('Yolo', function () {
         .end();
     });
     it('then & wrap - call', function (done) {
-      A.emit('test-then-format-wrap', { value: 41 }, check({ v: 41, r: 42 }, done));
+      A.execute('test-then-format-wrap', { value: 41 }, check({ v: 41, r: 42 }, done));
     });
 
     it('then & merge - declare', function () {
       A.on('test-then-format-merge').then(':plus-one-as-foo', '$:value').merge().end();
     });
     it('then & merge - call', function (done) {
-      A.emit('test-then-format-merge', { value: 41 }, check({ value: 41, foo: 42 }, done));
+      A.execute('test-then-format-merge', { value: 41 }, check({ value: 41, foo: 42 }, done));
     });
 
     it('then & put - declare', function () {
       A.on('test-then-format-put').then(':plus-one', '$:value').merge('auqlue').end();
     });
     it('then & put - call', function (done) {
-      A.emit('test-then-format-put', { value: 41 }, check({ auqlue: 42, value: 41 }, done));
+      A.execute('test-then-format-put', { value: 41 }, check({ auqlue: 42, value: 41 }, done));
     });
 
     it('then & replace - declare', function () {
       A.on('test-then-format-replace').then(':plus-one', '$:value').replace('value').end();
     });
     it('then & replace - call', function (done) {
-      A.emit('test-then-format-replace', { value: 41 }, check({ value: 42 }, done));
+      A.execute('test-then-format-replace', { value: 41 }, check({ value: 42 }, done));
     });
 
     it('apply - declare', function () {
       A.on('test-apply').apply('val.ue', ':plus-one').end();
     });
     it('apply - call', function (done) {
-      A.emit('test-apply', { val: { ue: 41 } }, check({ val: { ue: 42 } }, done));
+      A.execute('test-apply', { val: { ue: 41 } }, check({ val: { ue: 42 } }, done));
     });
 
     // Control Flow
@@ -125,7 +125,7 @@ describe('Yolo', function () {
         .end();
     });
     it('race - call', function (done) {
-      A.emit( 'test-race'
+      A.execute( 'test-race'
             , { some: { where: { data: 0 } } }
             , check({ field1: 1, field2: 2 }, done)
             );
@@ -136,7 +136,7 @@ describe('Yolo', function () {
       A.on('test-until-1').Until('jp:times<`10`', 0, '$:flow').then(':plus-one').end().end();
     });
     it('until - call - 1', function (done) {
-      A.emit('test-until-1', 0, check(10, done));
+      A.execute('test-until-1', 0, check(10, done));
     });
     it('until - declare - delayed', function () {
       A.on('test-until-1-bis').Until('jp:times<`2`', 10, '$:flow').then(':plus-one').end().end();
@@ -144,7 +144,7 @@ describe('Yolo', function () {
     it('until - call - delayed', function (done) {
       var canResponde = false
       setTimeout(function () { canResponde = true }, 20);
-      A.emit('test-until-1-bis', 0, function (err, suc) {
+      A.execute('test-until-1-bis', 0, function (err, suc) {
         if (canResponde) return check(2, done)(err, suc);
         return done('has responded too early');
       });
@@ -153,7 +153,7 @@ describe('Yolo', function () {
       A.on('test-until-2').Until('jp:times<`10`').then(':plus-one', '$:flow').end().end();
     });
     it('until - call - 2', function (done) {
-      A.emit('test-until-2', 0, check(10, done));
+      A.execute('test-until-2', 0, check(10, done));
     });
 
     // Collections
@@ -161,7 +161,7 @@ describe('Yolo', function () {
       A.on('test-map').Map('list').then(':plus-one', '$:value').end().replace('list').end();
     });
     it('map - call', function (done) {
-      A.emit('test-map', { list: [0,1,2,3] }, check({ list: [1,2,3,4] }, done));
+      A.execute('test-map', { list: [0,1,2,3] }, check({ list: [1,2,3,4] }, done));
     });
 
     it('fold - declare', function () {
@@ -172,22 +172,22 @@ describe('Yolo', function () {
         .end();
     });
     it('fold - call', function (done) {
-      A.emit('test-fold', { value: [1,2,3,4,5,6,7] }, check({ value: 42 }, done));
+      A.execute('test-fold', { value: [1,2,3,4,5,6,7] }, check({ value: 42 }, done));
     });
 
     it('reduce - declare', function () {
       A.on('test-reduce').Reduce().then(':concat-left-right-10ms-async').end().end();
     });
     it('reduce - call - empty', function (done) {
-      A.emit('test-reduce', [], check(null, done));
+      A.execute('test-reduce', [], check(null, done));
     });
     it('reduce - call - single', function (done) {
-      A.emit('test-reduce', [1], check(1, done));
+      A.execute('test-reduce', [1], check(1, done));
     });
     it('reduce - call - multi with time checking', function (done) {
       var str = 'abcdefghi';
       this.timeout(((str.length - 1) * 10) - 5);
-      A.emit('test-reduce', str.split(''), check(str, done));
+      A.execute('test-reduce', str.split(''), check(str, done));
     });
 
     it('filter - declare', function () {
@@ -197,7 +197,7 @@ describe('Yolo', function () {
         .end();
     });
     it('filter - call', function (done) {
-      A.emit('test-filter', [0,1,2,3], check({ evens: [1,3], list: [0,1,2,3] }, done));
+      A.execute('test-filter', [0,1,2,3], check({ evens: [1,3], list: [0,1,2,3] }, done));
     });
 
     it('detect - declare - sync success', function () {
@@ -206,7 +206,7 @@ describe('Yolo', function () {
         .end();
     });
     it('detect - call - sync success', function (done) {
-      A.emit('test-detect-sync-success', [0,2,3,4,6,8], check(3, done));
+      A.execute('test-detect-sync-success', [0,2,3,4,6,8], check(3, done));
     });
 
     it('detect - declare - async success', function () {
@@ -215,13 +215,13 @@ describe('Yolo', function () {
         .end();
     });
     it('detect - call - async success 1', function (done) {
-      A.emit('test-detect-async-success', [0,2,3,4,6,8], check(3, done));
+      A.execute('test-detect-async-success', [0,2,3,4,6,8], check(3, done));
     });
     it('detect - call - async success 2', function (done) {
-      A.emit('test-detect-async-success', [3,4,6,0,2,8], check(3, done));
+      A.execute('test-detect-async-success', [3,4,6,0,2,8], check(3, done));
     });
     it('detect - call - async success 3', function (done) {
-      A.emit('test-detect-async-success', [0,2,4,6,8,3], check(3, done));
+      A.execute('test-detect-async-success', [0,2,4,6,8,3], check(3, done));
     });
 
     it('detect - declare - sync with error', function () {
@@ -230,7 +230,7 @@ describe('Yolo', function () {
         .end();
     });
     it('detect - call - sync with error', function (done) {
-      A.emit('test-detect-sync-with-errors', [0,2,4,6,3,8], check(3, done));
+      A.execute('test-detect-sync-with-errors', [0,2,4,6,3,8], check(3, done));
     });
 
     it('detect - declare - async with error', function () {
@@ -239,7 +239,7 @@ describe('Yolo', function () {
         .end();
     });
     it('detect - call - async with error', function (done) {
-      A.emit('test-detect-async-with-errors', [0,2,4,6,3,8], check(3, done));
+      A.execute('test-detect-async-with-errors', [0,2,4,6,3,8], check(3, done));
     });
 
     it('detect - declare - error', function () {
@@ -248,7 +248,7 @@ describe('Yolo', function () {
         .end();
     });
     it('detect - call - async with error', function (done) {
-      A.emit('test-detect-async-error', [4,8,16,24], function (err) {
+      A.execute('test-detect-async-error', [4,8,16,24], function (err) {
         if (err) return done();
         else return done('Exptect an error');
       });
@@ -268,22 +268,22 @@ describe('Yolo', function () {
         .end();
     });
     it('match - call - 1', function (done) {
-      A.emit('test-match-when', { value: 1 }, check('when-equal-1', done));
+      A.execute('test-match-when', { value: 1 }, check('when-equal-1', done));
     });
     it('match - call - rxp', function (done) {
-      A.emit('test-match-when', { value: 'blreqexp-matcha' }, check('when-regexp-match', done));
+      A.execute('test-match-when', { value: 'blreqexp-matcha' }, check('when-regexp-match', done));
     });
     it('match - call - fn', function (done) {
-      A.emit('test-match-when', { value: 'blaXX42bla' }, check('when-function-succeed', done));
+      A.execute('test-match-when', { value: 'blaXX42bla' }, check('when-function-succeed', done));
     });
     it('match - call - query', function (done) {
-      A.emit('test-match-when', { value: { field: true } }, check('when-query-field', done));
+      A.execute('test-match-when', { value: { field: true } }, check('when-query-field', done));
     });
     it('match - call - type', function (done) {
-      A.emit('test-match-when', { value: new Date() }, check('when-type-date', done));
+      A.execute('test-match-when', { value: new Date() }, check('when-type-date', done));
     });
     it('match - call - otherwise', function (done) {
-      A.emit('test-match-when', { value: null }, check('when-no-case-match', done));
+      A.execute('test-match-when', { value: null }, check('when-no-case-match', done));
     });
 
     it('unless - declare', function () {
@@ -295,7 +295,7 @@ describe('Yolo', function () {
         .end();
     });
     it('unless - call', function (done) {
-      A.emit('test-unless', {}, check(2, done));
+      A.execute('test-unless', {}, check(2, done));
     });
 
     it('memoize - declare', function () {
@@ -307,9 +307,9 @@ describe('Yolo', function () {
     it('memoize - call', function (done) {
       this.timeout(39);
       var flow = { left: 'a', right: 'b' };
-      return A.emit('test-memoize', flow, function (err, r1) {
+      return A.execute('test-memoize', flow, function (err, r1) {
         if (err) return done(err);
-        return A.emit('test-memoize', flow, function (err, r2) {
+        return A.execute('test-memoize', flow, function (err, r2) {
           if (err) return done(err);
           if (r1 != r2) return done('Should return same result');
           return check('ab', done)(null, r2);
