@@ -26,7 +26,7 @@ export default function (node, logger, Bee) {
         node.setParent(this.node);
         this.node.set(key, node);
         loading.pick(type.fqn).map(fn => fn(node));
-        return node.emit('-load', result, err => {
+        return node.execute('-load', result, err => {
           return callback(err, type);
         });
       });
@@ -48,7 +48,7 @@ export default function (node, logger, Bee) {
         return this.node.send(':instanciate', node.field(name), callback);
       }, err => {
         if (err) return callback(err);
-        return node.emit('-inflated', fields, err => {
+        return node.execute('-inflated', fields, err => {
           return callback(err, node);
         });
       });
@@ -113,7 +113,7 @@ export default function (node, logger, Bee) {
       catch (e) {
         checks.push(check);
         const payload = { node, data, patches }
-        return this.node.emit('sanitize', payload, (err, { done, patches, data }) => {
+        return this.node.execute('sanitize', payload, (err, { done, patches, data }) => {
           if (err) return callback(err);
           if (done == 0) return callback(e);
           return walk.call(this, data, patches);

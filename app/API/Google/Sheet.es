@@ -21,14 +21,14 @@ export default function (node, logger, Bee) {
     const client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
     const savedAuth = this.node.get('auth');
     if (savedAuth != null) return callback(null, { auth: savedAuth });
-    return this.node.emit('read-token', {}, (err, token) => {
-      if (err == null) return this.node.emit('set-token', { client, token }, callback);
+    return this.node.send(':read-token', {}, (err, token) => {
+      if (err == null) return this.node.send(':set-token', { client, token }, callback);
       const code = this.node.get('authorization_code');
-      return this.node.emit('get-new-token', { client, scopes, code }, (err, token) => {
+      return this.node.send(':get-new-token', { client, scopes, code }, (err, token) => {
         if (err) return callback(err);
-        return this.node.emit('store-token', token, (err) => {
+        return this.node.send(':store-token', token, (err) => {
           if (err) return callback(err);
-          return this.node.emit('set-token', { client, token }, callback);
+          return this.node.send(':set-token', { client, token }, callback);
         });
       });
     });
@@ -53,7 +53,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('store-token', function (token, callback) {
-    return this.node.emit('get-token-path', {}, (err, path) => {
+    return this.node.send(':get-token-path', {}, (err, path) => {
       if (err) return callback(err);
       const content = JSON.stringify(token);
       return fs.writeFile(path, content, err => callback(err));
@@ -61,7 +61,7 @@ export default function (node, logger, Bee) {
   });
 
   node.on('read-token', function ({}, callback) {
-    return this.node.emit('get-token-path', {}, (err, path) => {
+    return this.node.send(':get-token-path', {}, (err, path) => {
       if (err) return callback(err);
       return fs.readFile(path, (err, data) => {
         if (err) return callback(err);

@@ -13,7 +13,7 @@ export default function (node, logger) {
     if (!(list.length > 0)) return callback(null, []);
     const node = this.node.type().node;
     return async.map(list, (item, callback) => {
-      return node.emit('parse', item, callback);
+      return node.send(':parse', item, callback);
     }, callback);
   });
 
@@ -23,7 +23,7 @@ export default function (node, logger) {
     if (!(list.length > 0)) return callback(null, []);
     const node = this.node.type().node;
     return async.map(list, (item, callback) => {
-      return node.emit('sanitize', item, callback);
+      return node.send(':sanitize', item, callback);
     }, callback);
   });
 
@@ -57,7 +57,7 @@ export default function (node, logger) {
   node.on('upsert', function (collection, callback) {
     const type = this.node.type();
     return async.map(collection, (entry, callback) => {
-      return type.node.emit('upsert', entry, callback);
+      return type.node.send(':upsert', entry, callback);
     }, callback);
   });
 

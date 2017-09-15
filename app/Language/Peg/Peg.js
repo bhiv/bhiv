@@ -23,7 +23,7 @@ module.exports = function (node) {
         cache.remove(request.file);
         return callback(err);
       }
-      return node.emit('compute', content, function (err, parser) {
+      return node.send(':compute', content, function (err, parser) {
         if (err) {
           cache.remove(request.file);
           return callback(err);

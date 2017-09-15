@@ -20,9 +20,9 @@ module.exports = function (node, logger) {
 
   node.on('execute', function (action, event) {
     if (client == null) {
-      return node.emit('connect', {}, function (err) {
+      return node.send(':connect', {}, function (err) {
         if (err) return event.reply(err);
-        return node.emit('execute', action, event);
+        return node.send(':execute', action, event);
       });
     }
     return client[action.cmd].apply(client, action.args.concat(function (err, result) {

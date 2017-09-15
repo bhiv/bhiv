@@ -23,7 +23,7 @@ export default function (node, logger) {
     if (parseInt(value, 10) === value) return callback(null, value);
     const view = { id: null };
     view[this.node.get('main_field') || 'name'] = value;
-    return this.node.emit('fetch', view, (err, result) => {
+    return this.node.send(':fetch', view, (err, result) => {
       if (err) return callback(err);
       if (result == null) return callback(null, null);
       return callback(null, result.id);

@@ -5,12 +5,12 @@ module.exports = function (node) {
   node.on('inlet-create', function (content, flux) {
     if (typeof content == 'string') content = { source: content };
     //content.source += '//# sourceURL=' + content.filepath;
-    return node.emit('compress', content, function (err, source) {
+    return node.send(':compress', content, function (err, source) {
       if (err) return flux(err);
       try { var fn = new Function('node, data, flux', source); }
       catch (e) { return flux(Yolo.Util.wrapError(e, content)); }
       var inlet = { execute: fn };
-      return node.emit('inlet-consolidate', inlet, flux);
+      return node.send(':inlet-consolidate', inlet, flux);
     });
   });
 
@@ -24,7 +24,7 @@ module.exports = function (node) {
 
   node.on('parse', function (content, event) {
     content = { source: content };
-    return node.emit('compress', content, function (err, source) {
+    return node.send(':compress', content, function (err, source) {
       if (err) return event.reply(err);
       try { var fn = new Function('node, data', content.source); }
       catch (e) { return event.reply(Yolo.Util.wrapError(e, content)); }

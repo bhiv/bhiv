@@ -66,7 +66,7 @@ module.exports = new function () {
           if (data == null) data = {};
           if (payload.params != null) data.params = payload.params;
           if (payload.children != null) data.children = payload.children;
-          return inlet.node.emit(match[2].substr(1), data, function (err, result) {
+          return inlet.node.execute(match[2].substr(1), data, function (err, result) {
             if (err) return callback(err);
             if (result instanceof Yolo.Node) {
               var flow = { instance: result, params: payload.params };

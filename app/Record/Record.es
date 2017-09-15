@@ -44,7 +44,7 @@ export default function (node, logger, Bee) {
   // inflated
   node.on('walk', function ({ data, fqn }, callback) {
     return (function iterator(field, data, callback) {
-      return field.node.emit('map', { data, iterator }, (err, result) => {
+      return field.node.execute('map', { data, iterator }, (err, result) => {
         if (err) return callback(err);
         return field.node.send(fqn, result, callback);
       });
@@ -83,8 +83,8 @@ export default function (node, logger, Bee) {
     return this.node.send('Type:parse', { node: this.node, data }, (err, data) => {
       if (err) return callback(err);
       if (data == null) return callback(null, null);
-      return this.node.emit('map', { data, iterator: (field, value, callback) => {
-        return field.node.emit('parse', value, callback);
+      return this.node.execute('map', { data, iterator: (field, value, callback) => {
+        return field.node.execute('parse', value, callback);
       } }, callback);
     });
   });
@@ -97,8 +97,8 @@ export default function (node, logger, Bee) {
       const data = result.data;
       if (data == null) return callback(null, null);
       if (typeof data != 'object') return callback(null, null);
-      return this.node.emit('map', { data, iterator: (field, value, callback) => {
-        return field.node.emit('sanitize', value, callback);
+      return this.node.execute('map', { data, iterator: (field, value, callback) => {
+        return field.node.execute('sanitize', value, callback);
       } }, callback);
     });
   });
@@ -161,7 +161,7 @@ export default function (node, logger, Bee) {
       }
     }
     if (!found) return callback(null, data);
-    return this.node.emit('fetch', view, (err, result) => {
+    return this.node.execute('fetch', view, (err, result) => {
       if (err) return callback(err);
       if (result == null) return callback(null, data);
       for (let  i = 0; i < fields.length; i++) {

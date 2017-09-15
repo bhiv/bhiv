@@ -15,14 +15,14 @@ export default function (node, logger) {
     return async.each(Object.keys(map), (key, callback) => {
       if (hasList) {
         return async.map(map[key], (item, callback) => {
-          return node.emit('parse', item, callback);
+          return node.send(':parse', item, callback);
         }, (err, list) => {
           if (err) return callback(err);
           map[key] = list;
           return callback();
         });
       } else {
-        return node.emit('parse', map[key], callback);
+        return node.send(':parse', map[key], callback);
       }
     }, err => {
       return callback(err, map);
@@ -36,14 +36,14 @@ export default function (node, logger) {
     return async.each(Object.keys(map), (key, callback) => {
       if (hasList) {
         return async.map(map[key], (item, callback) => {
-          return node.emit('sanitize', item, callback);
+          return node.send(':sanitize', item, callback);
         }, (err, list) => {
           if (err) return callback(err);
           map[key] = list;
           return callback();
         });
       } else {
-        return node.emit('sanitize', map[key], (err, data) => {
+        return node.send(':sanitize', map[key], (err, data) => {
           if (err) return callback(err);
           map[key] = data;
           return callback();
@@ -94,14 +94,14 @@ export default function (node, logger) {
     const keys = Object.keys(collection);
     const result = {};
     return async.each(keys, (key, callback) => {
-      return keyType.node.emit('sanitize', key, (err, keyValue) => {
+      return keyType.node.send(':sanitize', key, (err, keyValue) => {
         if (err) return callback(err);
-        return keyType.node.emit('identify', keyValue, (err, value) => {
+        return keyType.node.send(':identify', keyValue, (err, value) => {
           if (err) return callback(err);
           if (hasList) {
             return async.map(collection[key], (entry, callback) => {
               entry.key = value;
-              return type.node.emit('upsert', entry, callback);
+              return type.node.send(':upsert', entry, callback);
             }, (err, list) => {
               if (err) return callback(err);
               result[key] = list;
@@ -110,7 +110,7 @@ export default function (node, logger) {
           } else {
             const entry = collection[key];
             entry.key = value;
-            return type.node.emit('upsert', entry, (err, record) => {
+            return type.node.send(':upsert', entry, (err, record) => {
               if (err) return callback(err);
               result[key] = record;
               return callback();

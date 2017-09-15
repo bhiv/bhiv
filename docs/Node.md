@@ -2,30 +2,34 @@
 
 ## Structure:
 
-### inherit(<layout>) -> This
+### .inherit(<layout>) -> This
 
-### attach(<node>, <child-name>) -> This
+### .attach(<node>, <child-name>) -> This
 
-### detach() -> Node
+### .detach() -> Node
 
-### detachChild(<child-name>) -> Node
+### .detachChild(<child-name>) -> Node
 
-### detachChild(<node>) -> Node
+### .detachChild(<node>) -> Node
 
-### create(<layout>, <place>, <callback>?) -> Node
+### .create(<layout>, <place>, <callback>?) -> Node
 
-### create(<layout>, <callback>?) -> Node
+### .create(<layout>, <callback>?) -> Node
 
-### build(<layout>, <callback>?) -> Node
+### .build(<layout>, <callback>?) -> Node
 
-### getChild(<child-name>) -> Node
+### .getChild(<child-name>) -> Node
 
-### getChildren() -> Array<Node>
+### .getChildren() -> Array<Node>
 
-### parent -> Node
+### .parent -> Node
 
-### mapreduce(<map-function>, <reduce-function>, <callback>) -> This
-  
+### .mapreduce(<map-function>, <reduce-function>, <callback>) -> This
+
+## Router:
+
+### .io(<serializer-function>, <unserializer-function>);
+
 ## Data:
 
 ### set(<path>, <value>, <options>?) -> Boolean

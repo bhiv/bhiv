@@ -14,10 +14,10 @@ module.exports = function (node, logger, Bee) {
   });
 
   node.on('inlet-create', function (content, event) {
-    return node.emit('parse', content, function (err, css) {
+    return node.send(':parse', content, function (err, css) {
       if (err) return event.reply(err);
       var inlet = { css: css };
-      return node.emit('inlet-consolidate', inlet, event);
+      return node.send(':inlet-consolidate', inlet, event);
     });
   });
 

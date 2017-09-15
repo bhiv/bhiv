@@ -17,8 +17,8 @@ export default function (node, logger) {
   });
 
   node.on('fetch-relations', function (data, callback) {
-    return this.node.emit('map', { data, iterator: (type, data, callback) => {
-      return type.node.emit('fetch-relations', data, callback);
+    return this.node.send(':map', { data, iterator: (type, data, callback) => {
+      return type.node.send(':fetch-relations', data, callback);
     } }, callback);
   });
 

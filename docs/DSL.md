@@ -20,4 +20,9 @@
 ## scheme: `>'
   
 Yolo Query Language:
-  
+
+  Absolute.Module.Path : inlet-name   (execute)
+  Absolute.Module.Path # path.to.data (get)
+  Absolute.Module.Path = path.to.data (set)
+  Absolute.Module.Path / field.name   (field)
+  Absolute.Module.Path ! outlet-name  (emit)
