@@ -1,5 +1,5 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 
 describe('Utils', function () {
@@ -16,7 +16,7 @@ describe('Utils', function () {
     ].map(function (e) {
       const s = JSON.stringify.bind(JSON);
       it('should merge: ' + s(e[0]) + ' with ' + s(e[1]) + ' => ' + s(e[2]), function () {
-        return assert.deepEqual(Yolo.Util.merge(e[0], e[1]), e[2]);
+        return assert.deepEqual(Bhiv.Util.merge(e[0], e[1]), e[2]);
       });
     });
   });
@@ -33,7 +33,7 @@ describe('Utils', function () {
     , [ cyc, '{"cyclic":Circular()}' ]
     ].map(function (e) {
       it('should serialize correcty: ' + e[1], function () {
-        return assert.equal(Yolo.Util.serialize(e[0]), e[1]);
+        return assert.equal(Bhiv.Util.serialize(e[0]), e[1]);
       });
     });
   });
@@ -62,7 +62,7 @@ describe('Utils', function () {
     , [ 'obj 2', { a: 1 }, { a: 2 }, -1 ]
     ].map(function (e) {
       it('should compare correcty: ' + e[0], function () {
-        return assert.equal(Yolo.Util.compare(e[1], e[2]), e[3]);
+        return assert.equal(Bhiv.Util.compare(e[1], e[2]), e[3]);
       });
     });
   });

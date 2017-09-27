@@ -1,4 +1,4 @@
-{ "metas": [ { "name": "generator", "content": "YoloJS" }
+{ "metas": [ { "name": "generator", "content": "BhivJS" }
            , { "name": "viewport", "content": "width=device-width, initial-scale=0.8" }
            ]
 , "scripts": [{ "location": "/static/runtime.js", "async": false }]

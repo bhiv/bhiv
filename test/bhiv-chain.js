@@ -1,9 +1,9 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 var jmespath = require('jmespath');
 
-Yolo.VM.DSL.jp = function (dsl, data, callback) {
+Bhiv.VM.DSL.jp = function (dsl, data, callback) {
   try { data = jmespath.search(data, dsl.substr(3)); }
   catch (e) {
     console.warn(e);
@@ -25,11 +25,11 @@ var dump = function (value) {
   return value;
 };
 
-describe('Yolo', function () {
+describe('Bhiv', function () {
 
   describe('VM.AST', function () {
 
-    var A = new Yolo.Node('A');
+    var A = new Bhiv.Node('A');
 
     A.on('dump', function (alpha) { console.log(alpha); return alpha; });
     A.on('get-one', function (number) { return 1; });
@@ -400,9 +400,9 @@ describe('Yolo', function () {
     });
 
     it('Dynamic Module access - declare', function () {
-      var B = new Yolo.Node('B');
+      var B = new Bhiv.Node('B');
       B.on('test', () => 'rep:B');
-      var C = new Yolo.Node('C');
+      var C = new Bhiv.Node('C');
       C.on('test', () => 'rep:C');
       A.attach(B, 'B');
       A.attach(C, 'C');

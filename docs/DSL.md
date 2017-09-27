@@ -19,7 +19,7 @@
 
 ## scheme: `>'
   
-Yolo Query Language:
+Bhiv Query Language:
 
   Absolute.Module.Path : inlet-name   (execute)
   Absolute.Module.Path # path.to.data (get)

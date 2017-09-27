@@ -25,7 +25,7 @@ module.exports = function (node) {
     var context = node.get('context') || {};
     if (content.filename != null) context.filename = content.filename;
     try { var producer = Jade.compile(content.source, context); }
-    catch (e) { console.log(content); return flux(Yolo.Util.wrapError(e, content.source)); }
+    catch (e) { console.log(content); return flux(Bhiv.Util.wrapError(e, content.source)); }
     inlet.producer = producer;
     try { var clientStr = Jade.compileClient(content.source, node.get('context')); }
     catch (e) { var clientStr = 'function () { return "compile failed"; }'; }
@@ -42,7 +42,7 @@ module.exports = function (node) {
           , 'return this.call(payload, flux);'
           ].join('\n')
         );
-        return Yolo.Util.serialize(inlet, true, iterator);
+        return Bhiv.Util.serialize(inlet, true, iterator);
       };
       inlet.call = function (payload, flux) {
         return Runtime.Jade.producer(this, payload, flux);

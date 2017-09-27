@@ -1,8 +1,8 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 
-describe('Yolo', function () {
+describe('Bhiv', function () {
 
   describe('Fqn', function () {
 
@@ -18,7 +18,7 @@ describe('Yolo', function () {
 //    , { fqn: '.Model<With[mixed],[parameter]>', has: '0.args.0.2.path', eq: 'mixed' }
     ].map(function (e) {
       it('should parse: ' + e.fqn, function () {
-        var fqn = Yolo.Fqn.parse(e.fqn);
+        var fqn = Bhiv.Fqn.parse(e.fqn);
         var path = e.has.split('.');
         var ii = fqn;
         /**/
@@ -38,7 +38,7 @@ describe('Yolo', function () {
       });
       if (e.nostr != true) {
         it('sould serialize: ' + e.fqn, function () {
-          assert.equal(Yolo.Fqn.stringify(Yolo.Fqn.parse(e.fqn)), e.fqn);
+          assert.equal(Bhiv.Fqn.stringify(Bhiv.Fqn.parse(e.fqn)), e.fqn);
         });
       }
     });

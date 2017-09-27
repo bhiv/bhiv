@@ -14,11 +14,11 @@ module.exports = function (node) {
           for (var key in toplevel.Config) {
             if (key == path) result = toplevel.Config[key];
             else if (path.indexOf(key + '.') != 0) continue ;
-            else result = Yolo.Util.getIn(toplevel.Config[key], path.substr(key.length + 1));
+            else result = Bhiv.Util.getIn(toplevel.Config[key], path.substr(key.length + 1));
             if (result != null) break ;
           }
         } else if (path.indexOf('params.') == 0) {
-          result = Yolo.Util.getIn({ params: params }, path);
+          result = Bhiv.Util.getIn({ params: params }, path);
         } else if (path.indexOf('data.') == 0) {
           result = node.get(path.substr('data.'.length));
         }
@@ -54,7 +54,7 @@ module.exports = function (node) {
       inlet.args = this.args;
       inlet.result = this.result;
       inlet.call = this.setter;
-      return Yolo.Util.serialize(inlet);
+      return Bhiv.Util.serialize(inlet);
     };
     return callback();
   });

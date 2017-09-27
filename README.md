@@ -1,11 +1,5 @@
-```
-                _         _      
-    _   _  ___ | | ___   (_)___  
-   | | | |/ _ \| |/ _ \  | / __| 
-   | |_| | (_) | | (_) | | \__ \ 
-    \__, |\___/|_|\___(_)/ |___/ 
-    |___/              |__/      
-```
+Bhiv
+
 A framework for scalabe and splittable backend, it bring a single design pattern which enable you to produce maintainable code.
   * isomorphic
   * flow based exectution
@@ -16,7 +10,7 @@ A framework for scalabe and splittable backend, it bring a single design pattern
 Fully undocumented (sorry about that) but it should comming soon
 
 TODO:
-  * Yolo.Core:
+  * Bhiv.Core:
     * Clean old functions not used anymore
     * Implement custom DSL for: VM ("$" scheme keyword), Node (* scheme)
     * Refactor Collection using "field" instead of "type"
@@ -24,19 +18,19 @@ TODO:
     * Add hot code swapping
     * Add submodule based parser for Routing module
     * Handle better cross dependencies
-  * Yolo.Framework:
+  * Bhiv.Framework:
     * Allow Yaml, XML, ... config files formats
     * Add syntax for configuration merging behavior
-  * Yolo.Packages:
+  * Bhiv.Packages:
     * Create a package manager environment
     * Handle react / redux or smth else (replacement of NSB https://github.com/np42/yolojs/tree/b1009616e66a7aa5c82d4582e7f84a49fdd10e10/app/Widget)
     * Server side rendering (for SEO)
-  * Yolo.Shell:
+  * Bhiv.Shell:
     * Add command to add / remove / list packages
 
-# Yolo.Node Pattern:
+# Bhiv.Node Pattern:
 
-The Yolo.Node pattern is an omnipotent object which can:
+The Bhiv.Node pattern is an omnipotent object which can:
   * have properties, methods and events
   * have children (like dom)
   * have extended model capability
@@ -101,7 +95,7 @@ The Yolo.Node pattern is an omnipotent object which can:
 
   * send(\<selector>, \<payload>, \<callback>)
 
-## Yolo.Node.Flux
+## Bhiv.Node.Flux
 
 ### Standard callback
   * callback() => callback.emit('done', null);

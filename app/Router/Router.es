@@ -22,12 +22,12 @@ export default function (node, logger) {
 
   node.on('parse', function (content, callback) {
     try { var rules = Parser.parse(content); }
-    catch (e) { debugger; return callback(Yolo.Util.wrapError(e, content)); }
+    catch (e) { debugger; return callback(Bhiv.Util.wrapError(e, content)); }
     return callback(null, rules);
   });
 
   node.on('rule-add', function (rule, callback) {
-    if (rule.id == null) rule.id = Yolo.Digest(rule).substr(0, 8);
+    if (rule.id == null) rule.id = Bhiv.Digest(rule).substr(0, 8);
     return this.node.send(rule.fqn, rule, callback);
   });
 

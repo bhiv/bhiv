@@ -2,12 +2,12 @@ var PEG   = require('pegjs');
 
 module.exports = function (node) {
 
-  var cache = new Yolo.Cache();
+  var cache = new Bhiv.Cache();
 
   node.on('compute', function (content, callback) {
     if (typeof content == 'string') content = { source: content };
     try { var parser = PEG.buildParser(content.source); }
-    catch (e) { return callback(Yolo.Util.wrapError(e, content)); }
+    catch (e) { return callback(Bhiv.Util.wrapError(e, content)); }
     return callback(null, parser);
   });
 

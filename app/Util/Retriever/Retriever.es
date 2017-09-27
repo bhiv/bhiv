@@ -6,7 +6,7 @@ var async  = require('async');
 
 module.exports = function (node, logger) {
 
-  var cache = new Yolo.Cache(10);
+  var cache = new Bhiv.Cache(10);
 
   /*************************************************/
 
@@ -14,7 +14,7 @@ module.exports = function (node, logger) {
     if (typeof request == 'string') request = Url.parse(request);
     if (request.protocol == null) request.protocol = 'file:';
     var method = flux.has('data') ? 'streamable' : 'content';
-    if (request.cache) request.cache_key = Yolo.Digest(request);
+    if (request.cache) request.cache_key = Bhiv.Digest(request);
     if (method == 'content' && request.cache_key != null) {
       if (cache.has(request.cache_key)) return flux(null, cache.get(request.cache_key));
       throw new Error('fix me');
@@ -105,7 +105,7 @@ module.exports = function (node, logger) {
         return callback(err);
       } else if (stack.length == 0) {
         err = { code: 'NOT_FOUND', message: 'file ' + request.filepath + ' not found' };
-        return callback(Yolo.Util.wrapError(err));
+        return callback(Bhiv.Util.wrapError(err));
       } else {
         return this.node.send(':response', { request, response: stack.join('\n') }, callback);
       }

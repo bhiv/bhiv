@@ -3,7 +3,7 @@ import async from 'async';
 
 export default function (node, logger, Bee) {
 
-  const loading = new Yolo.Cache(-1);
+  const loading = new Bhiv.Cache(-1);
 
   node.on('instanciate', function (type, callback) {
     if (type == null) return callback(null, null);

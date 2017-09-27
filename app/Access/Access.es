@@ -8,7 +8,7 @@ export default function (node, logger, Bee) {
     const access = {};
     if (payload.params.access_token != null)
       access.token = payload.params.access_token;
-    const result = Yolo.Util.merge(payload, { access });
+    const result = Bhiv.Util.merge(payload, { access });
     return this.super(result, callback);
   });
 

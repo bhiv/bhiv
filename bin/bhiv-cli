@@ -1,31 +1,31 @@
 #!/bin/sh
 
-yolo_cli () {
+bhiv_cli () {
     action="$1";
     if [ -n "$1" ]; then shift; fi
     case "$action" in
-        install) yolo_install $@;;
-        update)  yolo_update $@;;
+        install) bhiv_install $@;;
+        update)  bhiv_update $@;;
 
-        create)      yolo_create $@;;
-        init)        yolo_init_project $@;;
-        init-module) yolo_init_module $@;;
-        link)        yolo_link $@;;
+        create)      bhiv_create $@;;
+        init)        bhiv_init_project $@;;
+        init-module) bhiv_init_module $@;;
+        link)        bhiv_link $@;;
 
-        set-magic)   yolo_set_magic $@;;
+        set-magic)   bhiv_set_magic $@;;
 
-        run)     yolo_run $@;;
-        test)    yolo_test $@;;
+        run)     bhiv_run $@;;
+        test)    bhiv_test $@;;
 
-        start)   yolo_start $@;;
-        stop)    yolo_stop $@;;
-        restart) yolo_restart $@;;
+        start)   bhiv_start $@;;
+        stop)    bhiv_stop $@;;
+        restart) bhiv_restart $@;;
 
-        bind-module)   yolo_bind_module $@;;
-        unbind-module) yolo_unbind_module $@;;
+        bind-module)   bhiv_bind_module $@;;
+        unbind-module) bhiv_unbind_module $@;;
 
-        help)    yolo_synopsis $@;;
-        *)       yolo_synopsis $@;;
+        help)    bhiv_synopsis $@;;
+        *)       bhiv_synopsis $@;;
     esac
     exit ;
 }
@@ -40,11 +40,11 @@ VERSION=$(json "$THIS/../package.json" "get-string" "version")
 
 ################################################################
 
-yolo_install () {
-    sudo npm install -g 'https://github.com/np42/yolojs#master'
+bhiv_install () {
+    sudo npm install -g 'https://github.com/bhiv/bhiv#master'
 }
 
-yolo_init () {
+bhiv_init () {
     if [ ! -d package.json ]
     then
         npm init -y
@@ -55,7 +55,7 @@ yolo_init () {
 
     ignore=".gitignore"
 
-    yolo_link
+    bhiv_link
 
     if [ ! -e "$ignore" ]
     then
@@ -70,14 +70,14 @@ yolo_init () {
     mkdir -p app config test docs resources
 }
 
-yolo_init_module () {
+bhiv_init_module () {
     index="index.js"
 
-    yolo_init "$index"
+    bhiv_init "$index"
 
-    post='(MODULE=$(basename $(pwd)); cd ../..; node_modules/yolojs/bin/yolo-cli bind-module $MODULE)'
+    post='(MODULE=$(basename $(pwd)); cd ../..; node_modules/bhiv/bin/bhiv-cli bind-module $MODULE)'
     json package.json set-string 'scripts.postinstall' "$post"
-    json package.json set-string 'peerDependencies.yolojs' "^$yolojs_version"
+    json package.json set-string 'peerDependencies.yolojs' "^$bhiv_version"
 
     if [ ! -e "$index" ]
     then
@@ -85,25 +85,25 @@ yolo_init_module () {
     fi
 }
 
-yolo_init_project () {
+bhiv_init_project () {
     index="index.js"
 
-    yolo_init "$index"
+    bhiv_init "$index"
 
     if [ ! -e "$index" ]
     then
-        echo "require('yolojs');" > "$index"
+        echo "require('bhiv');" > "$index"
     fi
 }
 
-yolo_create () {
+bhiv_create () {
     name="$1"
     port="$2"
     Name=$(capitalize "$name")
 
     if [ -d app -o -d config ]; then errcho "Not empty project"; exit 1; fi
     if [ -z "$port" ]; then port=7000; fi
-    if [ -z "$name" ]; then yolo_synopsis $@; fi
+    if [ -z "$name" ]; then bhiv_synopsis $@; fi
 
     route="config/route-$name.$port.map"
     config="config/config-custom.json"
@@ -115,7 +115,7 @@ yolo_create () {
     mkdir -p "app/$Name/Controller"
     mkdir -p "static/$name"
 
-    yolo_init
+    bhiv_init
 
     cat << EOF > "$route"
 Http GET / $Name.Controller:page-home
@@ -145,7 +145,7 @@ EOF
 EOF
 
     cat << EOF > "$home"
-Yolo.Ui.Dom {
+Bhiv.Ui.Dom {
   + Less style:
     .this { text-align: center; color: #333; }
 
@@ -156,13 +156,13 @@ Yolo.Ui.Dom {
 EOF
 }
 
-yolo_link () {
-    npm link -no-bin-links yolojs
+bhiv_link () {
+    npm link -no-bin-links bhiv
 }
 
 ################################################################
 
-yolo_set_magic () {
+bhiv_set_magic () {
 
     while [ -n "$1" ]
     do
@@ -174,31 +174,31 @@ yolo_set_magic () {
 
 ################################################################
 
-yolo_run () {
+bhiv_run () {
     node index.js
 }
 
-yolo_test () {
+bhiv_test () {
     node index.js --test $@
 }
 
 ################################################################
 
-yolo_start () {
+bhiv_start () {
     echo
 }
 
-yolo_stop () {
+bhiv_stop () {
     echo
 }
 
-yolo_restart () {
+bhiv_restart () {
     echo
 }
 
 ################################################################
 
-yolo_bind_module () {
+bhiv_bind_module () {
     return 
     NAME="$(basename $(pwd))"
     DEPENDENCIES="config/elders.txt"
@@ -211,18 +211,18 @@ yolo_bind_module () {
     fi
 }
 
-yolo_unbind_module () {
+bhiv_unbind_module () {
     echo $@
 }
 
 ################################################################
 
-yolo_synopsis () {
-    echo "SYNOPSIS: yolo-cli <action> [<args>]"
+bhiv_synopsis () {
+    echo "SYNOPSIS: bhiv-cli <action> [<args>]"
     if [ "$0" = "help" ]; then exit 0;
     else exit 1; fi
 }
 
 ################################################################
 
-yolo_cli $@
+bhiv_cli $@

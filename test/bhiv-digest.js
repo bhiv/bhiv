@@ -1,5 +1,5 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 
 describe('Digest', function () {
@@ -21,7 +21,7 @@ describe('Digest', function () {
   , cyclic
   ].map(function (e) {
     it('should digest: ' + e, function () {
-      Yolo.Digest(e);
+      Bhiv.Digest(e);
     });
   });
 

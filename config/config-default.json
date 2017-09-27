@@ -5,12 +5,12 @@
 
   , "App.Routing.Http":
     { "port": 7000, "Formidable": {}
-    , "responders": { "webpage": "Yolo.Ui.Builder:http-response" }
+    , "responders": { "webpage": "Bhiv.Ui.Builder:http-response" }
     }
 
-  , "Language.Jade": { "debug": false, "globals": ["toplevel", "Yolo"] }
+  , "Language.Jade": { "debug": false, "globals": ["toplevel", "Bhiv"] }
 
-  , "Yolo.Ui.Runtime": { "cache": 60 }
+  , "Bhiv.Ui.Runtime": { "cache": 60 }
 
   , "Cluster": {}
 

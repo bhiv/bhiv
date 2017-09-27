@@ -9,7 +9,7 @@ export default function (node, logger) {
     if (storage == null) return callback('No storage available');
     const prefix = this.node.get('storage.prefix');
     const paths = [];
-    Yolo.Util.walk(view, function (path, value) {
+    Bhiv.Util.walk(view, function (path, value) {
       if (path.length == 0) return value;
       paths.push(path.join('.'));
       return value;
@@ -17,7 +17,7 @@ export default function (node, logger) {
     const result = {};
     paths.map(function (path) {
       const value = storage.getItem(prefix + '.' + path);
-      Yolo.Util.setIn(result, path, value);
+      Bhiv.Util.setIn(result, path, value);
     });
     return callback(null, result);
   });
@@ -25,14 +25,14 @@ export default function (node, logger) {
   node.on('pull').as({ query: '$:@' })
     .then(':fetch', '$:query').merge('result')
     .then(function ({ query, result }) {
-      Yolo.Util.walk(query, (path, value) => {
+      Bhiv.Util.walk(query, (path, value) => {
         if (path.length == 0) return value;
         if (value && typeof value == 'object') {
           for (var has in value) break ;
           if (has) return value;
         }
         const target = path.join('.');
-        const data = Yolo.Util.getIn(result, target);
+        const data = Bhiv.Util.getIn(result, target);
         this.node.set(target, data);
         return null;
       });

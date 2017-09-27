@@ -64,12 +64,12 @@ export default function (node, logger, Bee) {
       };
     }
     const result = {};
-    return Yolo.Async.each(this.node.field(), (name, callback) => {
+    return Bhiv.Async.each(this.node.field(), (name, callback) => {
       const field = this.node.field(name);
-      const value = Yolo.Util.getIn(data, name);
+      const value = Bhiv.Util.getIn(data, name);
       return iterator(field, value, (err, value) => {
         if (err) return callback(err);
-        if (value != null) Yolo.Util.setIn(result, name, value);
+        if (value != null) Bhiv.Util.setIn(result, name, value);
         return callback();
       });
     }, err => {
@@ -114,7 +114,7 @@ export default function (node, logger, Bee) {
       } else {
         const field = this.node.field(fieldName);
         if (field == null) continue ;
-        Yolo.Util.setIn(record, fieldName, data[fieldName]);
+        Bhiv.Util.setIn(record, fieldName, data[fieldName]);
       }
     }
     if (data['*']) record['*'] = true;
@@ -128,7 +128,7 @@ export default function (node, logger, Bee) {
     const flat = {};
     for (let i = 0; i < fields.length; i++) {
       const fieldName = fields[i];
-      const value = fieldName in data ? data[fieldName] : Yolo.Util.getIn(data, fieldName);
+      const value = fieldName in data ? data[fieldName] : Bhiv.Util.getIn(data, fieldName);
       flat[fieldName] = value;
     }
     if (data['*']) flat['*'] = true;
@@ -166,8 +166,8 @@ export default function (node, logger, Bee) {
       if (result == null) return callback(null, data);
       for (let  i = 0; i < fields.length; i++) {
         const fieldName = fields[i];
-        const value = Yolo.Util.getIn(result, fieldName);
-        data[fieldName] = Yolo.Util.merge(data[fieldName], value);
+        const value = Bhiv.Util.getIn(result, fieldName);
+        data[fieldName] = Bhiv.Util.merge(data[fieldName], value);
       }
       return callback(null, data);
     });
@@ -177,7 +177,7 @@ export default function (node, logger, Bee) {
   node.on('fetch', function (view, callback) {
     const result = {};
     const fields = this.node.field();
-    return Yolo.Async.each(fields, (field, callback) => {
+    return Bhiv.Async.each(fields, (field, callback) => {
       if (view && !(field in view)) return callback();
       const childType = this.node.field(field).node;
       if (childType == null) {

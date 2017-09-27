@@ -1,4 +1,4 @@
 { "metas": {}
-, "scripts": [{ "fqn": "Yolo.Ui.Runtime:export" }]
+, "scripts": [{ "fqn": "Bhiv.Ui.Runtime:export" }]
 , "styles": []
 }

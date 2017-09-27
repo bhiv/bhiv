@@ -9,8 +9,8 @@ module.exports = new function () {
 
     var toolbox = {};
     toolbox.moment = moment;
-    toolbox.slugify = Yolo.Util.slugify;
-    toolbox.id = Yolo.Util.id;
+    toolbox.slugify = Bhiv.Util.slugify;
+    toolbox.id = Bhiv.Util.id;
 
     this.render = function (inlet, payload) {
       var node = inlet.node;
@@ -26,22 +26,22 @@ module.exports = new function () {
       });
 
       var data = node.get();
-      data = Yolo.Util.merge(data, payload.data);
+      data = Bhiv.Util.merge(data, payload.data);
       data = Bhiv.extract(data, scope);
       scope.data = data;
 
       scope.tags = scope.tags
-        .map(Yolo.Util.slugify)
+        .map(Bhiv.Util.slugify)
         .filter(function (value, index, self) { return self.indexOf(value) === index; })
       ;
 
       scope.invoke = function (fqn, data, childName) {
-        if (childName == null) childName = 'X_' + Yolo.Util.id(4);
-        return ['', childName, fqn, Yolo.Util.serialize(data, true), childName, ''].join('%');
+        if (childName == null) childName = 'X_' + Bhiv.Util.id(4);
+        return ['', childName, fqn, Bhiv.Util.serialize(data, true), childName, ''].join('%');
       };
 
       try { return inlet.producer(scope); }
-      catch (e) { throw Yolo.Util.wrapError(e, inlet.source); }
+      catch (e) { throw Bhiv.Util.wrapError(e, inlet.source); }
     };
 
     this.producer = function (inlet, payload, controller) {
@@ -56,23 +56,23 @@ module.exports = new function () {
           var result = [start, data.html, end].join('');
           if (data.instance) inlet.node.attach(data.instance, match[1]);
           for (var layout in data.styles) break ;
-          // FIXME: if Yolo.Event.reply become asynchronous
+          // FIXME: if Bhiv.Event.reply become asynchronous
           if (layout != null) controller.reply('styles', data.styles);
           return loop(result, payload, controller);
         };
         if (match[2].indexOf(':') == 0) {
           try { var data = { data: JSON.parse(match[3]) }; }
-          catch (e) { logger.warn(Yolo.Util.wrapError(e, match[3])); }
+          catch (e) { logger.warn(Bhiv.Util.wrapError(e, match[3])); }
           if (data == null) data = {};
           if (payload.params != null) data.params = payload.params;
           if (payload.children != null) data.children = payload.children;
           return inlet.node.execute(match[2].substr(1), data, function (err, result) {
             if (err) return callback(err);
-            if (result instanceof Yolo.Node) {
+            if (result instanceof Bhiv.Node) {
               var flow = { instance: result, params: payload.params };
               // FIXME
               logger.warn('Need a fix here');
-              return node.send('Yolo.Ui.Builder:execute', flow, callback);
+              return node.send('Bhiv.Ui.Builder:execute', flow, callback);
             } else {
               return callback(null, { html: result });
             }
@@ -82,7 +82,7 @@ module.exports = new function () {
           var flow = { fqn: match[2], params: payload.params, override: override };
           // FIXME
           logger.warn('Need a fix here');
-          return node.send('Yolo.Ui.Builder:compute', flow, callback);
+          return node.send('Bhiv.Ui.Builder:compute', flow, callback);
         }
       })(result, payload, controller);
     };

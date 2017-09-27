@@ -1,22 +1,22 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 
-describe('Yolo', function () {
+describe('Bhiv', function () {
 
   describe('Routing', function () {
 
-    var Root = new Yolo.Node('Test', 'Root');
-    var A = new Yolo.Node('A', 'A');
+    var Root = new Bhiv.Node('Test', 'Root');
+    var A = new Bhiv.Node('A', 'A');
     A.on('test-1').as('failure').end();
-    var B = new Yolo.Node('B', 'B');
+    var B = new Bhiv.Node('B', 'B');
 
     Root.attach(A);
     Root.attach(B);
 
-    Root.require = new Yolo.Loader(Root, function (opts, callback) {
+    Root.require = new Bhiv.Loader(Root, function (opts, callback) {
       var grower = function () {
-        return new Yolo.Node(opts.fqn, opts.fqn.split('.').pop());
+        return new Bhiv.Node(opts.fqn, opts.fqn.split('.').pop());
       };
       debugger;
       return callback(null, grower);

@@ -1,9 +1,9 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 var async = require('async');
 
-describe('Yolo', function () {
+describe('Bhiv', function () {
 
   describe('AutoLoading', function () {
 
@@ -17,14 +17,14 @@ describe('Yolo', function () {
       var c = cases[name];
       it('should return the same node (' + name + ')', function (done) {
         var r = [];
-        var A = new Yolo.Node('A');
-        var Log = new Yolo.Node('Log');
+        var A = new Bhiv.Node('A');
+        var Log = new Bhiv.Node('Log');
         A.attach(Log, 'Log');
-        A.require = new Yolo.Loader(A, function (option, callback) {
+        A.require = new Bhiv.Loader(A, function (option, callback) {
           r.push(new Error('stack'));
           return c(function () {
             var name = option.fqn.substr(1);
-            return callback(null, function () { return new Yolo.Node(name, name) });
+            return callback(null, function () { return new Bhiv.Node(name, name) });
           });
         });
         return async.parallel

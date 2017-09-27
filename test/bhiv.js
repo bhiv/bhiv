@@ -1,9 +1,9 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 var async = require('async');
 
-describe('Yolo', function () {
+describe('Bhiv', function () {
 
   describe('Node', function () {
 

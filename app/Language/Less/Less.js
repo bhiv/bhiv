@@ -7,7 +7,7 @@ module.exports = function (node, logger, Bee) {
     var obj = Bhiv.compute(content.source);
     var options = { sourceMap: { sourceMapFileInline: false }, compress: true };
     return less.render(obj.template, options, function (err, result) {
-      if (err) return event.reply(Yolo.Util.wrapError(err, content.source));
+      if (err) return event.reply(Bhiv.Util.wrapError(err, content.source));
       obj.template = result.css;
       return event.reply(null, obj);
     });
@@ -30,7 +30,7 @@ module.exports = function (node, logger, Bee) {
     inlet.serialize = function () {
       return (
         [ '{ css: ' + JSON.stringify(this.css)
-        , ', call: ' + Yolo.Util.serialize(this.call)
+        , ', call: ' + Bhiv.Util.serialize(this.call)
         , '}'
         ].join('')
       );

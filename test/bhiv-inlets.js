@@ -1,5 +1,5 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 
 Array.prototype.sum = function () {
@@ -8,12 +8,12 @@ Array.prototype.sum = function () {
   return res;
 };
 
-describe('Yolo', function () {
+describe('Bhiv', function () {
 
   describe('Inlet', function () {
 
     (function () {
-      var A = new Yolo.Node('A');
+      var A = new Bhiv.Node('A');
       A.on('test3', function (payload) { throw new Error('will be catched'); });
       A.on('test4', function (payload) { return 42; });
 
@@ -43,8 +43,8 @@ describe('Yolo', function () {
     , [ [1,2,3], 42, [1,2,3] ]
     ].map(function (test, index) {
       var t = 'test-' + index;
-      it('should resolve ' + t + ' ' + Yolo.Util.serialize(test[0]), function (done) {
-        var N = new Yolo.Node('N');
+      it('should resolve ' + t + ' ' + Bhiv.Util.serialize(test[0]), function (done) {
+        var N = new Bhiv.Node('N');
         N.on(t, test[0]);
         //debugger;
         N.send(':' + t, test[1], function (err, result) {

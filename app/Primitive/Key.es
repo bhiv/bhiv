@@ -20,7 +20,7 @@ export default function (node) {
 
   node.patch('syntax', function (value) {
     if (value == null) return null;
-    return Yolo.Util.slugify(value);
+    return Bhiv.Util.slugify(value);
   });
 
 };

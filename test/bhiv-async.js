@@ -1,5 +1,5 @@
 require('pegjs-require');
-var Yolo = require('../lib/Yolo.js');
+var Bhiv = require('../lib/Bhiv.js');
 var assert = require('assert');
 
 describe('Async', function () {
@@ -14,7 +14,7 @@ describe('Async', function () {
     ].map(function ([name, array, response, async]) {
       var result = 0;
       it(name, function (cb) {
-        Yolo.Async.each(array, function (e, cb) {
+        Bhiv.Async.each(array, function (e, cb) {
           result += e;
           if (async) {
             return setTimeout(cb, 1);

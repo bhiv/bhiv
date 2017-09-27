@@ -8,7 +8,7 @@ module.exports = function (node) {
     return node.send(':compress', content, function (err, source) {
       if (err) return flux(err);
       try { var fn = new Function('node, data, flux', source); }
-      catch (e) { return flux(Yolo.Util.wrapError(e, content)); }
+      catch (e) { return flux(Bhiv.Util.wrapError(e, content)); }
       var inlet = { execute: fn };
       return node.send(':inlet-consolidate', inlet, flux);
     });
@@ -17,7 +17,7 @@ module.exports = function (node) {
   node.on('inlet-consolidate', function (inlet, event) {
     inlet.call = function (data, event) {
       try { return this.execute(this.node, data, event); }
-      catch (e) { return event.reply('fail', Yolo.Util.wrapError(e)); }
+      catch (e) { return event.reply('fail', Bhiv.Util.wrapError(e)); }
     };
     return event.reply('done', inlet);
   });
@@ -27,7 +27,7 @@ module.exports = function (node) {
     return node.send(':compress', content, function (err, source) {
       if (err) return event.reply(err);
       try { var fn = new Function('node, data', content.source); }
-      catch (e) { return event.reply(Yolo.Util.wrapError(e, content)); }
+      catch (e) { return event.reply(Bhiv.Util.wrapError(e, content)); }
       return event.reply('done', fn);
     });
   });
