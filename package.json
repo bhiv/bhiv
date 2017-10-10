@@ -1,6 +1,6 @@
 {
   "name": "bhiv",
-  "version": "1.0.0",
+  "version": "5.0.0",
   "description": "An unified framework",
   "main": "lib/node/bootstrap.js",
   "scripts": {
