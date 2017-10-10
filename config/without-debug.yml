@@ -1,0 +1,7 @@
+---
+  Instances: {}
+  Data:
+    Logs:
+      type:
+        debug: false
+        info: false

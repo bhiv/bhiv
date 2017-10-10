@@ -1,0 +1,14 @@
+---
+  Instances: {}
+  Data:
+    Logs:
+      type:
+        debug: false
+        info: false
+        notice: true
+        warning: true
+        error: true
+        critical: true
+        emergency: true
+      output:
+        default: "console"

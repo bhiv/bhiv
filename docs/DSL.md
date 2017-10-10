@@ -1,4 +1,4 @@
-## scheme: `=' 
+## scheme: `='
   escape value
 
 ## scheme: `$'
@@ -7,18 +7,19 @@
 
 ## scheme: `#'
   get value from node data
-  
+
 ## scheme: `%'
   syntax for constructing string include several sub interpolation:
-  #{ ... } to get value from node data 
+  ${ ... } to get value from flow
+  #{ ... } to get value from node data
   %{ ... } to get node property like name, cwd, ...
   &{ ... } to get value from Global Config exemple Full.Module.Path:then.path.to.data
-  ${ ... } to get value from flow
+  ~{ ... } to get value from module manifest (e.g. package.json)
   ={ ... } to insert expression as it
-  >{ ... } to execute ast 
+  >{ ... } to execute ast
 
 ## scheme: `>'
-  
+
 Bhiv Query Language:
 
   Absolute.Module.Path : inlet-name   (execute)

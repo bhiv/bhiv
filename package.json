@@ -11,7 +11,8 @@
     "url": "https://github.com/bhiv/bhiv.git"
   },
   "keywords": [
-    "framework", "ubiquity"
+    "framework",
+    "ubiquity"
   ],
   "author": "Nicolas Pelletier",
   "license": "ISC",
@@ -32,6 +33,7 @@
     "colors": "^1.1.2",
     "glob": "^7.0.3",
     "jmespath": "git://github.com/np42/jmespath.js.git#np42-minor-fixes",
+    "js-yaml": "^3.10.0",
     "kexec": "^2.0.2",
     "minimist": "^1.2.0",
     "node-wrapper": "^0.0.33",

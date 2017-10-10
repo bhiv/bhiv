@@ -1,0 +1,7 @@
+---
+  Data:
+    Logs:
+      output:
+        default: "console"
+    Cluster:
+      count: 1
