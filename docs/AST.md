@@ -215,18 +215,18 @@
 /**********************/
 
 /** To create a anchor which can help an other function to use it as template
- *    @param: <tags>: (string) => anchor tags
+ *    @param: <tag>: (string) => anchor tag
  */
-.Block(<tags>) => Waterfall Self
+.Block(<tag>) => Waterfall Self
 .  end()
 
 /** To use an other function but changing some part (c.f. block)
- *    @param: <fqn>: (string) => a function identifier
+ *    @param: <fqn>:  (string) => a function identifier
+ *    @param: <tags>: (string) => a tag list separated by space
+ *    @param: <glue>: (*) => data to merge with flow
  */
-.Use(<fqn>)         => Self MetaCall
-.  At(<tags>)       => Self MetaCall Position
-.    inject(<data>) => Self MetaCall Position Merger
-.    Do()           => Self MetaCall Position Waterfall
-.      .end()
+.Then(<fqn>)        => Self MetaCall
+.  Append(<tags>[, <glue>])   => Self MetaCall Waterfall
+.  Prepend(<tags>[, <glue>])  => Self MetaCall Waterfall
+.  Replace(<tags>[, <glue>])  => Self MetaCall Waterfall
 .  end()
-
