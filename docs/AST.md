@@ -148,6 +148,7 @@
 .shunt(<test>[, <identifier>[, <glue>]]) => Waterfall Self
 
 /** To catch an error if pattern match
+ *    @flow: { error, payload } -> when caught
  *    @param: <test>: (*)                       =>
  *    @param: <identifier>: (string | function) =>
  *    @param: <glue>: (*)                       =>
