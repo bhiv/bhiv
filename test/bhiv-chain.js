@@ -117,18 +117,31 @@ describe('Bhiv', function () {
     });
 
     // Control Flow
-    it('race - declare', function () {
+    it('race - no args - declare', function () {
       A.on('test-race').as('$:some.where').Race()
         .  At('field1').then(':plus-one', '$:data')
         .  At('field2').then(':plus-one', '$:data.two').then(':plus-one')
         .  end()
         .end();
     });
-    it('race - call', function (done) {
+    it('race - no args - call', function (done) {
       A.execute( 'test-race'
-            , { some: { where: { data: 0 } } }
-            , check({ field1: 1, field2: 2 }, done)
-            );
+               , { some: { where: { data: 0 } } }
+               , check({ field1: 1, field2: 2 }, done)
+               );
+    });
+    it('race - array - declare', function () {
+      A.on('test-race-array').as('$:some.where').Race([])
+        .  At(0).then(':plus-one', '$:data')
+        .  At(1).then(':plus-one', '$:data.two').then(':plus-one')
+        .  end()
+        .end();
+    });
+    it('race - array - call', function (done) {
+      A.execute( 'test-race-array'
+               , { some: { where: { data: 0 } } }
+               , check([1, 2], done)
+               );
     });
     // TODO:test race errors
 
