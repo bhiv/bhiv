@@ -32,7 +32,6 @@
     "chokidar": "1.6.0",
     "colors": "^1.1.2",
     "glob": "^7.0.3",
-    "jmespath": "git://github.com/np42/jmespath.js.git#np42-minor-fixes",
     "js-yaml": "^3.10.0",
     "kexec": "^2.0.2",
     "minimist": "^1.2.0",
@@ -41,6 +40,7 @@
     "pegjs-require": "^1.0.0"
   },
   "devDependencies": {
-    "mocha": "^3.0.2"
+    "jmespath": "git://github.com/np42/jmespath.js.git#np42-minor-fixes",
+    "mocha": "^3.5.3"
   }
 }
