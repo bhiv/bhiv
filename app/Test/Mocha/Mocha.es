@@ -53,20 +53,24 @@ export default function (node, logger) {
       error = null;
     }
     if (error) return callback(error);
-    if (typeof test.assert == 'function') {
-      if (test.assert.length > 2) {
-        try { return test.assert(result, test.result, callback); }
-        catch (err) { return callback(err); }
+    if (!('glue' in test)) test.glue = function (a) { return a };
+    return this.run(test.glue, result, function (err, result) {
+      if (err) return callback(err);
+      if (typeof test.assert == 'function') {
+        if (test.assert.length > 2) {
+          try { return test.assert(result, test.result, callback); }
+          catch (err) { return callback(err); }
+        } else {
+          try { test.assert(result, test.result); }
+          catch (err) { return callback(err); }
+        }
       } else {
-        try { test.assert(result, test.result); }
+        var testName = test.assert || 'deepEqual';
+        try { assert[testName](result, test.result); }
         catch (err) { return callback(err); }
       }
-    } else {
-      var testName = test.assert || 'deepEqual';
-      try { assert[testName](result, test.result); }
-      catch (err) { return callback(err); }
-    }
-    return callback(null, null);
+      return callback(null, null);
+    });
   });
 
 };
