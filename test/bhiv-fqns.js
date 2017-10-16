@@ -4,18 +4,12 @@ var assert = require('assert');
 
 describe('Bhiv', function () {
 
-  describe('Fqn', function () {
+  describe('Static Fqn', function () {
 
     [ { fqn: 'Absolute.Path.To.A.Child', has: '0.type', eq: 'root' }
     , { fqn: '.Relative.Path.To.A.Child', has: '2.name', eq: 'To' }
     , { fqn: 'Child.With:inlet', has: '3.name', eq: 'inlet' }
     , { fqn: ':inlet-without-path', has: '0.type', eq: 'inlet' }
-//    , { fqn: 'Child.With[data . field]', has: '3.path', eq: 'data.field', nostr: true }
-//    , { fqn: '[data.field.without.path]', has: '0.type', eq: 'data' }
-//    , { fqn: '.Child.With.Model/and/field/and/subfield', has: '3.type', eq: 'field' }
-//    , { fqn: '.Path.To.Model<.With/path.Paramerter>', has: '2.args.0.1.type', eq: 'field' }
-//    , { fqn: '.Model<A,[with.data.parameter]>.And.SubChild', has: '0.args.1.0.type', eq: 'data' }
-//    , { fqn: '.Model<With[mixed],[parameter]>', has: '0.args.0.2.path', eq: 'mixed' }
     ].map(function (e) {
       it('should parse: ' + e.fqn, function () {
         var fqn = Bhiv.Fqn.parse(e.fqn);
@@ -37,10 +31,31 @@ describe('Bhiv', function () {
         return ;
       });
       if (e.nostr != true) {
-        it('sould serialize: ' + e.fqn, function () {
+        it('should serialize: ' + e.fqn, function () {
           assert.equal(Bhiv.Fqn.stringify(Bhiv.Fqn.parse(e.fqn)), e.fqn);
         });
       }
+    });
+
+  });
+
+  describe('Dynamic Fqn', function () {
+
+    [ ['{fqn}', { fqn: 'pli.ure:t e s t' }, 'Pli.Ure:t-e-s-t']
+    , ['{p}:toto', { p: 'test' }, 'Test:toto']
+    , ['{p}.B:toto', { p: 'test' }, 'Test.B:toto']
+    , ['A.{p}:toto', { p: 'test' }, 'A.Test:toto']
+    , ['A.{p}.B:toto', { p: 'test' }, 'A.Test.B:toto']
+    , ['A:{m}', { m: 'method' }, 'A:method']
+    , ['A:-{m}', { m: 'method' }, 'A:-method']
+    , ['A:toto-{m}', { m: 'method' }, 'A:toto-method']
+    , ['A:{m}-titi', { m: 'method' }, 'A:method-titi']
+    , ['A:toto-{m}-titi', { m: 'method' }, 'A:toto-method-titi']
+    ].map(function (e) {
+      it('Test ' + e[0], function () {
+        const result = Bhiv.VM.Runtime._resolveDynamicFqn(e[0], e[1]);
+        assert.equal(result, e[2]);
+      });
     });
 
   });
